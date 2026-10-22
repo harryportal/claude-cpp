@@ -1,0 +1,1219 @@
+<title>STL Forward List Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Forward List Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Push at the front",
+  p: String.raw`Create the forward_list 1, 2, 3. Push 0 onto the front and print all the elements separated by spaces.`,
+  ex: String.raw`0 1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3};
+    fl.push_front(0);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A forward_list is a singly linked list. It offers push_front and no push_back, because adding at the tail would need a walk to the end.` },
+
+{ n: 2, d: "easy", t: "Only the front is directly available",
+  p: String.raw`Create the forward_list 4, 5. Print its first element.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{4, 5};
+    std::cout << fl.front() << '\n';
+}`,
+  why: String.raw`Access is limited to the front, because reaching any other node means following the links from the start.` },
+
+{ n: 3, d: "easy", t: "Count with distance",
+  p: String.raw`Create the forward_list 1, 2, 3, 4. Count its elements by measuring the distance from begin to end, then print the count.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4};
+    std::cout << std::distance(fl.begin(), fl.end()) << '\n';
+}`,
+  why: String.raw`forward_list has no size member, so counting means walking the list. std::distance does exactly that walk.` },
+
+{ n: 4, d: "easy", t: "Insert after a node",
+  p: String.raw`Create the forward_list 1, 3. Insert 2 directly after the first element, then print the list separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 3};
+    fl.insert_after(fl.begin(), 2);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`insert_after takes an iterator to the node before the insertion point, because a singly linked node cannot reach its predecessor.` },
+
+{ n: 5, d: "easy", t: "Insert at the head",
+  p: String.raw`Create the forward_list 2, 3. Insert 1 at the very front using the position before the first element, then print the list separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{2, 3};
+    fl.insert_after(fl.before_begin(), 1);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`before_begin is a sentinel just before the first element. Inserting after it is how a forward_list adds at the head.` },
+
+{ n: 6, d: "easy", t: "Erase the element after a node",
+  p: String.raw`Create the forward_list 1, 2, 3. Erase the element that follows the first element, then print the list separated by spaces.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3};
+    fl.erase_after(fl.begin());
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`erase_after removes the node after the given iterator, so the iterator it names is the one that stays valid.` },
+
+{ n: 7, d: "easy", t: "Clear and check",
+  p: String.raw`Create the forward_list 1. Clear it, then print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1};
+    fl.clear();
+    std::cout << std::boolalpha << fl.empty() << '\n';
+}`,
+  why: String.raw`clear destroys all nodes. empty is the constant-time check to use, because it does not need to count anything.` },
+
+{ n: 8, d: "easy", t: "Construct a pair at the front",
+  p: String.raw`Create an empty forward_list of pairs of an int and a string. Use emplace_front to add the pair 1 and the string a. Print the int and the string, separated by a space.`,
+  ex: String.raw`1 a`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::forward_list<std::pair<int, std::string>> fl;
+    fl.emplace_front(1, "a");
+    std::cout << fl.front().first << ' ' << fl.front().second << '\n';
+}`,
+  why: String.raw`emplace_front forwards its arguments to the pair's constructor, so the pair is built directly inside the new node.` },
+
+{ n: 9, d: "easy", t: "Remove every matching value",
+  p: String.raw`Create the forward_list 1, 2, 1, 3. Remove every element equal to 1 and print the rest separated by spaces.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 1, 3};
+    fl.remove(1);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove unlinks every matching node in one pass. Nothing needs to be shifted, which is an advantage of linked storage.` },
+
+{ n: 10, d: "easy", t: "Reverse in place",
+  p: String.raw`Create the forward_list 1, 2, 3 and reverse it in place. Print the elements separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3};
+    fl.reverse();
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`reverse only rewires the links between existing nodes, so no elements are copied or moved in memory.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Insert before the first larger value",
+  p: String.raw`The forward_list 1, 3, 5 is sorted. Insert 4 at the position that keeps it sorted, then print the list separated by spaces.`,
+  ex: String.raw`1 3 4 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 3, 5};
+    auto prev = fl.before_begin();
+    while (std::next(prev) != fl.end() && *std::next(prev) < 4) ++prev;
+    fl.insert_after(prev, 4);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Because the list cannot step backwards, the search keeps a position one node behind the candidate. Inserting after that position places the value between its neighbours.` },
+
+{ n: 12, d: "medium", t: "Remove by predicate",
+  p: String.raw`Create the forward_list 1, 2, 3, 4, 5. Remove every odd value and print what remains separated by spaces.`,
+  ex: String.raw`2 4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4, 5};
+    fl.remove_if([](int x) { return x % 2 != 0; });
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if is a member function for forward_list because the generic algorithm would need to move elements and cannot do so efficiently here.` },
+
+{ n: 13, d: "medium", t: "Merge two sorted lists",
+  p: String.raw`Merge the sorted forward_list 1, 4, 6 into the sorted forward_list 2, 3, 7, leaving the first list in sorted order. Print the first list separated by spaces, then true if the second list is now empty.`,
+  ex: String.raw`1 2 3 4 6 7 true`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> a{1, 4, 6}, b{2, 3, 7};
+    a.merge(b);
+    for (int x : a) std::cout << x << ' ';
+    std::cout << std::boolalpha << b.empty() << '\n';
+}`,
+  why: String.raw`merge splices nodes from the second list into the first without copying them. Both inputs must be sorted for the result to be sorted.` },
+
+{ n: 14, d: "medium", t: "Sort and remove duplicates",
+  p: String.raw`Create the forward_list 3, 1, 3, 2, 1. Sort it, remove the duplicates, and print the result separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{3, 1, 3, 2, 1};
+    fl.sort();
+    fl.unique();
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`unique only removes adjacent duplicates, so the list must be sorted first.` },
+
+{ n: 15, d: "medium", t: "Splice a list after a node",
+  p: String.raw`Create the forward_list a = 1, 2 and the forward_list b = 8, 9. Move all of b into a directly after the first element of a. Print a separated by spaces.`,
+  ex: String.raw`1 8 9 2`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> a{1, 2}, b{8, 9};
+    a.splice_after(a.begin(), b);
+    bool first = true;
+    for (int x : a) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`splice_after relinks the nodes of b into a without copying them. The node pointers in b are reused, and b becomes empty.` },
+
+{ n: 16, d: "medium", t: "Middle element with two pointers",
+  p: String.raw`For the forward_list 1, 2, 3, 4, 5, print the middle element. Use one pointer that advances one node per step and another that advances two nodes per step.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4, 5};
+    auto slow = fl.begin();
+    auto fast = fl.begin();
+    while (fast != fl.end() && std::next(fast) != fl.end()) {
+        fast = std::next(fast, 2);
+        ++slow;
+    }
+    std::cout << *slow << '\n';
+}`,
+  why: String.raw`When the fast pointer reaches the end, the slow pointer has covered half the list. Walking the list once finds the middle without knowing its length.` },
+
+{ n: 17, d: "medium", t: "Nth from the end",
+  p: String.raw`For the forward_list 1, 2, 3, 4, 5, find the second element from the end in one pass, using a lead pointer that is two nodes ahead of a trailing pointer. Print its value.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4, 5};
+    auto lead = fl.begin();
+    for (int i = 0; i < 2; ++i) ++lead;
+    auto trail = fl.begin();
+    while (lead != fl.end()) {
+        ++lead;
+        ++trail;
+    }
+    std::cout << *trail << '\n';
+}`,
+  why: String.raw`Keeping the two pointers a fixed distance apart means the trailing one lands on the target when the lead reaches the end.` },
+
+{ n: 18, d: "medium", t: "Concatenate lists at the tail",
+  p: String.raw`Create the forward_list a = 1, 2 and the forward_list b = 3. Append all of b after the last element of a, then print a separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> a{1, 2}, b{3};
+    auto last = a.before_begin();
+    for (auto it = a.begin(); it != a.end(); ++it) last = it;
+    a.splice_after(last, b);
+    bool first = true;
+    for (int x : a) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Finding the last node takes one walk, and then splice_after attaches the other list there in constant time.` },
+
+{ n: 19, d: "medium", t: "Count with a predicate",
+  p: String.raw`Count the even numbers in the forward_list 1, 2, 3, 4 using a standard algorithm, and print the count.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4};
+    std::cout << std::count_if(fl.begin(), fl.end(), [](int x) { return x % 2 == 0; }) << '\n';
+}`,
+  why: String.raw`count_if needs only forward iterators, which a forward_list provides, so the generic algorithm applies directly.` },
+
+{ n: 20, d: "medium", t: "Remove the head of a list",
+  p: String.raw`Create the forward_list 7, 8, 9. Remove the first element and print the new first element.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{7, 8, 9};
+    fl.pop_front();
+    std::cout << fl.front() << '\n';
+}`,
+  why: String.raw`pop_front unlinks the head node in constant time. There is no pop_back, because removing the tail would need the node before it.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Insert after the second node",
+  p: String.raw`Create the forward_list 1, 2, 3, 4. Insert 9 directly after the second element, then print the list separated by spaces.`,
+  ex: String.raw`1 2 9 3 4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4};
+    fl.insert_after(std::next(fl.begin()), 9);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Reaching the second node takes one step from the start. insert_after then links the new node in directly after it.` },
+
+{ n: 22, d: "hard", t: "Reverse a middle section",
+  p: String.raw`Create the forward_list 1, 2, 3, 4, 5. Reverse only the elements 2, 3 and 4 in place, leaving 1 and 5 where they are. Print the list separated by spaces.`,
+  ex: String.raw`1 4 3 2 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4, 5};
+    auto prev = fl.begin();            // node 1
+    auto first = std::next(prev);      // node 2, the section head
+    for (int k = 0; k < 2; ++k) {      // move the node after 'first' to just after 'prev'
+        auto moved = std::next(first);
+        fl.splice_after(prev, fl, first, std::next(moved));
+    }
+    bool out = true;
+    for (int x : fl) {
+        std::cout << (out ? "" : " ") << x;
+        out = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Each splice moves the element after the section head to the front of the section. Repeating it for every element after the head reverses the section in place.` },
+
+{ n: 23, d: "hard", t: "Sum of the last k elements",
+  p: String.raw`For the forward_list 1, 2, 3, 4, 5, 6 and k equal to 3, print the sum of the last three elements. Use a lead pointer that is k nodes ahead of a trailing pointer.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4, 5, 6};
+    const int k = 3;
+    auto lead = std::next(fl.begin(), k);
+    auto trail = fl.begin();
+    while (lead != fl.end()) {
+        ++lead;
+        ++trail;
+    }
+    std::cout << std::accumulate(trail, fl.end(), 0) << '\n';
+}`,
+  why: String.raw`When the lead pointer reaches the end, the trailing pointer sits at the start of the last k elements. Summing from there covers exactly those elements.` },
+
+{ n: 24, d: "hard", t: "Stable sort of pairs by key",
+  p: String.raw`Create the forward_list of pairs (2, a), (1, b), (2, c), (1, d). Sort it by the first member, keeping equal keys in their original order. Print the second members separated by spaces.`,
+  ex: String.raw`b d a c`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <utility>
+
+int main() {
+    std::forward_list<std::pair<int, char>> fl{{2, 'a'}, {1, 'b'}, {2, 'c'}, {1, 'd'}};
+    fl.sort([](const auto& x, const auto& y) { return x.first < y.first; });
+    bool first = true;
+    for (const auto& [key, value] : fl) {
+        std::cout << (first ? "" : " ") << value;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The member sort on forward_list is stable, so elements with equal keys keep their input order. It works by merging, which suits linked nodes.` },
+
+{ n: 25, d: "hard", t: "Truncate after a marker value",
+  p: String.raw`Create the forward_list 1, 2, 3, 4, 5. Remove every element after the first 3, keeping 3 itself. Print the remaining elements separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4, 5};
+    auto it = fl.begin();
+    while (*it != 3) ++it;
+    while (std::next(it) != fl.end()) fl.erase_after(it);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`erase_after removes the node after the given iterator, so repeatedly erasing after the marker truncates the list without needing to walk from the start each time.` },
+
+{ n: 26, d: "hard", t: "Remove a value using a before iterator",
+  p: String.raw`Create the forward_list 2, 1, 2, 3. Remove every element equal to 2 by keeping an iterator to the node before the current one. Print the remaining elements separated by spaces.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{2, 1, 2, 3};
+    auto prev = fl.before_begin();
+    while (std::next(prev) != fl.end()) {
+        if (*std::next(prev) == 2) fl.erase_after(prev);
+        else ++prev;
+    }
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Erasing needs the node before the target. Keeping prev one step behind the scan gives it, and prev only advances when nothing is removed.` },
+
+{ n: 27, d: "hard", t: "Move a range to the front",
+  p: String.raw`Create the forward_list 1, 2, 3, 4. Move the elements 2 and 3, which sit after the first element and before the fourth, to the front of the list. Print the list separated by spaces.`,
+  ex: String.raw`2 3 1 4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4};
+    const auto from = fl.begin();
+    const auto to = std::next(fl.begin(), 3);
+    fl.splice_after(fl.before_begin(), fl, from, to);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`splice_after takes an open range (first, last) and relinks it after the given position. The range here holds the nodes 2 and 3.` },
+
+{ n: 28, d: "hard", t: "Palindrome check via a copy",
+  p: String.raw`Check whether the forward_list 1, 2, 1 reads the same forwards and backwards. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 1};
+    const std::vector<int> v(fl.begin(), fl.end());
+    std::cout << std::boolalpha << std::equal(v.begin(), v.end(), v.rbegin()) << '\n';
+}`,
+  why: String.raw`A forward_list cannot be read backwards, so the values are copied into a vector that can. Comparing the vector with its reverse decides the question.` },
+
+{ n: 29, d: "hard", t: "Count occurrences with the generic algorithm",
+  p: String.raw`Count how many times 2 appears in the forward_list 2, 1, 2, 2, 3 using a standard algorithm. Print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{2, 1, 2, 2, 3};
+    std::cout << std::count(fl.begin(), fl.end(), 2) << '\n';
+}`,
+  why: String.raw`count is one pass over the list and needs only forward iterators, so it works on a forward_list as it does on any sequence.` },
+
+{ n: 30, d: "hard", t: "Flatten a list of lists",
+  p: String.raw`Create a forward_list of forward_lists holding the rows {1, 2}, {3} and {4, 5}. Print every value in order across all rows, separated by spaces.`,
+  ex: String.raw`1 2 3 4 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<std::forward_list<int>> rows{{1, 2}, {3}, {4, 5}};
+    bool first = true;
+    for (const auto& row : rows)
+        for (int x : row) {
+            std::cout << (first ? "" : " ") << x;
+            first = false;
+        }
+    std::cout << '\n';
+}`,
+  why: String.raw`Each row is its own linked list, so flattening is just two nested loops. Rows can differ in length without any padding.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Empty by default",
+  p: String.raw`Create a default-constructed forward_list of ints and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl;
+    std::cout << std::boolalpha << fl.empty() << '\n';
+}`,
+  why: String.raw`A default-constructed forward_list holds no nodes, so empty is true.` },
+
+{ n: 32, d: "easy", t: "Guard the front of an empty list",
+  p: String.raw`Create an empty forward_list of ints. Print its front element if it has one, or -1 if it is empty.`,
+  ex: String.raw`-1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl;
+    std::cout << (fl.empty() ? -1 : fl.front()) << '\n';
+}`,
+  why: String.raw`front on an empty list is undefined, so checking empty first is required.` },
+
+{ n: 33, d: "medium", t: "insert_after returns the last inserted iterator",
+  p: String.raw`Create the forward_list 1, 4. Insert the values 2 and 3 after the first element in one call. Print the value that the iterator returned by the insertion points to.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 4};
+    const auto it = fl.insert_after(fl.begin(), {2, 3});
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`insert_after with a range returns an iterator to the last element it inserted, so a caller can continue from there.` },
+
+{ n: 34, d: "easy", t: "emplace_after constructs in place",
+  p: String.raw`Create the forward_list 1. Use emplace_after to add 5 directly after the first element, then print the list separated by a space.`,
+  ex: String.raw`1 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1};
+    fl.emplace_after(fl.begin(), 5);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`emplace_after builds the new element inside its node from the given arguments.` },
+
+{ n: 35, d: "easy", t: "assign replaces the contents",
+  p: String.raw`Create the forward_list 1, 2, 3. Replace its contents with 7, 8, 9 and print the first element.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3};
+    fl.assign({7, 8, 9});
+    std::cout << fl.front() << '\n';
+}`,
+  why: String.raw`assign discards the old nodes and builds new ones from the given values.` },
+
+{ n: 36, d: "medium", t: "Resize a forward_list",
+  p: String.raw`Create the forward_list 1, 2, 3. Resize it to five elements, filling the new slots with 0. Print all the elements separated by spaces.`,
+  ex: String.raw`1 2 3 0 0`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3};
+    fl.resize(5, 0);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`resize appends nodes at the tail when growing and removes them from the tail when shrinking. Growing has to walk to the end.` },
+
+{ n: 37, d: "easy", t: "Equality of two lists",
+  p: String.raw`Compare the forward_list 1, 2 with the forward_list 1, 2 using ==, and print the result as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> a{1, 2}, b{1, 2};
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Two forward_lists are equal when they hold the same values in the same order, regardless of where their nodes live.` },
+
+{ n: 38, d: "easy", t: "Lexicographic order of lists",
+  p: String.raw`Compare the forward_list 1, 2 with the forward_list 1, 2, 0 using less-than, and print the result as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> a{1, 2}, b{1, 2, 0};
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`When one list is a prefix of the other, the shorter one is less, so [1, 2] comes before [1, 2, 0].` },
+
+{ n: 39, d: "medium", t: "Swap two lists of different sizes",
+  p: String.raw`Create the forward_list a = 1 and the forward_list b = 2, 3. Swap them, then print the number of elements in a and in b, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> a{1}, b{2, 3};
+    a.swap(b);
+    std::cout << std::distance(a.begin(), a.end()) << ' ' << std::distance(b.begin(), b.end()) << '\n';
+}`,
+  why: String.raw`swap exchanges the heads of the two lists, so the nodes stay where they are and only the ownership changes.` },
+
+{ n: 40, d: "medium", t: "Reference stability on insert_after",
+  p: String.raw`Create the forward_list 1, 2 and keep a reference to its first element. Insert 100 values after the second element. Print the value that the reference refers to.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2};
+    int& first = fl.front();
+    auto it = std::next(fl.begin());
+    for (int i = 0; i < 100; ++i) it = fl.insert_after(it, i);
+    std::cout << first << '\n';
+}`,
+  why: String.raw`Inserting after a node does not move any existing node, so references to earlier elements stay valid.` },
+
+{ n: 41, d: "medium", t: "Unique with a binary predicate",
+  p: String.raw`Create the forward_list 1, 3, 2, 4, 5. Remove each element that has the same parity as the element immediately before it. Print the result separated by spaces.`,
+  ex: String.raw`1 2 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 3, 2, 4, 5};
+    fl.unique([](int a, int b) { return a % 2 == b % 2; });
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`unique takes a predicate that compares each element with its predecessor. A predicate can remove runs of values that share a property, not only exact duplicates.` },
+
+{ n: 42, d: "medium", t: "Sort descending",
+  p: String.raw`Create the forward_list 1, 3, 2. Sort it in descending order and print the elements separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <forward_list>
+#include <functional>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 3, 2};
+    fl.sort(std::greater<>{});
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The member sort accepts a comparator, and std::greater puts the larger value first.` },
+
+{ n: 43, d: "medium", t: "Count removed elements",
+  p: String.raw`Create the forward_list 1, 2, 3, 4, 5, 6. Remove the even values and print how many were removed, by comparing the lengths before and after.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4, 5, 6};
+    const auto before = std::distance(fl.begin(), fl.end());
+    fl.remove_if([](int x) { return x % 2 == 0; });
+    std::cout << before - std::distance(fl.begin(), fl.end()) << '\n';
+}`,
+  why: String.raw`Since forward_list has no size, the count is found by measuring the distance before and after the removal.` },
+
+{ n: 44, d: "medium", t: "Find the node before a value",
+  p: String.raw`Create the forward_list 1, 2, 3. Find the element that comes directly before the value 3 and print it.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3};
+    auto prev = fl.before_begin();
+    while (std::next(prev) != fl.end() && *std::next(prev) != 3) ++prev;
+    std::cout << *prev << '\n';
+}`,
+  why: String.raw`Searching with a trailing position means the node before the match is available directly. Dereferencing one past it gives the match itself.` },
+
+{ n: 45, d: "medium", t: "Split a list in half",
+  p: String.raw`Create the forward_list 1, 2, 3, 4. Move everything after the second element into a new forward_list b, leaving the first two in a. Print the first element of b.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    std::forward_list<int> a{1, 2, 3, 4};
+    std::forward_list<int> b;
+    const auto mid = std::next(a.begin());
+    b.splice_after(b.before_begin(), a, mid, a.end());
+    std::cout << b.front() << '\n';
+}`,
+  why: String.raw`splice_after moves the open range after the given node into another list in constant time. The first half stays in a and the rest moves to b.` },
+
+{ n: 46, d: "medium", t: "Insert at the head of a sorted list",
+  p: String.raw`The forward_list 1, 3, 5 is sorted. Insert 0 so the list stays sorted. Print the elements separated by spaces.`,
+  ex: String.raw`0 1 3 5`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 3, 5};
+    const int value = 0;
+    auto prev = fl.before_begin();
+    while (std::next(prev) != fl.end() && *std::next(prev) < value) ++prev;
+    fl.insert_after(prev, value);
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The search keeps a position one node behind the current candidate, because the list cannot step backwards. When the new value is smaller than every element, the position stays at before_begin and the value becomes the new head.` },
+
+{ n: 47, d: "easy", t: "Accumulate the values",
+  p: String.raw`Sum the forward_list 1, 2, 3, 4 with a standard accumulation and print the total.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::forward_list<int> fl{1, 2, 3, 4};
+    std::cout << std::accumulate(fl.begin(), fl.end(), 0) << '\n';
+}`,
+  why: String.raw`accumulate walks the range once with forward iterators, which is all a forward_list needs.` },
+
+{ n: 48, d: "hard", t: "Dedupe an unsorted list",
+  p: String.raw`Create the forward_list 3, 1, 3, 2, 1. Remove every value that has already appeared earlier in the list, keeping the first occurrence of each. Print the result separated by spaces.`,
+  ex: String.raw`3 1 2`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
+#include <iostream>
+#include <unordered_set>
+
+int main() {
+    std::forward_list<int> fl{3, 1, 3, 2, 1};
+    std::unordered_set<int> seen;
+    fl.remove_if([&seen](int x) { return !seen.insert(x).second; });
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if visits the nodes in order, so a set that records each value as it is first seen can decide which later copies to drop. Insert reports whether the value is new.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "medium", t: "Undo stack as a forward_list",
+  p: String.raw`Record the states a, then ab, pushing each onto the front of a forward_list. Then undo once by removing the front state. Print the new front state.`,
+  ex: String.raw`a`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::forward_list<std::string> undo;
+    undo.push_front("a");
+    undo.push_front("ab");
+    undo.pop_front();
+    std::cout << undo.front() << '\n';
+}`,
+  why: String.raw`The front of the list is the most recent state, so a singly linked list works as a stack with push_front and pop_front.` },
+
+{ n: 50, d: "easy", t: "Remove an item from a shopping list",
+  p: String.raw`A shopping list holds eggs, milk and bread in that order. Remove milk and print the remaining items separated by spaces.`,
+  ex: String.raw`eggs bread`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::forward_list<std::string> list{"eggs", "milk", "bread"};
+    list.remove("milk");
+    bool first = true;
+    for (const auto& item : list) {
+        std::cout << (first ? "" : " ") << item;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove unlinks every node whose value matches, so the other items keep their order and nothing needs shifting.` },
+
+{ n: 51, d: "medium", t: "Insert a song after the current one",
+  p: String.raw`A playlist holds A, B and C in that order, and the current song is A. Insert X directly after the current song. Print the playlist separated by spaces.`,
+  ex: String.raw`A X B C`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::forward_list<std::string> playlist{"A", "B", "C"};
+    auto current = playlist.begin();
+    playlist.insert_after(current, "X");
+    bool first = true;
+    for (const auto& song : playlist) {
+        std::cout << (first ? "" : " ") << song;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Inserting after the current node is constant time and leaves the rest of the playlist untouched.` },
+
+{ n: 52, d: "medium", t: "Filter a roster by score",
+  p: String.raw`A roster holds the pairs ann 60, bob 40 and cy 75 as name and score. Remove everyone with a score below 50 and print the remaining names separated by spaces.`,
+  ex: String.raw`ann cy`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::forward_list<std::pair<std::string, int>> roster{{"ann", 60}, {"bob", 40}, {"cy", 75}};
+    roster.remove_if([](const auto& entry) { return entry.second < 50; });
+    bool first = true;
+    for (const auto& [name, score] : roster) {
+        std::cout << (first ? "" : " ") << name;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if works on any predicate, so the filter reads the score member and the list keeps everyone else in order.` },
+
+{ n: 53, d: "medium", t: "Average of a list",
+  p: String.raw`Compute the integer average of the values 4, 8 and 6 stored in a forward_list. Print the average.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+
+int main() {
+    const std::forward_list<int> fl{4, 8, 6};
+    const int total = std::accumulate(fl.begin(), fl.end(), 0);
+    const auto count = std::distance(fl.begin(), fl.end());
+    std::cout << total / count << '\n';
+}`,
+  why: String.raw`The count has to be measured by walking the list, since there is no size. Dividing the total by that count gives the average.` },
+
+{ n: 54, d: "easy", t: "Newest first history",
+  p: String.raw`Visit the pages 1, 2 and 3 in order, pushing each onto the front of a forward_list. Print the pages from newest to oldest, separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> history;
+    for (int page = 1; page <= 3; ++page) history.push_front(page);
+    bool first = true;
+    for (int page : history) {
+        std::cout << (first ? "" : " ") << page;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Pushing each visit at the front leaves the most recent one first, which is the order a history list is read in.` },
+
+{ n: 55, d: "hard", t: "Run-length encoding",
+  p: String.raw`Encode the characters a, a, a, b, c, c held in a forward_list as count and letter pairs, with no spaces. Print the encoded string.`,
+  ex: String.raw`3a1b2c`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::forward_list<char> data{'a', 'a', 'a', 'b', 'c', 'c'};
+    std::string out;
+    for (auto it = data.begin(); it != data.end();) {
+        const char c = *it;
+        int run = 0;
+        while (it != data.end() && *it == c) { ++run; ++it; }
+        out += std::to_string(run) + c;
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Each run of equal characters is counted with one forward pass, then written as a count followed by the character. The iterator only moves forward, which is all this needs.` },
+
+{ n: 56, d: "easy", t: "Merge two sorted sensor logs",
+  p: String.raw`Two sorted forward_lists of timestamps hold 1, 4, 9 and 2, 3, 10. Merge them so the first list ends up sorted, then print it separated by spaces.`,
+  ex: String.raw`1 2 3 4 9 10`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> a{1, 4, 9}, b{2, 3, 10};
+    a.merge(b);
+    bool first = true;
+    for (int t : a) {
+        std::cout << (first ? "" : " ") << t;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`merge combines two sorted lists by relinking nodes, so the merged log costs no copying.` },
+
+{ n: 57, d: "medium", t: "Remove completed tasks",
+  p: String.raw`Task IDs 5, 6 and 7 are queued in a forward_list. Task 6 is completed, so remove it and print the remaining IDs separated by spaces.`,
+  ex: String.raw`5 7`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> tasks{5, 6, 7};
+    const int completed = 6;
+    tasks.remove(completed);
+    bool first = true;
+    for (int id : tasks) {
+        std::cout << (first ? "" : " ") << id;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Removing a completed task is a single unlink in the middle of the list, with no shifting of the tasks around it.` },
+
+{ n: 58, d: "medium", t: "Tag every other item",
+  p: String.raw`Add 100 to the elements at odd positions of the forward_list 1, 2, 3, 4, counting the first element as position 1. Print the list separated by spaces.`,
+  ex: String.raw`101 2 103 4`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl{1, 2, 3, 4};
+    bool odd = true;
+    for (int& x : fl) {
+        if (odd) x += 100;
+        odd = !odd;
+    }
+    bool first = true;
+    for (int x : fl) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A flag toggled at each step tracks whether the position is odd, which needs only a single forward pass.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-forward-list-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
+  { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
+  { from: 21, to: 55, label: "Hard", range: "Problems 21–55", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

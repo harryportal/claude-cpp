@@ -1,0 +1,1523 @@
+<title>Operating Systems: Three Easy Pieces</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by chapter · 54 problems</p>
+    <h1>Operating Systems: Three Easy Pieces Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">54</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="54" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "easy", t: "A child process runs after fork", ch: "Ch. 4 · Processes", idiom: "Processes",
+  p: String.raw`Create a child process. The child prints child followed by a space. The parent waits for the child to finish and then prints parent, then a newline.`,
+  ex: String.raw`child parent`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        std::printf("child ");
+        std::fflush(stdout);
+        _exit(0);
+    }
+    waitpid(pid, nullptr, 0);
+    std::printf("parent\n");
+}`,
+  why: String.raw`fork creates a new process that starts with a copy of the parent's state, and it returns twice: 0 in the child and the child's pid in the parent. Waiting makes the order of output deterministic.` },
+
+{ n: 2, d: "easy", t: "Child's parent is the creator", ch: "Ch. 4 · Processes", idiom: "Processes",
+  p: String.raw`Record the parent's pid. Create a child process. The child prints 1 if its parent's pid equals the recorded pid, else 0, then a newline. The parent waits for the child to finish.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    pid_t me = getpid();
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        std::printf("%d\n", getppid() == me);
+        std::fflush(stdout);
+        _exit(0);
+    }
+    waitpid(pid, nullptr, 0);
+}`,
+  why: String.raw`Every process records the pid of the process that created it. This parent link is what lets a parent wait for, and collect the status of, its children.` },
+
+{ n: 3, d: "easy", t: "Replacing a process image", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a child process that replaces itself with the shell running the command exit 3. The parent waits for the child and prints the child's exit status, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        execl("/bin/sh", "sh", "-c", "exit 3", static_cast<char*>(nullptr));
+        _exit(127);
+    }
+    int status = 0;
+    waitpid(pid, &status, 0);
+    std::printf("%d\n", WEXITSTATUS(status));
+}`,
+  why: String.raw`exec replaces the calling process's program while keeping its pid. Splitting creation (fork) from program loading (exec) is the design the Process API chapter describes, and it makes the child's exit status visible to the parent.` },
+
+{ n: 4, d: "easy", t: "wait returns the child's pid", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a child process that exits immediately. The parent calls wait with no arguments and prints 1 if the pid it returns equals the child's pid, else 0, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) _exit(0);
+    pid_t got = wait(nullptr);
+    std::printf("%d\n", got == pid);
+}`,
+  why: String.raw`wait reports which child has finished and lets the parent reap it. Without this call the child would remain a zombie entry in the process table.` },
+
+{ n: 5, d: "easy", t: "Redirect output into a file", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`The child redirects its standard output into the file /tmp/ostep_redirect.txt, truncating it, and then prints hello followed by a newline. The parent waits for the child, reads the first line of that file, and prints it followed by a newline.`,
+  ex: String.raw`hello`,
+  code: String.raw`#include <cstdio>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    const char* path = "/tmp/ostep_redirect.txt";
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+        std::printf("hello\n");
+        std::fflush(stdout);
+        _exit(0);
+    }
+    waitpid(pid, nullptr, 0);
+    char buf[32] = {};
+    std::FILE* f = std::fopen(path, "r");
+    if (f != nullptr) {
+        if (std::fgets(buf, sizeof buf, f) == nullptr) buf[0] = '\0';
+        std::fclose(f);
+    }
+    std::printf("%s", buf);
+}`,
+  why: String.raw`Redirection works by changing what file descriptor 1 refers to before running the program. The program itself does not need to know the output went to a file.` },
+
+{ n: 6, d: "easy", t: "Pipe bytes from child to parent", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a pipe and a child process. The child writes the three bytes abc into the pipe and exits. The parent reads from the pipe and prints the number of bytes it received, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    int fds[2];
+    pipe(fds);
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(fds[0]);
+        ssize_t w = write(fds[1], "abc", 3);
+        close(fds[1]);
+        _exit(w == 3 ? 0 : 1);
+    }
+    close(fds[1]);
+    char buf[16];
+    ssize_t n = read(fds[0], buf, sizeof buf);
+    close(fds[0]);
+    waitpid(pid, nullptr, 0);
+    std::printf("%zd\n", n);
+}`,
+  why: String.raw`A pipe is a kernel buffer with a read end and a write end. The reader sees end-of-file only after every write end has been closed, which is why the parent closes its copy of the write end.` },
+
+{ n: 7, d: "extension", t: "Observing a zombie process", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a child process that exits immediately, and do not reap it yet. The parent reads the child's state from /proc/<pid>/stat, retrying for up to one second until the state is Z, then prints the state character, then a newline. Finally, the parent reaps the child.`,
+  ex: String.raw`Z`,
+  code: String.raw`#include <cstdio>
+#include <cstring>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) _exit(0);
+    char path[64];
+    std::snprintf(path, sizeof path, "/proc/%d/stat", static_cast<int>(pid));
+    char state = '?';
+    for (int tries = 0; tries < 100 && state != 'Z'; ++tries) {
+        std::FILE* f = std::fopen(path, "r");
+        if (f != nullptr) {
+            char buf[512];
+            if (std::fgets(buf, sizeof buf, f) != nullptr) {
+                const char* p = std::strrchr(buf, ')');
+                if (p != nullptr && p[1] == ' ') state = p[2];
+            }
+            std::fclose(f);
+        }
+        usleep(10000);
+    }
+    std::printf("%c\n", state);
+    waitpid(pid, nullptr, 0);
+}`,
+  why: String.raw`A child that has exited keeps a process table entry until its parent collects its status. That entry is a zombie, and it persists until wait is called.` },
+
+{ n: 8, d: "extension", t: "Delivering a signal to a child", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a child process. The child installs a handler for SIGUSR1 that sets a flag, then tells the parent it is ready through a pipe. The parent waits for that message, then sends SIGUSR1 to the child. The child loops until the flag is set, then prints the flag's value, then a newline. The parent waits for the child to finish.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <csignal>
+#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+static volatile sig_atomic_t got = 0;
+
+static void on_usr1(int) { got = 1; }
+
+int main() {
+    int ready[2];
+    pipe(ready);
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(ready[0]);
+        signal(SIGUSR1, on_usr1);
+        char c = 'r';
+        ssize_t w = write(ready[1], &c, 1);
+        (void)w;
+        close(ready[1]);
+        while (!got) usleep(1000);
+        std::printf("%d\n", static_cast<int>(got));
+        std::fflush(stdout);
+        _exit(0);
+    }
+    close(ready[1]);
+    char c = 0;
+    ssize_t r = read(ready[0], &c, 1);
+    (void)r;
+    close(ready[0]);
+    kill(pid, SIGUSR1);
+    waitpid(pid, nullptr, 0);
+}`,
+  why: String.raw`Signals are asynchronous notifications delivered by the kernel to a process. The handler runs in the middle of normal execution, so it should only set simple flags, and the parent here waits until the handler is installed before sending the signal.` },
+
+{ n: 9, d: "applications", t: "A two-stage pipeline built from fork and pipe", ch: "Ch. 5 · Process API", idiom: "Process API",
+  p: String.raw`Create a pipe and a child process. The child connects its standard input to the read end of the pipe and then replaces itself with the program tr, which translates lowercase letters to uppercase. The parent writes hello followed by a newline into the pipe, closes it, and waits for the child. The output of tr appears on the standard output.`,
+  ex: String.raw`HELLO`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    int p[2];
+    pipe(p);
+    std::fflush(stdout);
+    pid_t tr = fork();
+    if (tr == 0) {
+        dup2(p[0], STDIN_FILENO);
+        close(p[0]);
+        close(p[1]);
+        execlp("tr", "tr", "a-z", "A-Z", static_cast<char*>(nullptr));
+        _exit(127);
+    }
+    close(p[0]);
+    const char msg[] = "hello\n";
+    ssize_t w = write(p[1], msg, sizeof msg - 1);
+    (void)w;
+    close(p[1]);
+    waitpid(tr, nullptr, 0);
+}`,
+  why: String.raw`This is how a shell runs cmd1 | cmd2: fork each command, wire descriptors with pipe and dup2, and exec. The data flows through a kernel buffer and never through a file.` },
+
+{ n: 10, d: "easy", t: "A failed system call reports errno", ch: "Ch. 6 · Direct Execution", idiom: "Direct Execution",
+  p: String.raw`Try to open the path /nonexistent/dir/file.txt for reading. Print the returned descriptor, a space, and 1 if errno is ENOENT, else 0, then a newline.`,
+  ex: String.raw`-1 1`,
+  code: String.raw`#include <cerrno>
+#include <cstdio>
+#include <fcntl.h>
+
+int main() {
+    int fd = open("/nonexistent/dir/file.txt", O_RDONLY);
+    std::printf("%d %d\n", fd, errno == ENOENT);
+}`,
+  why: String.raw`System calls cross from user mode into the kernel and come back with a return value. A failure is reported by returning -1 and setting errno, which is how the kernel signals a rejected request.` },
+
+{ n: 11, d: "easy", t: "The kernel rejects a write on a read-only descriptor", ch: "Ch. 6 · Direct Execution", idiom: "Direct Execution",
+  p: String.raw`Open /dev/null for reading only. Try to write one byte to it. Print the return value of the write, a space, and 1 if errno is EBADF, else 0, then a newline.`,
+  ex: String.raw`-1 1`,
+  code: String.raw`#include <cerrno>
+#include <cstdio>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main() {
+    int fd = open("/dev/null", O_RDONLY);
+    ssize_t w = write(fd, "x", 1);
+    std::printf("%zd %d\n", w, errno == EBADF);
+    close(fd);
+}`,
+  why: String.raw`The kernel checks each request against the access rights stored with the descriptor, so a program cannot write through a descriptor that was opened only for reading.` },
+
+{ n: 12, d: "easy", t: "FIFO average turnaround time", ch: "Ch. 7 · CPU Scheduling", idiom: "CPU Scheduling",
+  p: String.raw`Three jobs arrive at time 0 in the order A, B, C, with run times 200, 100 and 50. They run to completion one after another in arrival order. Compute the average turnaround time, where turnaround is the completion time. Print it with two decimal places, then a newline.`,
+  ex: String.raw`283.33`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    int burst[] = {200, 100, 50};
+    int t = 0, sum = 0;
+    for (int b : burst) {
+        t += b;
+        sum += t;
+    }
+    std::printf("%.2f\n", sum / 3.0);
+}`,
+  why: String.raw`FIFO (first come, first served) is simple, but a long job at the front delays all the short jobs behind it. Turnaround time makes that cost visible.` },
+
+{ n: 13, d: "easy", t: "Shortest job first average turnaround", ch: "Ch. 7 · CPU Scheduling", idiom: "CPU Scheduling",
+  p: String.raw`The same three jobs arrive at time 0, with run times 200, 100 and 50. This time the scheduler runs them to completion in order of increasing run time. Compute the average turnaround time and print it with two decimal places, then a newline.`,
+  ex: String.raw`183.33`,
+  code: String.raw`#include <algorithm>
+#include <cstdio>
+#include <vector>
+
+int main() {
+    std::vector<int> burst{200, 100, 50};
+    std::sort(burst.begin(), burst.end());
+    int t = 0, sum = 0;
+    for (int b : burst) {
+        t += b;
+        sum += t;
+    }
+    std::printf("%.2f\n", sum / 3.0);
+}`,
+  why: String.raw`Running the shortest job first minimizes average turnaround when all jobs arrive together. The trade-off is that the scheduler needs to know run times in advance.` },
+
+{ n: 14, d: "easy", t: "Round-robin average response time", ch: "Ch. 7 · CPU Scheduling", idiom: "CPU Scheduling",
+  p: String.raw`Three jobs arrive at time 0, each needing 5 units of CPU. The scheduler gives each job one unit at a time, cycling through the jobs in order A, B, C, and the job goes to the back of the queue if it has work left. Response time is the time at which a job first runs. Compute the average response time and print it with two decimal places, then a newline.`,
+  ex: String.raw`1.00`,
+  code: String.raw`#include <cstdio>
+#include <deque>
+#include <vector>
+
+struct Job {
+    int remaining;
+    int first_run = -1;
+};
+
+int main() {
+    std::deque<int> q{0, 1, 2};
+    std::vector<Job> jobs{{5}, {5}, {5}};
+    int t = 0;
+    while (!q.empty()) {
+        int j = q.front();
+        q.pop_front();
+        if (jobs[j].first_run < 0) jobs[j].first_run = t;
+        ++t;
+        if (--jobs[j].remaining > 0) q.push_back(j);
+    }
+    double sum = 0;
+    for (const auto& j : jobs) sum += j.first_run;
+    std::printf("%.2f\n", sum / jobs.size());
+}`,
+  why: String.raw`Round-robin keeps response time low for interactive work, at the cost of turnaround time. Its quantum is the trade-off knob.` },
+
+{ n: 15, d: "medium", t: "Priority demotion in a multi-level queue", ch: "Ch. 8 · Multi-level Feedback", idiom: "Multi-level Feedback",
+  p: String.raw`A job needs 25 units of CPU. It starts at the highest of three queue levels, where each level gives a quantum of 10 units. A job that uses its whole quantum without finishing moves down one level, and a job never moves below the lowest level. Count the demotions, and the time at which the job finishes. Print the demotions, a space, and the finish time, then a newline.`,
+  ex: String.raw`2 25`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    int remaining = 25;
+    int level = 2;
+    int demotions = 0;
+    int time = 0;
+    while (remaining > 0) {
+        int slice = remaining < 10 ? remaining : 10;
+        remaining -= slice;
+        time += slice;
+        if (remaining > 0 && slice == 10 && level > 0) {
+            --level;
+            ++demotions;
+        }
+    }
+    std::printf("%d %d\n", demotions, time);
+}`,
+  why: String.raw`MLFQ infers from a job's behavior whether it is interactive or CPU-bound. Jobs that keep using their full quantum sink to lower queues, where they run less often.` },
+
+{ n: 16, d: "medium", t: "Lottery draws decide the winner", ch: "Ch. 9 · Lottery Scheduling", idiom: "Lottery Scheduling",
+  p: String.raw`Job A holds 3 tickets and job B holds 1 ticket, for 4 tickets in total. Six draws are given as the numbers 0, 4, 2, 7, 5 and 1. For each draw, the winning ticket is the number modulo 4. Tickets numbered 0 to 2 belong to A, and ticket 3 belongs to B. Count the wins for A and for B. Print A's wins, a space, and B's wins, then a newline.`,
+  ex: String.raw`5 1`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const int tickets_a = 3, tickets_b = 1;
+    const int total = tickets_a + tickets_b;
+    const int draws[] = {0, 4, 2, 7, 5, 1};
+    int a_wins = 0, b_wins = 0;
+    for (int d : draws) {
+        int winner = d % total;
+        if (winner < tickets_a) ++a_wins;
+        else ++b_wins;
+    }
+    std::printf("%d %d\n", a_wins, b_wins);
+}`,
+  why: String.raw`Lottery scheduling is probabilistic: the chance of running is proportional to tickets, so over many draws each job's share converges to its ticket fraction. Short sequences can deviate from that.` },
+
+{ n: 17, d: "medium", t: "Makespan on two CPUs", ch: "Ch. 10 · Multi-CPU Scheduling", idiom: "Multi-CPU Scheduling",
+  p: String.raw`Four jobs with run times 30, 10, 10 and 10 are assigned in that order to two CPUs. Each job goes to the CPU that currently has the least total work. Print the largest total work on any CPU, which is the makespan, then a newline.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <algorithm>
+#include <cstdio>
+#include <vector>
+
+int main() {
+    std::vector<int> jobs{30, 10, 10, 10};
+    std::vector<int> load(2, 0);
+    for (int j : jobs) {
+        auto it = std::min_element(load.begin(), load.end());
+        *it += j;
+    }
+    std::printf("%d\n", *std::max_element(load.begin(), load.end()));
+}`,
+  why: String.raw`On multiple CPUs the finish time of a batch depends on how work is balanced, not only on its total. A single long job sets a floor on the makespan that no assignment can beat.` },
+
+{ n: 18, d: "easy", t: "Changes in a child are invisible to the parent", ch: "Ch. 13 · Address Spaces", idiom: "Address Spaces",
+  p: String.raw`Let x be an int equal to 1. Create a child process. The child sets x to 2 and prints child, a space, and x, then a space. The parent waits for the child, then prints parent, a space, and its own value of x, then a newline.`,
+  ex: String.raw`child 2 parent 1`,
+  code: String.raw`#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+    int x = 1;
+    std::fflush(stdout);
+    pid_t pid = fork();
+    if (pid == 0) {
+        x = 2;
+        std::printf("child %d ", x);
+        std::fflush(stdout);
+        _exit(0);
+    }
+    waitpid(pid, nullptr, 0);
+    std::printf("parent %d\n", x);
+}`,
+  why: String.raw`Each process has its own address space. After fork the two copies start with the same contents, but a write in one is not seen by the other, which is what makes address spaces a protection boundary.` },
+
+{ n: 19, d: "easy", t: "Growing a heap block keeps its contents", ch: "Ch. 14 · Memory API", idiom: "Memory API",
+  p: String.raw`Allocate a heap array of three ints, and set them to 1, 2 and 3. Resize the block to hold one hundred ints. Print the first element, a space, and the third element, then a newline. Free the block.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <cstdio>
+#include <cstdlib>
+
+int main() {
+    int* a = static_cast<int*>(std::malloc(3 * sizeof(int)));
+    a[0] = 1;
+    a[1] = 2;
+    a[2] = 3;
+    a = static_cast<int*>(std::realloc(a, 100 * sizeof(int)));
+    std::printf("%d %d\n", a[0], a[2]);
+    std::free(a);
+}`,
+  why: String.raw`realloc may move a block to a new address, but it copies the old contents. Programs must use the returned pointer and never the old one.` },
+
+{ n: 20, d: "easy", t: "Base and bounds translation", ch: "Ch. 15 · Address Translation", idiom: "Address Translation",
+  p: String.raw`A process has a base of 0x1000 and a bound of 0x100. Write a function that maps a virtual address to a physical address by adding the base, or returns -1 if the virtual address is at or beyond the bound. Print the translation of virtual address 0x20, a space, and the translation of 0x200, then a newline.`,
+  ex: String.raw`4128 -1`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const unsigned base = 0x1000, bound = 0x100;
+    auto translate = [&](unsigned va) -> long {
+        if (va >= bound) return -1;
+        return static_cast<long>(base + va);
+    };
+    std::printf("%ld %ld\n", translate(0x20), translate(0x200));
+}`,
+  why: String.raw`Base-and-bounds hardware adds a base register to every virtual address and checks it against a limit. The check is what prevents a process from reaching memory outside its own region.` },
+
+{ n: 21, d: "easy", t: "Segment selection from a virtual address", ch: "Ch. 16 · Segmentation", idiom: "Segmentation",
+  p: String.raw`The address space uses 14-bit virtual addresses. The top two bits select one of four segments, and the low twelve bits are the offset. Segment 0 has base 32768, segment 1 has base 34816, segment 2 has base 28672, and segment 3 is unused. Translate virtual address 0x1068 by adding the offset to the base of the selected segment. Print the physical address, then a newline.`,
+  ex: String.raw`34920`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    struct Seg { unsigned base, bounds; };
+    Seg segs[4] = {{32768, 2048}, {34816, 2048}, {28672, 2048}, {0, 0}};
+    unsigned va = 0x1068;
+    unsigned s = (va >> 12) & 0x3;
+    unsigned off = va & 0xFFF;
+    std::printf("%u\n", segs[s].base + off);
+}`,
+  why: String.raw`Segmentation gives each segment its own base and bounds, so code, heap and stack can sit in separate regions of physical memory.` },
+
+{ n: 22, d: "easy", t: "First fit and best fit on a free list", ch: "Ch. 17 · Free-space Management", idiom: "Free-space Management",
+  p: String.raw`A free list holds holes of sizes 10, 30 and 20, in that order. A request for 15 units arrives. The first-fit policy takes the first hole large enough, and the best-fit policy takes the smallest hole large enough. Print the size chosen by first fit, a space, and the size chosen by best fit, then a newline.`,
+  ex: String.raw`30 20`,
+  code: String.raw`#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+
+int main() {
+    std::vector<int> holes{10, 30, 20};
+    int request = 15;
+    auto first = std::find_if(holes.begin(), holes.end(),
+                              [&](int h) { return h >= request; });
+    auto best = holes.end();
+    for (auto it = holes.begin(); it != holes.end(); ++it) {
+        if (*it >= request && (best == holes.end() || *it < *best)) best = it;
+    }
+    std::printf("%d %d\n", *first, *best);
+}`,
+  why: String.raw`Choosing where to allocate from changes both speed and fragmentation. First fit is fast, while best fit leaves large holes intact at the cost of searching the whole list.` },
+
+{ n: 23, d: "medium", t: "Splitting addresses into page number and offset", ch: "Ch. 18 · Paging", idiom: "Paging",
+  p: String.raw`The address space has 16-byte pages. For each virtual address 0, 21 and 63, print its virtual page number, a space, and its offset within the page, then a newline.`,
+  ex: String.raw`0 0 1 5 3 15`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const unsigned page = 16;
+    unsigned addrs[] = {0, 21, 63};
+    for (unsigned va : addrs) std::printf("%u %u\n", va / page, va % page);
+}`,
+  why: String.raw`With a power-of-two page size, the page number is the high bits of the address and the offset is the low bits. Hardware does this split with shifts and masks instead of division.` },
+
+{ n: 24, d: "medium", t: "TLB hits and misses under LRU", ch: "Ch. 19 · Translation Lookaside Buffers", idiom: "Translation Lookaside Buffers",
+  p: String.raw`A TLB holds four translations and evicts the least recently used one when full. Process the page references 0, 1, 2, 0, 3, 4, 0 in order. Count hits and misses. Print the number of hits, a space, and the number of misses, then a newline.`,
+  ex: String.raw`2 5`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <cstdio>
+#include <list>
+
+int main() {
+    const std::size_t cap = 4;
+    std::list<int> tlb;
+    int hits = 0, misses = 0;
+    const int refs[] = {0, 1, 2, 0, 3, 4, 0};
+    for (int vpn : refs) {
+        auto it = std::find(tlb.begin(), tlb.end(), vpn);
+        if (it != tlb.end()) {
+            ++hits;
+            tlb.erase(it);
+        } else {
+            ++misses;
+            if (tlb.size() == cap) tlb.pop_back();
+        }
+        tlb.push_front(vpn);
+    }
+    std::printf("%d %d\n", hits, misses);
+}`,
+  why: String.raw`The TLB caches recent translations. Its hit rate depends on the locality of the reference stream, and a miss costs a full page-table walk.` },
+
+{ n: 25, d: "medium", t: "Two-level page table indices", ch: "Ch. 20 · Advanced Page Tables", idiom: "Advanced Page Tables",
+  p: String.raw`A 32-bit virtual address uses 4 KB pages and a two-level page table, where the top 10 bits index the page directory, the next 10 bits index the page table, and the low 12 bits are the offset. For the address 0x12345678, print the directory index, a space, the page-table index, a space, and the offset, then a newline.`,
+  ex: String.raw`72 837 1656`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    unsigned va = 0x12345678u;
+    std::printf("%u %u %u\n", va >> 22, (va >> 12) & 0x3FF, va & 0xFFF);
+}`,
+  why: String.raw`Multi-level tables only allocate the second-level tables that are actually used, so sparse address spaces cost far less memory than a flat table would.` },
+
+{ n: 26, d: "medium", t: "Demand paging with a fault handler", ch: "Ch. 21 · Swapping: Mechanisms", idiom: "Swapping: Mechanisms",
+  p: String.raw`Map one page of anonymous memory with no access rights. Install a SIGSEGV handler that counts the fault and grants read and write access to the page. Write the value 42 to the first byte of the page, then print the number of faults, a space, and the value read back from that byte, then a newline.`,
+  ex: String.raw`1 42`,
+  code: String.raw`#include <csignal>
+#include <cstdio>
+#include <sys/mman.h>
+#include <unistd.h>
+
+static volatile sig_atomic_t faults = 0;
+static char* page = nullptr;
+static long pg = 0;
+
+static void on_fault(int, siginfo_t*, void*) {
+    faults = faults + 1;
+    mprotect(page, static_cast<size_t>(pg), PROT_READ | PROT_WRITE);
+}
+
+int main() {
+    pg = sysconf(_SC_PAGESIZE);
+    page = static_cast<char*>(mmap(nullptr, static_cast<size_t>(pg), PROT_NONE,
+                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    struct sigaction sa {};
+    sa.sa_sigaction = on_fault;
+    sa.sa_flags = SA_SIGINFO;
+    sigaction(SIGSEGV, &sa, nullptr);
+    page[0] = 42;
+    std::printf("%d %d\n", static_cast<int>(faults), page[0]);
+}`,
+  why: String.raw`A page fault is the mechanism behind demand paging and swapping: the access traps to the kernel, which can map the page and let the instruction retry. This program plays the kernel's role in user space with a signal handler.` },
+
+{ n: 27, d: "medium", t: "Counting misses for three replacement policies", ch: "Ch. 22 · Swapping: Policies", idiom: "Swapping: Policies",
+  p: String.raw`Memory holds three pages. The page references are 0, 1, 2, 0, 1, 3, 0, 3, 1, 2 in order. Simulate FIFO, LRU and optimal replacement, where optimal evicts the page whose next use is farthest in the future. Print the miss count for FIFO, a space, the miss count for LRU, a space, and the miss count for optimal, then a newline.`,
+  ex: String.raw`7 5 5`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <cstdio>
+#include <deque>
+#include <vector>
+
+int main() {
+    const int refs[] = {0, 1, 2, 0, 1, 3, 0, 3, 1, 2};
+    const int n = 10;
+    const std::size_t frames = 3;
+
+    int fifo_miss = 0;
+    {
+        std::deque<int> q;
+        for (int r : refs) {
+            if (std::find(q.begin(), q.end(), r) == q.end()) {
+                ++fifo_miss;
+                if (q.size() == frames) q.pop_front();
+                q.push_back(r);
+            }
+        }
+    }
+
+    int lru_miss = 0;
+    {
+        std::deque<int> q;
+        for (int r : refs) {
+            auto it = std::find(q.begin(), q.end(), r);
+            if (it != q.end()) {
+                q.erase(it);
+            } else {
+                ++lru_miss;
+                if (q.size() == frames) q.pop_back();
+            }
+            q.push_front(r);
+        }
+    }
+
+    int opt_miss = 0;
+    {
+        std::vector<int> mem;
+        for (int i = 0; i < n; ++i) {
+            int r = refs[i];
+            if (std::find(mem.begin(), mem.end(), r) != mem.end()) continue;
+            ++opt_miss;
+            if (mem.size() < frames) {
+                mem.push_back(r);
+                continue;
+            }
+            int victim = 0, far = -1;
+            for (std::size_t k = 0; k < mem.size(); ++k) {
+                int next = n;
+                for (int j = i + 1; j < n; ++j) {
+                    if (refs[j] == mem[k]) {
+                        next = j;
+                        break;
+                    }
+                }
+                if (next > far) {
+                    far = next;
+                    victim = static_cast<int>(k);
+                }
+            }
+            mem[victim] = r;
+        }
+    }
+
+    std::printf("%d %d %d\n", fifo_miss, lru_miss, opt_miss);
+}`,
+  why: String.raw`FIFO ignores how often a page is used, LRU assumes the recent past predicts the future, and optimal needs future knowledge that a real system never has. Comparing them against optimal shows how much room a real policy has.` },
+
+{ n: 28, d: "medium", t: "Locked counter across two threads", ch: "Ch. 26 · Concurrency and Threads", idiom: "Concurrency and Threads",
+  p: String.raw`Start two threads. Each increments a shared long counter one million times, and each increment is protected by a mutex. Join both threads and print the final value of the counter, then a newline.`,
+  ex: String.raw`2000000`,
+  code: String.raw`#include <cstdio>
+#include <mutex>
+#include <thread>
+
+int main() {
+    long counter = 0;
+    std::mutex m;
+    auto work = [&] {
+        for (int i = 0; i < 1000000; ++i) {
+            std::lock_guard<std::mutex> g(m);
+            ++counter;
+        }
+    };
+    std::thread a(work), b(work);
+    a.join();
+    b.join();
+    std::printf("%ld\n", counter);
+}`,
+  why: String.raw`Without the lock, increments from two threads can interleave, and updates are lost. The mutex makes each read-modify-write indivisible with respect to the other thread.` },
+
+{ n: 29, d: "medium", t: "Returning a value from a thread", ch: "Ch. 27 · Thread API", idiom: "Thread API",
+  p: String.raw`Create a POSIX thread, passing it a struct holding the int 21. The thread stores twice its argument in a static int and returns a pointer to that int. Join the thread, and print the int that the returned pointer points to, then a newline.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <cstdio>
+#include <pthread.h>
+
+struct Args {
+    int x;
+};
+
+static int result = 0;
+
+void* worker(void* p) {
+    result = static_cast<Args*>(p)->x * 2;
+    return &result;
+}
+
+int main() {
+    Args a{21};
+    pthread_t t;
+    pthread_create(&t, nullptr, worker, &a);
+    void* ret = nullptr;
+    pthread_join(t, &ret);
+    std::printf("%d\n", *static_cast<int*>(ret));
+}`,
+  why: String.raw`The thread API passes a single void pointer in and out, so the program casts it back to the type it knows. Anything returned by pointer must outlive the thread, which is why this one is static.` },
+
+{ n: 30, d: "medium", t: "trylock on a held mutex", ch: "Ch. 28 · Locks", idiom: "Locks",
+  p: String.raw`Create and lock a mutex. Try to lock it again without blocking, and print 1 if the attempt fails with EBUSY, else 0. Unlock the mutex, try again, and print 1 if the attempt now succeeds, else 0, then a newline. Unlock the mutex again at the end.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <cerrno>
+#include <cstdio>
+#include <pthread.h>
+
+int main() {
+    pthread_mutex_t m;
+    pthread_mutex_init(&m, nullptr);
+    pthread_mutex_lock(&m);
+    int busy = pthread_mutex_trylock(&m) == EBUSY;
+    pthread_mutex_unlock(&m);
+    int free_now = pthread_mutex_trylock(&m) == 0;
+    pthread_mutex_unlock(&m);
+    pthread_mutex_destroy(&m);
+    std::printf("%d %d\n", busy, free_now);
+}`,
+  why: String.raw`A lock tells callers whether it is held, and a non-blocking attempt lets a thread do other work instead of waiting. The mutex's own state, not the thread, decides whether the attempt succeeds.` },
+
+{ n: 31, d: "applications", t: "Transfers that conserve the total", ch: "Ch. 28 · Locks", idiom: "Locks",
+  p: String.raw`Four bank accounts each start with 250. Four threads each make 2000 transfers between accounts, moving a small amount from one account to another. Each account has its own mutex, and a transfer locks the two accounts in order of their index to avoid deadlock. After all threads finish, print the sum of all balances, then a newline.`,
+  ex: String.raw`1000`,
+  code: String.raw`#include <cstdio>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    const int n = 4;
+    std::vector<int> balance(n, 250);
+    std::vector<std::mutex> locks(n);
+    auto transfer = [&](int from, int to, int amount) {
+        int first = from < to ? from : to;
+        int second = from < to ? to : from;
+        std::lock_guard<std::mutex> l1(locks[first]);
+        std::lock_guard<std::mutex> l2(locks[second]);
+        balance[from] -= amount;
+        balance[to] += amount;
+    };
+    auto worker = [&](int seed) {
+        for (int i = 0; i < 2000; ++i) {
+            int from = (seed + i) % n;
+            int to = (seed + 3 * i + 1) % n;
+            if (from != to) transfer(from, to, 1 + i % 5);
+        }
+    };
+    std::vector<std::thread> ts;
+    for (int s = 0; s < 4; ++s) ts.emplace_back(worker, s);
+    for (auto& t : ts) t.join();
+    int total = 0;
+    for (int b : balance) total += b;
+    std::printf("%d\n", total);
+}`,
+  why: String.raw`Every transfer subtracts from one balance and adds to another, so the total never changes if the transfers are atomic. Locking in a fixed order is what lets many transfers run in parallel without a circular wait.` },
+
+{ n: 32, d: "medium", t: "Sloppy counter with local buffers", ch: "Ch. 29 · Locked Data Structures", idiom: "Locked Data Structures",
+  p: String.raw`Four threads each perform 1000 increments of a shared counter. Each thread keeps a local count, and flushes it into the shared counter under a mutex whenever the local count reaches 10, and once more at the end. Join all threads and print the shared counter, then a newline.`,
+  ex: String.raw`4000`,
+  code: String.raw`#include <cstdio>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    const int S = 10, nthreads = 4, per_thread = 1000;
+    long global = 0;
+    std::mutex m;
+    auto worker = [&] {
+        int local = 0;
+        for (int i = 0; i < per_thread; ++i) {
+            if (++local == S) {
+                std::lock_guard<std::mutex> g(m);
+                global += local;
+                local = 0;
+            }
+        }
+        std::lock_guard<std::mutex> g(m);
+        global += local;
+    };
+    std::vector<std::thread> ts;
+    for (int i = 0; i < nthreads; ++i) ts.emplace_back(worker);
+    for (auto& t : ts) t.join();
+    std::printf("%ld\n", global);
+}`,
+  why: String.raw`Taking the lock on every increment is correct but slow under contention. Batching updates through a local buffer trades a small, bounded error during the run for far fewer lock acquisitions, and the final value is still exact.` },
+
+{ n: 33, d: "medium", t: "Producer and consumer with a condition variable", ch: "Ch. 30 · Condition Variables", idiom: "Condition Variables",
+  p: String.raw`A producer thread puts the values 1 to 5 into a single slot, one at a time, waiting while the slot is full. A consumer thread takes each value out, waiting while the slot is empty, and adds it to a sum. Use a mutex and a condition variable. Join both threads and print the sum, then a newline.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <condition_variable>
+#include <cstdio>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    bool full = false;
+    int slot = 0;
+    int sum = 0;
+    std::thread producer([&] {
+        for (int i = 1; i <= 5; ++i) {
+            std::unique_lock<std::mutex> lk(m);
+            cv.wait(lk, [&] { return !full; });
+            slot = i;
+            full = true;
+            cv.notify_all();
+        }
+    });
+    std::thread consumer([&] {
+        for (int i = 0; i < 5; ++i) {
+            std::unique_lock<std::mutex> lk(m);
+            cv.wait(lk, [&] { return full; });
+            sum += slot;
+            full = false;
+            cv.notify_all();
+        }
+    });
+    producer.join();
+    consumer.join();
+    std::printf("%d\n", sum);
+}`,
+  why: String.raw`A condition variable lets a thread sleep until a shared condition becomes true, instead of spinning. The wait must re-check the condition in a loop, which the predicate form does for you.` },
+
+{ n: 34, d: "medium", t: "Counting semaphore permits", ch: "Ch. 31 · Semaphores", idiom: "Semaphores",
+  p: String.raw`Create a POSIX semaphore with an initial value of 2. Attempt to decrement it three times without blocking. Print 1 if each attempt succeeds, else 0, separated by spaces, then a newline.`,
+  ex: String.raw`1 1 0`,
+  code: String.raw`#include <cstdio>
+#include <semaphore.h>
+
+int main() {
+    sem_t s;
+    sem_init(&s, 0, 2);
+    int a = sem_trywait(&s) == 0;
+    int b = sem_trywait(&s) == 0;
+    int c = sem_trywait(&s) == 0;
+    std::printf("%d %d %d\n", a, b, c);
+    sem_destroy(&s);
+}`,
+  why: String.raw`A semaphore is a counter that threads decrement to acquire a permit and increment to release one. When it reaches zero, further acquisitions must wait.` },
+
+{ n: 35, d: "medium", t: "Using a semaphore to order two threads", ch: "Ch. 31 · Semaphores", idiom: "Semaphores",
+  p: String.raw`Create a semaphore with an initial value of 0. A child thread prints child followed by a space, then signals the semaphore. The main thread waits on the semaphore, then prints parent followed by a newline. Join the child thread before exiting.`,
+  ex: String.raw`child parent`,
+  code: String.raw`#include <cstdio>
+#include <semaphore.h>
+#include <thread>
+
+int main() {
+    sem_t ready;
+    sem_init(&ready, 0, 0);
+    std::thread child([&] {
+        std::printf("child ");
+        std::fflush(stdout);
+        sem_post(&ready);
+    });
+    sem_wait(&ready);
+    std::printf("parent\n");
+    child.join();
+    sem_destroy(&ready);
+}`,
+  why: String.raw`A semaphore initialized to zero works as a signal: one thread waits, and another posts it once the event has happened. This enforces an order between the two threads.` },
+
+{ n: 36, d: "extension", t: "Barrier that holds every thread until all arrive", ch: "Ch. 31 · Semaphores", idiom: "Semaphores",
+  p: String.raw`Start three threads that each record a before event, then wait at a barrier until all three have arrived, then record an after event. Use a mutex, a condition variable and a counter to build the barrier. After joining all threads, check that every before event is recorded before every after event, and print ok if so, else bad, then a newline.`,
+  ex: String.raw`ok`,
+  code: String.raw`#include <condition_variable>
+#include <cstdio>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    const int n = 3;
+    std::mutex m;
+    std::condition_variable cv;
+    int arrived = 0;
+    std::vector<int> order;
+    auto worker = [&] {
+        std::unique_lock<std::mutex> lk(m);
+        order.push_back(0);
+        if (++arrived == n) cv.notify_all();
+        else cv.wait(lk, [&] { return arrived == n; });
+        order.push_back(1);
+    };
+    std::vector<std::thread> ts;
+    for (int i = 0; i < n; ++i) ts.emplace_back(worker);
+    for (auto& t : ts) t.join();
+    bool ok = true;
+    for (int i = 0; i < n; ++i)
+        if (order[i] != 0) ok = false;
+    for (int i = n; i < 2 * n; ++i)
+        if (order[i] != 1) ok = false;
+    std::printf("%s\n", ok ? "ok" : "bad");
+}`,
+  why: String.raw`A barrier makes a group of threads synchronize at a phase boundary. Every thread must wait for the last arrival, which is why all before events come first.` },
+
+{ n: 37, d: "medium", t: "Consistent lock order avoids deadlock", ch: "Ch. 32 · Concurrency Bugs", idiom: "Concurrency Bugs",
+  p: String.raw`Two mutexes, A and B, protect a shared counter. Two threads each perform 1000 iterations, and in each iteration they lock A and then B, increment the counter, and unlock both. Join both threads, then print done if the counter equals 2000, else wrong, then a newline.`,
+  ex: String.raw`done`,
+  code: String.raw`#include <cstdio>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex a, b;
+    int count = 0;
+    auto work = [&] {
+        for (int i = 0; i < 1000; ++i) {
+            std::lock_guard<std::mutex> la(a);
+            std::lock_guard<std::mutex> lb(b);
+            ++count;
+        }
+    };
+    std::thread t1(work), t2(work);
+    t1.join();
+    t2.join();
+    std::printf("%s\n", count == 2000 ? "done" : "wrong");
+}`,
+  why: String.raw`Deadlock needs a cycle of threads each waiting for a lock the next one holds. Acquiring locks in one global order makes such a cycle impossible.` },
+
+{ n: 38, d: "medium", t: "Event loop over two pipes", ch: "Ch. 33 · Event-based Concurrency", idiom: "Event-based Concurrency",
+  p: String.raw`Create two pipes. Write the two bytes ab into the first pipe and the one byte c into the second. Using a single poll loop, wait until data is readable on either pipe, read whatever is available from each readable pipe, and stop once three bytes have been read in total. Print the number of read events, a space, and the total number of bytes read, then a newline.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <cstdio>
+#include <poll.h>
+#include <unistd.h>
+
+int main() {
+    int p1[2], p2[2];
+    pipe(p1);
+    pipe(p2);
+    if (write(p1[1], "ab", 2) != 2) return 1;
+    if (write(p2[1], "c", 1) != 1) return 1;
+    pollfd fds[2] = {{p1[0], POLLIN, 0}, {p2[0], POLLIN, 0}};
+    int events = 0, bytes = 0;
+    char buf[64];
+    while (bytes < 3) {
+        int r = poll(fds, 2, -1);
+        if (r <= 0) break;
+        for (auto& f : fds) {
+            if (f.fd >= 0 && (f.revents & POLLIN)) {
+                ssize_t n = read(f.fd, buf, sizeof buf);
+                if (n > 0) {
+                    ++events;
+                    bytes += static_cast<int>(n);
+                }
+                f.fd = -1;
+            }
+        }
+    }
+    std::printf("%d %d\n", events, bytes);
+}`,
+  why: String.raw`An event loop does not block on one connection at a time. It waits on many descriptors together and handles whichever is ready, which is the structure behind servers that handle many clients on one thread.` },
+
+{ n: 39, d: "hard", t: "Polling a device until it is ready", ch: "Ch. 36 · I/O Devices", idiom: "I/O Devices",
+  p: String.raw`A device becomes ready at tick 3 of a clock that starts at 0 and advances by one after each check. The program checks the device at each tick, starting with tick 0, and stops at the first check that finds the device ready. Print the number of checks made, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const int ready_at = 3;
+    int tick = 0;
+    int polls = 0;
+    while (true) {
+        ++polls;
+        if (tick >= ready_at) break;
+        ++tick;
+    }
+    std::printf("%d\n", polls);
+}`,
+  why: String.raw`Polling spends CPU time checking the device over and over, while interrupts let the device notify the CPU instead. Polling is the simplest model and is best when the wait is short.` },
+
+{ n: 40, d: "hard", t: "Average rotational delay of a disk", ch: "Ch. 37 · Hard Disk Drives", idiom: "Hard Disk Drives",
+  p: String.raw`A disk spins at 7200 RPM. On average, the desired sector is half a revolution away. Compute the average rotational delay in milliseconds, print it with two decimal places, then a newline.`,
+  ex: String.raw`4.17`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const double rpm = 7200.0;
+    double full_rev_ms = 60000.0 / rpm;
+    std::printf("%.2f\n", full_rev_ms / 2.0);
+}`,
+  why: String.raw`Rotational delay is often the largest part of a random disk access. Its average is half a revolution, which is why faster spindles reduce latency.` },
+
+{ n: 41, d: "hard", t: "Total head movement under two schedulers", ch: "Ch. 37 · Hard Disk Drives", idiom: "Hard Disk Drives",
+  p: String.raw`The disk head starts at track 53. The pending requests, in arrival order, are tracks 98, 183, 37, 122, 14, 124, 65 and 67. First, compute the total head movement if requests are served in arrival order. Second, compute the total head movement if at each step the nearest pending request is served. Print the first total, a space, and the second total, then a newline.`,
+  ex: String.raw`640 236`,
+  code: String.raw`#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+
+int main() {
+    const int head = 53;
+    const std::vector<int> reqs{98, 183, 37, 122, 14, 124, 65, 67};
+
+    int fcfs = 0, cur = head;
+    for (int r : reqs) {
+        fcfs += std::abs(r - cur);
+        cur = r;
+    }
+
+    std::vector<int> pending = reqs;
+    int sstf = 0;
+    cur = head;
+    while (!pending.empty()) {
+        auto it = std::min_element(pending.begin(), pending.end(),
+            [&](int a, int b) { return std::abs(a - cur) < std::abs(b - cur); });
+        sstf += std::abs(*it - cur);
+        cur = *it;
+        pending.erase(it);
+    }
+    std::printf("%d %d\n", fcfs, sstf);
+}`,
+  why: String.raw`Serving requests in arrival order can make the head zigzag across the disk. Choosing the nearest request reduces movement, but can starve requests far from the head, which is why schedulers such as SCAN exist.` },
+
+{ n: 42, d: "hard", t: "RAID-4 parity and reconstruction", ch: "Ch. 38 · Redundant Disk Arrays (RAID)", idiom: "Redundant Disk Arrays (RAID)",
+  p: String.raw`A RAID-4 stripe has three data blocks with values 0b1010, 0b0110 and 0b0011, and one parity block that stores the bitwise XOR of the data blocks. Compute the parity. Then assume the second data block is lost, and reconstruct it from the parity and the other two data blocks. Print the parity, a space, and the reconstructed value, then a newline.`,
+  ex: String.raw`15 6`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    unsigned b0 = 0b1010, b1 = 0b0110, b2 = 0b0011;
+    unsigned parity = b0 ^ b1 ^ b2;
+    unsigned recovered = parity ^ b0 ^ b2;
+    std::printf("%u %u\n", parity, recovered);
+}`,
+  why: String.raw`XOR is its own inverse, so parity lets any single missing block be rebuilt from the surviving blocks. This is the basis of RAID-4 and RAID-5 fault tolerance.` },
+
+{ n: 43, d: "hard", t: "Usable capacity of three RAID levels", ch: "Ch. 38 · Redundant Disk Arrays (RAID)", idiom: "Redundant Disk Arrays (RAID)",
+  p: String.raw`Each disk holds 100 blocks. Compute the usable capacity in blocks of a RAID-0 array of 4 disks, a RAID-1 array of 2 disks, and a RAID-5 array of 4 disks. Print the three values separated by spaces, then a newline.`,
+  ex: String.raw`400 100 300`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const int blocks = 100;
+    int raid0 = 4 * blocks;
+    int raid1 = 2 * blocks / 2;
+    int raid5 = (4 - 1) * blocks;
+    std::printf("%d %d %d\n", raid0, raid1, raid5);
+}`,
+  why: String.raw`Striping gives full capacity but no redundancy. Mirroring halves capacity, and parity costs one disk's worth of space regardless of array size.` },
+
+{ n: 44, d: "hard", t: "File size and hard link count", ch: "Ch. 39 · Files and Directories", idiom: "Files and Directories",
+  p: String.raw`Remove any existing files /tmp/ostep_file_b.txt, then create /tmp/ostep_file_a.txt holding the ten bytes 0123456789. Create a hard link named /tmp/ostep_file_b.txt to it. Use stat on the first file to print its size, a space, and its link count, then a newline. Remove both files at the end.`,
+  ex: String.raw`10 2`,
+  code: String.raw`#include <cstdio>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+int main() {
+    const char* a = "/tmp/ostep_file_a.txt";
+    const char* b = "/tmp/ostep_file_b.txt";
+    unlink(b);
+    int fd = open(a, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    ssize_t w = write(fd, "0123456789", 10);
+    (void)w;
+    close(fd);
+    link(a, b);
+    struct stat st {};
+    stat(a, &st);
+    std::printf("%lld %lu\n", static_cast<long long>(st.st_size),
+                static_cast<unsigned long>(st.st_nlink));
+    unlink(a);
+    unlink(b);
+}`,
+  why: String.raw`A file's name is a directory entry pointing to an inode. Two names can point to the same inode, and the inode's link count records how many names refer to it. The data is freed only when the count reaches zero.` },
+
+{ n: 45, d: "applications", t: "Counting entries in a directory", ch: "Ch. 39 · Files and Directories", idiom: "Files and Directories",
+  p: String.raw`Create the directory /tmp/ostep_dir_demo if it does not exist, and create three empty files in it named a.txt, b.txt and c.txt. List the directory and count its entries, leaving out . and .. Print the count, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <dirent.h>
+#include <cstdio>
+#include <fcntl.h>
+#include <initializer_list>
+#include <string>
+#include <sys/stat.h>
+#include <unistd.h>
+
+int main() {
+    const char* dir = "/tmp/ostep_dir_demo";
+    mkdir(dir, 0755);
+    for (const char* name : {"a.txt", "b.txt", "c.txt"}) {
+        std::string p = std::string(dir) + "/" + name;
+        int fd = open(p.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        close(fd);
+    }
+    int count = 0;
+    DIR* d = opendir(dir);
+    while (dirent* e = readdir(d)) {
+        std::string n = e->d_name;
+        if (n != "." && n != "..") ++count;
+    }
+    closedir(d);
+    std::printf("%d\n", count);
+}`,
+  why: String.raw`A directory is a file whose contents are a list of name-to-inode mappings. Listing it reads those entries, and the . and .. entries are the names that every directory contains for itself and its parent.` },
+
+{ n: 46, d: "hard", t: "Locating an inode on disk", ch: "Ch. 40 · File System Implementation", idiom: "File System Implementation",
+  p: String.raw`The inode table starts at block 12. Each inode is 128 bytes, and each block is 4096 bytes. For inode numbers 32 and 40, compute the block that holds the inode and its byte offset within that block. Print block, a space, offset, a space, block, a space, and offset for the two inodes in that order, then a newline.`,
+  ex: String.raw`13 0 13 1024`,
+  code: String.raw`#include <cstdio>
+#include <initializer_list>
+
+int main() {
+    const unsigned inode_size = 128, block_size = 4096, inode_start = 12;
+    for (unsigned inum : {32u, 40u}) {
+        unsigned byte = inum * inode_size;
+        std::printf("%u %u ", inode_start + byte / block_size, byte % block_size);
+    }
+    std::printf("\n");
+}`,
+  why: String.raw`File systems compute an inode's location from its number with plain arithmetic, so finding a file's metadata needs no search. Several inodes share each block, which is why one disk read can serve several lookups.` },
+
+{ n: 47, d: "hard", t: "Block group of a block", ch: "Ch. 41 · Fast File System (FFS)", idiom: "Fast File System (FFS)",
+  p: String.raw`A disk is divided into groups of 1024 blocks each. For block number 3000, print the index of its group, a space, and its offset within the group, then a newline.`,
+  ex: String.raw`2 952`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const unsigned blocks_per_group = 1024;
+    unsigned block = 3000;
+    std::printf("%u %u\n", block / blocks_per_group, block % blocks_per_group);
+}`,
+  why: String.raw`FFS places related data and metadata in the same block group, so that a file's blocks and inode are close together on disk. Computing a group from a block number is the first step in choosing where to put data.` },
+
+{ n: 48, d: "hard", t: "Recovering committed transactions from a redo log", ch: "Ch. 42 · FSCK and Journaling", idiom: "FSCK and Journaling",
+  p: String.raw`A log holds these records in order: transaction 1 writes A to 1, then transaction 1 commits, then transaction 2 writes B to 2, and transaction 2 never commits. Both A and B start at 0. Replay the log by applying only the writes of committed transactions. Print A's value, a space, and B's value, in the form A=value B=value, then a newline.`,
+  ex: String.raw`A=1 B=0`,
+  code: String.raw`#include <cstdio>
+#include <map>
+#include <string>
+#include <vector>
+
+struct Rec {
+    int txn;
+    char type;
+    std::string key;
+    int val;
+};
+
+int main() {
+    std::vector<Rec> log{
+        {1, 'W', "A", 1},
+        {1, 'C', "", 0},
+        {2, 'W', "B", 2}
+    };
+    std::map<std::string, int> db{{"A", 0}, {"B", 0}};
+    std::map<int, bool> committed;
+    for (const auto& r : log)
+        if (r.type == 'C') committed[r.txn] = true;
+    for (const auto& r : log)
+        if (r.type == 'W' && committed.count(r.txn)) db[r.key] = r.val;
+    std::printf("A=%d B=%d\n", db["A"], db["B"]);
+}`,
+  why: String.raw`A write-ahead log makes a multi-block update recoverable: after a crash, only transactions whose commit record reached the log are redone. The uncommitted write is ignored, so the file system returns to a consistent state.` },
+
+{ n: 49, d: "applications", t: "Atomic replacement of a file by rename", ch: "Ch. 42 · FSCK and Journaling", idiom: "FSCK and Journaling",
+  p: String.raw`Write the text new to the file /tmp/ostep_config.txt.tmp, force it to disk, close it, and then rename it over /tmp/ostep_config.txt. Read the target file back and print its contents, then a newline.`,
+  ex: String.raw`new`,
+  code: String.raw`#include <cstdio>
+#include <unistd.h>
+
+int main() {
+    const char* target = "/tmp/ostep_config.txt";
+    const char* tmp = "/tmp/ostep_config.txt.tmp";
+    std::FILE* f = std::fopen(tmp, "w");
+    std::fputs("new", f);
+    std::fflush(f);
+    fsync(fileno(f));
+    std::fclose(f);
+    std::rename(tmp, target);
+    char buf[16] = {};
+    std::FILE* r = std::fopen(target, "r");
+    if (r != nullptr) {
+        if (std::fgets(buf, sizeof buf, r) == nullptr) buf[0] = '\0';
+        std::fclose(r);
+    }
+    std::printf("%s\n", buf);
+}`,
+  why: String.raw`Renaming within one file system replaces a name atomically, so readers see either the old file or the new one, never a partial write. Forcing the data to disk before the rename keeps that guarantee across a crash.` },
+
+{ n: 50, d: "hard", t: "Blocks appended by a log-structured file system", ch: "Ch. 43 · Log-structured File System (LFS)", idiom: "Log-structured File System (LFS)",
+  p: String.raw`A log-structured file system appends a data block and an updated inode block to its log on every write. Three writes are made to a file. Count the blocks appended to the log and print the count, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    int log_blocks = 0;
+    for (int write = 0; write < 3; ++write) {
+        log_blocks += 1;
+        log_blocks += 1;
+    }
+    std::printf("%d\n", log_blocks);
+}`,
+  why: String.raw`Log-structured file systems turn random writes into sequential appends, which suits disks. The cost moves to cleaning old, partly-dead segments later.` },
+
+{ n: 51, d: "hard", t: "Flash page programming with remapping", ch: "Ch. 44 · Flash-based SSDs", idiom: "Flash-based SSDs",
+  p: String.raw`A flash translation layer maps logical pages to physical pages and always programs the next free physical page. Sixteen logical pages are written once each, in order from 0 to 15, and then logical pages 0 to 3 are written again. Print the number of physical pages programmed, a space, and the number of logical pages that are currently mapped, then a newline.`,
+  ex: String.raw`20 16`,
+  code: String.raw`#include <cstdio>
+#include <map>
+
+int main() {
+    std::map<int, int> ftl;
+    int next_free = 0;
+    auto write_page = [&](int lpn) { ftl[lpn] = next_free++; };
+    for (int i = 0; i < 16; ++i) write_page(i);
+    for (int i = 0; i < 4; ++i) write_page(i);
+    std::printf("%d %d\n", next_free, static_cast<int>(ftl.size()));
+}`,
+  why: String.raw`Flash cannot overwrite a page in place, so an update programs a new page and remaps the logical address. The old physical page becomes garbage that must be erased later, which is the source of write amplification.` },
+
+{ n: 52, d: "hard", t: "Detecting a corrupted block with a checksum", ch: "Ch. 45 · Data Integrity and Protection", idiom: "Data Integrity and Protection",
+  p: String.raw`Compute an 8-bit checksum of the string hello as the sum of its bytes modulo 256, and print it. Then flip the lowest bit of its first character, recompute the checksum, and print 1 if it changed, else 0. Print the two results separated by a space, then a newline.`,
+  ex: String.raw`20 1`,
+  code: String.raw`#include <cstddef>
+#include <cstdio>
+#include <cstring>
+
+unsigned checksum(const char* s) {
+    unsigned sum = 0;
+    for (std::size_t i = 0; i < std::strlen(s); ++i)
+        sum += static_cast<unsigned char>(s[i]);
+    return sum & 0xFF;
+}
+
+int main() {
+    char data[] = "hello";
+    unsigned original = checksum(data);
+    data[0] ^= 1;
+    unsigned after = checksum(data);
+    std::printf("%u %d\n", original, original != after);
+}`,
+  why: String.raw`A checksum stored alongside data lets a reader detect corruption. This simple sum catches a single flipped bit, though real systems use stronger codes such as CRCs.` },
+
+{ n: 53, d: "hard", t: "Duplicate requests do not run twice", ch: "Ch. 48 · Distributed Systems", idiom: "Distributed Systems",
+  p: String.raw`A server keeps a counter and a table of replies keyed by request id. When a request arrives with an id it has already seen, the server returns the stored reply without incrementing the counter. Send request 7 twice, as a client would after a timeout, then print the counter, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <cstdio>
+#include <map>
+
+int main() {
+    int counter = 0;
+    std::map<int, int> replies;
+    auto handle = [&](int id) -> int {
+        auto it = replies.find(id);
+        if (it != replies.end()) return it->second;
+        ++counter;
+        replies[id] = counter;
+        return counter;
+    };
+    handle(7);
+    handle(7);
+    std::printf("%d\n", counter);
+}`,
+  why: String.raw`Over an unreliable network a client may resend a request whose reply was lost. Remembering replies by request id gives at-most-once execution, so a retry does not repeat the side effect.` },
+
+{ n: 54, d: "extension", t: "Attribute cache with a time to live", ch: "Ch. 49 · Network File System (NFS)", idiom: "Network File System (NFS)",
+  p: String.raw`A client caches a file's attributes for 10 time units after fetching them. The attributes are first fetched at time 0. Two requests arrive at times 5 and 12. For each request, if the cached attributes are still valid, count a hit. Otherwise count a miss, and fetch fresh attributes at that time. Print the number of hits, a space, and the number of misses, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <cstdio>
+
+int main() {
+    const int ttl = 10;
+    int fetched_at = 0;
+    int hits = 0, misses = 0;
+    const int requests[] = {5, 12};
+    for (int now : requests) {
+        if (now - fetched_at < ttl) {
+            ++hits;
+        } else {
+            ++misses;
+            fetched_at = now;
+        }
+    }
+    std::printf("%d %d\n", hits, misses);
+}`,
+  why: String.raw`NFS clients trade consistency for speed by caching attributes for a short time. A stale answer is possible inside the window, which is the weaker consistency model that this chapter discusses.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "ostep-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 2, label: "Ch. 4 · Processes", range: "Problems 1–2", badge: null },
+  { from: 3, to: 9, label: "Ch. 5 · Process API", range: "Problems 3–9", badge: null },
+  { from: 10, to: 11, label: "Ch. 6 · Direct Execution", range: "Problems 10–11", badge: null },
+  { from: 12, to: 14, label: "Ch. 7 · CPU Scheduling", range: "Problems 12–14", badge: null },
+  { from: 15, to: 15, label: "Ch. 8 · Multi-level Feedback", range: "Problems 15–15", badge: null },
+  { from: 16, to: 16, label: "Ch. 9 · Lottery Scheduling", range: "Problems 16–16", badge: null },
+  { from: 17, to: 17, label: "Ch. 10 · Multi-CPU Scheduling", range: "Problems 17–17", badge: null },
+  { from: 18, to: 18, label: "Ch. 13 · Address Spaces", range: "Problems 18–18", badge: null },
+  { from: 19, to: 19, label: "Ch. 14 · Memory API", range: "Problems 19–19", badge: null },
+  { from: 20, to: 20, label: "Ch. 15 · Address Translation", range: "Problems 20–20", badge: null },
+  { from: 21, to: 21, label: "Ch. 16 · Segmentation", range: "Problems 21–21", badge: null },
+  { from: 22, to: 22, label: "Ch. 17 · Free-space Management", range: "Problems 22–22", badge: null },
+  { from: 23, to: 23, label: "Ch. 18 · Paging", range: "Problems 23–23", badge: null },
+  { from: 24, to: 24, label: "Ch. 19 · Translation Lookaside Buffers", range: "Problems 24–24", badge: null },
+  { from: 25, to: 25, label: "Ch. 20 · Advanced Page Tables", range: "Problems 25–25", badge: null },
+  { from: 26, to: 26, label: "Ch. 21 · Swapping: Mechanisms", range: "Problems 26–26", badge: null },
+  { from: 27, to: 27, label: "Ch. 22 · Swapping: Policies", range: "Problems 27–27", badge: null },
+  { from: 28, to: 28, label: "Ch. 26 · Concurrency and Threads", range: "Problems 28–28", badge: null },
+  { from: 29, to: 29, label: "Ch. 27 · Thread API", range: "Problems 29–29", badge: null },
+  { from: 30, to: 31, label: "Ch. 28 · Locks", range: "Problems 30–31", badge: null },
+  { from: 32, to: 32, label: "Ch. 29 · Locked Data Structures", range: "Problems 32–32", badge: null },
+  { from: 33, to: 33, label: "Ch. 30 · Condition Variables", range: "Problems 33–33", badge: null },
+  { from: 34, to: 36, label: "Ch. 31 · Semaphores", range: "Problems 34–36", badge: null },
+  { from: 37, to: 37, label: "Ch. 32 · Concurrency Bugs", range: "Problems 37–37", badge: null },
+  { from: 38, to: 38, label: "Ch. 33 · Event-based Concurrency", range: "Problems 38–38", badge: null },
+  { from: 39, to: 39, label: "Ch. 36 · I/O Devices", range: "Problems 39–39", badge: null },
+  { from: 40, to: 41, label: "Ch. 37 · Hard Disk Drives", range: "Problems 40–41", badge: null },
+  { from: 42, to: 43, label: "Ch. 38 · Redundant Disk Arrays (RAID)", range: "Problems 42–43", badge: null },
+  { from: 44, to: 45, label: "Ch. 39 · Files and Directories", range: "Problems 44–45", badge: null },
+  { from: 46, to: 46, label: "Ch. 40 · File System Implementation", range: "Problems 46–46", badge: null },
+  { from: 47, to: 47, label: "Ch. 41 · Fast File System (FFS)", range: "Problems 47–47", badge: null },
+  { from: 48, to: 49, label: "Ch. 42 · FSCK and Journaling", range: "Problems 48–49", badge: null },
+  { from: 50, to: 50, label: "Ch. 43 · Log-structured File System (LFS)", range: "Problems 50–50", badge: null },
+  { from: 51, to: 51, label: "Ch. 44 · Flash-based SSDs", range: "Problems 51–51", badge: null },
+  { from: 52, to: 52, label: "Ch. 45 · Data Integrity and Protection", range: "Problems 52–52", badge: null },
+  { from: 53, to: 53, label: "Ch. 48 · Distributed Systems", range: "Problems 53–53", badge: null },
+  { from: 54, to: 54, label: "Ch. 49 · Network File System (NFS)", range: "Problems 54–54", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

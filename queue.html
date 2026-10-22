@@ -1,0 +1,1389 @@
+<title>STL Queue Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Queue Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Front and back",
+  p: String.raw`Push 1, 2 and 3 onto a queue. Print the front and the back, separated by a space. Then pop the front and print the new front.`,
+  ex: String.raw`1 3 2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    q.push(1); q.push(2); q.push(3);
+    std::cout << q.front() << ' ' << q.back() << ' ';
+    q.pop();
+    std::cout << q.front() << '\n';
+}`,
+  why: String.raw`A queue adds at the back and removes from the front, so front is the oldest element and back is the newest.` },
+
+{ n: 2, d: "easy", t: "Size after pushes and pops",
+  p: String.raw`Push 1, 2, 3 and 4 onto a queue, then pop one element. Print the size.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {1, 2, 3, 4}) q.push(v);
+    q.pop();
+    std::cout << q.size() << '\n';
+}`,
+  why: String.raw`Each push adds one element and each pop removes one, so the size tracks the difference.` },
+
+{ n: 3, d: "easy", t: "Empty queue",
+  p: String.raw`Create an empty queue of ints and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    const std::queue<int> q;
+    std::cout << std::boolalpha << q.empty() << '\n';
+}`,
+  why: String.raw`A new queue holds no elements, so empty is true.` },
+
+{ n: 4, d: "easy", t: "First in, first out",
+  p: String.raw`Push a, b and c onto a queue, then pop them one at a time, printing each one, separated by spaces.`,
+  ex: String.raw`a b c`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> q;
+    q.push("a"); q.push("b"); q.push("c");
+    while (!q.empty()) {
+        std::cout << q.front() << (q.size() > 1 ? " " : "\n");
+        q.pop();
+    }
+}`,
+  why: String.raw`The first element pushed is the first one popped, which is what first in, first out means.` },
+
+{ n: 5, d: "easy", t: "Reverse with a stack",
+  p: String.raw`Move the elements of the queue 1, 2, 3 through a stack so the order is reversed. Then pop the stack into a new queue and print its elements from front to back, separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <stack>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {1, 2, 3}) q.push(v);
+    std::stack<int> s;
+    while (!q.empty()) { s.push(q.front()); q.pop(); }
+    while (!s.empty()) { q.push(s.top()); s.pop(); }
+    while (!q.empty()) {
+        std::cout << q.front() << (q.size() > 1 ? " " : "\n");
+        q.pop();
+    }
+}`,
+  why: String.raw`Moving values to a stack reverses them, and moving them back into a queue keeps the reversed order.` },
+
+{ n: 6, d: "easy", t: "emplace builds in place",
+  p: String.raw`Create an empty queue of strings. Use emplace to add a string of three x characters, then print the front element.`,
+  ex: String.raw`xxx`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> q;
+    q.emplace(3, 'x');
+    std::cout << q.front() << '\n';
+}`,
+  why: String.raw`emplace forwards its arguments to the element's constructor, so the string is built in place at the back.` },
+
+{ n: 7, d: "easy", t: "Modify the back through a reference",
+  p: String.raw`Push 1 onto a queue. Add 4 to the back element through the reference that back returns, then print the back element.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    q.push(1);
+    q.back() += 4;
+    std::cout << q.back() << '\n';
+}`,
+  why: String.raw`back returns a reference, so the newest element can be changed without popping it.` },
+
+{ n: 8, d: "easy", t: "Swap two queues",
+  p: String.raw`Create the queue a holding 1, and the queue b holding 2 and 3. Swap them, then print the size of a and the size of b, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> a, b;
+    a.push(1);
+    b.push(2); b.push(3);
+    a.swap(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`swap exchanges the underlying containers, so each queue takes over the other's elements.` },
+
+{ n: 9, d: "easy", t: "Compare two queues",
+  p: String.raw`Build the queues a and b, each with 1 pushed and then 2. Print true if they are equal.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> a, b;
+    a.push(1); a.push(2);
+    b.push(1); b.push(2);
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Queues compare equal when their underlying containers hold the same elements in the same order.` },
+
+{ n: 10, d: "easy", t: "Choose the underlying container",
+  p: String.raw`Create a queue of ints backed by a std::deque. Push 7 and print the front element.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int, std::deque<int>> q;
+    q.push(7);
+    std::cout << q.front() << '\n';
+}`,
+  why: String.raw`queue is an adapter over another container. Its second template argument picks the container, and deque is the default.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Level-order traversal",
+  p: String.raw`A tree has root 1 with children 2 and 3, and node 2 has children 4 and 5. Traverse it level by level using a queue. Print each level's values separated by spaces, with levels separated by " | ".`,
+  ex: String.raw`1 | 2 3 | 4 5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    // children[v] lists the children of node v
+    const std::vector<std::vector<int>> children{{}, {2, 3}, {4, 5}, {}, {}, {}};
+    std::queue<int> level;
+    level.push(1);
+    bool firstLevel = true;
+    while (!level.empty()) {
+        const std::size_t n = level.size();
+        if (!firstLevel) std::cout << " | ";
+        firstLevel = false;
+        for (std::size_t i = 0; i < n; ++i) {
+            const int v = level.front();
+            level.pop();
+            std::cout << v << (i + 1 < n ? " " : "");
+            for (int c : children[v]) level.push(c);
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The queue holds the current level's nodes. Recording its size before processing lets each level be printed as a block, and children join the back for the next level.` },
+
+{ n: 12, d: "medium", t: "Shortest path on a grid",
+  p: String.raw`On an open 3 by 3 grid where you can move up, down, left or right one cell at a time, find the fewest moves from the top-left cell to the bottom-right cell using breadth-first search. Print the number of moves.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    constexpr int N = 3;
+    std::vector<std::vector<int>> dist(N, std::vector<int>(N, -1));
+    std::queue<std::pair<int, int>> q;
+    dist[0][0] = 0;
+    q.push({0, 0});
+    const int dr[] = {1, -1, 0, 0}, dc[] = {0, 0, 1, -1};
+    while (!q.empty()) {
+        const auto [r, c] = q.front();
+        q.pop();
+        for (int k = 0; k < 4; ++k) {
+            const int nr = r + dr[k], nc = c + dc[k];
+            if (nr < 0 || nc < 0 || nr >= N || nc >= N || dist[nr][nc] != -1) continue;
+            dist[nr][nc] = dist[r][c] + 1;
+            q.push({nr, nc});
+        }
+    }
+    std::cout << dist[N - 1][N - 1] << '\n';
+}`,
+  why: String.raw`Breadth-first search visits cells in order of their distance from the start. The first time a cell is reached gives its shortest distance, so the answer is read off when the goal is labelled.` },
+
+{ n: 13, d: "medium", t: "Interleave the two halves of a queue",
+  p: String.raw`Start with the queue 1, 2, 3, 4, 5, 6. Split it into two halves, then alternately take one element from the first half and one from the second, pushing them into a new queue. Print the new queue from front to back, separated by spaces.`,
+  ex: String.raw`1 4 2 5 3 6`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> deck;
+    for (int v = 1; v <= 6; ++v) deck.push(v);
+    std::queue<int> left, right, out;
+    for (int i = 0; i < 3; ++i) { left.push(deck.front()); deck.pop(); }
+    while (!deck.empty()) { right.push(deck.front()); deck.pop(); }
+    while (!left.empty()) {
+        out.push(left.front()); left.pop();
+        out.push(right.front()); right.pop();
+    }
+    while (!out.empty()) {
+        std::cout << out.front() << (out.size() > 1 ? " " : "\n");
+        out.pop();
+    }
+}`,
+  why: String.raw`Each half is kept in its own queue and drawn from in order, so the alternation preserves each half's sequence.` },
+
+{ n: 14, d: "medium", t: "Generate binary numbers in order",
+  p: String.raw`Using a queue of strings, generate the first five binary numbers starting from 1. Each number is produced by appending 0 and then 1 to the previous one. Print them separated by spaces.`,
+  ex: String.raw`1 10 11 100 101`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> q;
+    q.push("1");
+    for (int i = 0; i < 5; ++i) {
+        const std::string s = q.front();
+        q.pop();
+        std::cout << s << (i < 4 ? " " : "\n");
+        q.push(s + "0");
+        q.push(s + "1");
+    }
+}`,
+  why: String.raw`Taking the front and enqueuing its two extensions produces the numbers in increasing order, because every number is enqueued after all smaller ones.` },
+
+{ n: 15, d: "medium", t: "Rotate a queue",
+  p: String.raw`Start with the queue 1, 2, 3, 4. Rotate it left by two positions by moving the front element to the back two times. Print the queue from front to back, separated by spaces.`,
+  ex: String.raw`3 4 1 2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {1, 2, 3, 4}) q.push(v);
+    for (int i = 0; i < 2; ++i) { q.push(q.front()); q.pop(); }
+    while (!q.empty()) {
+        std::cout << q.front() << (q.size() > 1 ? " " : "\n");
+        q.pop();
+    }
+}`,
+  why: String.raw`Moving the front to the back is a rotation. Repeating it the required number of times shifts the queue without changing its contents.` },
+
+{ n: 16, d: "medium", t: "Queue built from two stacks",
+  p: String.raw`Implement a queue using two stacks. Enqueue 1 and 2, dequeue once, enqueue 3, then dequeue twice. Print the three dequeued values separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+class TwoStackQueue {
+    std::stack<int> in_, out_;
+    void shift() {
+        if (out_.empty())
+            while (!in_.empty()) { out_.push(in_.top()); in_.pop(); }
+    }
+public:
+    void enqueue(int v) { in_.push(v); }
+    int dequeue() { shift(); const int v = out_.top(); out_.pop(); return v; }
+};
+
+int main() {
+    TwoStackQueue q;
+    q.enqueue(1);
+    q.enqueue(2);
+    std::cout << q.dequeue() << ' ';
+    q.enqueue(3);
+    std::cout << q.dequeue() << ' ' << q.dequeue() << '\n';
+}`,
+  why: String.raw`New values go onto one stack. When the output stack runs dry, the input is moved over, which reverses it back to first-in order. Each element moves at most twice, so operations are amortised constant time.` },
+
+{ n: 17, d: "medium", t: "Students who cannot take a sandwich",
+  p: String.raw`Students stand in a queue with preferences 1, 1, 1, 0, 0, 1, where 1 means they want a square sandwich and 0 means round. Sandwiches are stacked with 1, 0, 0, 0, 1, 1 on top first. The student at the front takes the top sandwich if it matches their preference, and otherwise goes to the back of the queue. Stop when no student wants the sandwich on top. Print how many students cannot eat.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::queue<int> students;
+    for (int v : {1, 1, 1, 0, 0, 1}) students.push(v);
+    std::queue<int> sandwiches;
+    for (int v : {1, 0, 0, 0, 1, 1}) sandwiches.push(v);
+    int stuck = 0;
+    while (!students.empty() && stuck < static_cast<int>(students.size())) {
+        if (students.front() == sandwiches.front()) {
+            students.pop();
+            sandwiches.pop();
+            stuck = 0;
+        } else {
+            students.push(students.front());
+            students.pop();
+            ++stuck;
+        }
+    }
+    std::cout << students.size() << '\n';
+}`,
+  why: String.raw`Each student is either served or sent to the back. If a full pass produces no service, every remaining student wants the other kind, so the leftover count is the answer.` },
+
+{ n: 18, d: "medium", t: "Recent pings in a time window",
+  p: String.raw`A counter receives pings at times 1, 100, 3001 and 3002. For each ping, count how many pings fall in the window from that ping's time minus 3000 up to and including its own time. Print the counts separated by spaces.`,
+  ex: String.raw`1 2 3 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> recent;
+    for (int t : {1, 100, 3001, 3002}) {
+        recent.push(t);
+        while (recent.front() < t - 3000) recent.pop();
+        std::cout << recent.size() << (t == 3002 ? "\n" : " ");
+    }
+}`,
+  why: String.raw`Pings arrive in time order, so the oldest one is always at the front. Removing expired pings from the front keeps the queue exactly equal to the window.` },
+
+{ n: 19, d: "medium", t: "Elimination game",
+  p: String.raw`Five players 1 to 5 sit in a queue. Repeatedly move the front player to the back two times, then remove the next front player, until one remains. Print the survivor.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> players;
+    for (int v = 1; v <= 5; ++v) players.push(v);
+    while (players.size() > 1) {
+        for (int i = 0; i < 2; ++i) { players.push(players.front()); players.pop(); }
+        players.pop();
+    }
+    std::cout << players.front() << '\n';
+}`,
+  why: String.raw`Rotating the queue selects who is next, and popping removes that person. The survivor is the last element left.` },
+
+{ n: 20, d: "medium", t: "Sum of queues of queues",
+  p: String.raw`Create a queue of queues holding the rows 1, 2 and 3, 4. Add up every value in every inner queue, and print the total.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<std::queue<int>> rows;
+    std::queue<int> r1, r2;
+    r1.push(1); r1.push(2);
+    r2.push(3); r2.push(4);
+    rows.push(r1);
+    rows.push(r2);
+    int total = 0;
+    while (!rows.empty()) {
+        auto row = rows.front();
+        rows.pop();
+        while (!row.empty()) { total += row.front(); row.pop(); }
+    }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Each element is a queue in its own right. Copying the front row to a local lets it be drained without affecting the outer queue.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Topological order with Kahn's method",
+  p: String.raw`A task graph has edges 1 to 2, 1 to 3, 2 to 4 and 3 to 4, meaning each task must finish before the ones it points to. Print an order in which all tasks can be done, separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const int n = 4;
+    std::vector<std::vector<int>> adj(n);
+    std::vector<int> indegree(n, 0);
+    auto edge = [&](int u, int v) { adj[u].push_back(v); ++indegree[v]; };
+    edge(0, 1); edge(0, 2); edge(1, 3); edge(2, 3);
+
+    std::queue<int> ready;
+    for (int v = 0; v < n; ++v) if (indegree[v] == 0) ready.push(v);
+
+    bool first = true;
+    while (!ready.empty()) {
+        const int u = ready.front();
+        ready.pop();
+        std::cout << (first ? "" : " ") << u + 1;
+        first = false;
+        for (int v : adj[u]) if (--indegree[v] == 0) ready.push(v);
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A task with no unfinished prerequisites is ready. Processing ready tasks from a queue and releasing their dependents in turn gives a valid order, and a cycle would leave some tasks unreleased.` },
+
+{ n: 22, d: "hard", t: "Rotting spread through a grid",
+  p: String.raw`In the grid 2 1 1 / 1 1 0 / 0 1 1, each cell holding 2 is rotten, each 1 is fresh, and each 0 is empty. Every minute, rot spreads from rotten cells to fresh cells that touch them up, down, left or right. Print the number of minutes until no fresh cell remains.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<int>> g{{2, 1, 1}, {1, 1, 0}, {0, 1, 1}};
+    const int R = static_cast<int>(g.size()), C = static_cast<int>(g[0].size());
+    std::queue<std::pair<int, int>> rotten;
+    int fresh = 0;
+    for (int r = 0; r < R; ++r)
+        for (int c = 0; c < C; ++c) {
+            if (g[r][c] == 2) rotten.push({r, c});
+            if (g[r][c] == 1) ++fresh;
+        }
+    const int dr[] = {1, -1, 0, 0}, dc[] = {0, 0, 1, -1};
+    int minutes = 0;
+    while (!rotten.empty() && fresh > 0) {
+        ++minutes;
+        const std::size_t level = rotten.size();
+        for (std::size_t i = 0; i < level; ++i) {
+            const auto [r, c] = rotten.front();
+            rotten.pop();
+            for (int k = 0; k < 4; ++k) {
+                const int nr = r + dr[k], nc = c + dc[k];
+                if (nr < 0 || nc < 0 || nr >= R || nc >= C || g[nr][nc] != 1) continue;
+                g[nr][nc] = 2;
+                --fresh;
+                rotten.push({nr, nc});
+            }
+        }
+    }
+    std::cout << (fresh == 0 ? minutes : -1) << '\n';
+}`,
+  why: String.raw`Every rotten cell spreads in the same minute, so processing the queue one level at a time counts minutes exactly. A cell infected during one level is only processed in the next.` },
+
+{ n: 23, d: "hard", t: "Shortest word ladder",
+  p: String.raw`Transform the word hit into cog by changing one letter at a time, where every intermediate word must be in the list hot, dot, dog, lot, log and cog. Print the number of words in the shortest such sequence, including hit and cog.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <set>
+#include <string>
+#include <utility>
+
+int main() {
+    const std::string start = "hit", goal = "cog";
+    const std::set<std::string> dictionary{"hot", "dot", "dog", "lot", "log", "cog"};
+    std::queue<std::pair<std::string, int>> q;
+    std::set<std::string> seen{start};
+    q.push({start, 1});
+    int answer = 0;
+    while (!q.empty()) {
+        const auto [word, len] = q.front();
+        q.pop();
+        if (word == goal) { answer = len; break; }
+        for (std::size_t i = 0; i < word.size(); ++i) {
+            std::string next = word;
+            for (char c = 'a'; c <= 'z'; ++c) {
+                next[i] = c;
+                if (dictionary.count(next) && !seen.count(next)) {
+                    seen.insert(next);
+                    q.push({next, len + 1});
+                }
+            }
+        }
+    }
+    std::cout << answer << '\n';
+}`,
+  why: String.raw`Words one letter apart are neighbours, so breadth-first search over them finds the fewest steps. The first time a word is reached is its shortest distance, and marking it seen prevents revisits.` },
+
+{ n: 24, d: "hard", t: "Stack built from two queues",
+  p: String.raw`Implement a stack using two queues. Push 1, 2 and 3, then pop once, then print the value popped and the new top, separated by a space.`,
+  ex: String.raw`3 2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+class QueueStack {
+    std::queue<int> main_, aux_;
+public:
+    void push(int v) {
+        aux_.push(v);
+        while (!main_.empty()) { aux_.push(main_.front()); main_.pop(); }
+        main_.swap(aux_);
+    }
+    int pop() { const int v = main_.front(); main_.pop(); return v; }
+    int top() const { return main_.front(); }
+};
+
+int main() {
+    QueueStack s;
+    s.push(1); s.push(2); s.push(3);
+    const int popped = s.pop();
+    std::cout << popped << ' ' << s.top() << '\n';
+}`,
+  why: String.raw`After each push, the new value is placed at the front of the main queue by moving the older values behind it. The front is then always the most recent value, which is exactly stack behaviour.` },
+
+{ n: 25, d: "hard", t: "Recover the shortest path",
+  p: String.raw`An undirected graph has edges 0-1, 1-2, 2-4, 0-3 and 3-4. Find a shortest path from 0 to 4 using breadth-first search and print its nodes in order, separated by spaces.`,
+  ex: String.raw`0 3 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> adj{{1, 3}, {0, 2}, {1, 4}, {0, 4}, {2, 3}};
+    const int start = 0, goal = 4;
+    std::vector<int> parent(adj.size(), -1);
+    std::vector<bool> seen(adj.size(), false);
+    std::queue<int> q;
+    q.push(start);
+    seen[start] = true;
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop();
+        for (int v : adj[u]) {
+            if (seen[v]) continue;
+            seen[v] = true;
+            parent[v] = u;
+            q.push(v);
+        }
+    }
+    std::vector<int> path;
+    for (int v = goal; v != -1; v = parent[v]) path.push_back(v);
+    for (std::size_t i = path.size(); i-- > 0;) std::cout << path[i] << (i > 0 ? " " : "\n");
+}`,
+  why: String.raw`Breadth-first search records, for each node, the node it was first reached from. Walking those parent links back from the goal and reversing gives a shortest path.` },
+
+{ n: 26, d: "hard", t: "Bipartite check by two-colouring",
+  p: String.raw`Check whether the graph with edges 0-1, 1-2, 2-3 and 3-0 can have its nodes split into two groups so that every edge joins different groups. Use breadth-first search to assign the groups. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> adj{{1, 3}, {0, 2}, {1, 3}, {0, 2}};
+    std::vector<int> color(adj.size(), -1);
+    bool ok = true;
+    for (std::size_t s = 0; s < adj.size() && ok; ++s) {
+        if (color[s] != -1) continue;
+        color[s] = 0;
+        std::queue<std::size_t> q;
+        q.push(s);
+        while (!q.empty() && ok) {
+            const std::size_t u = q.front();
+            q.pop();
+            for (std::size_t v : adj[u]) {
+                if (color[v] == -1) {
+                    color[v] = 1 - color[u];
+                    q.push(v);
+                } else if (color[v] == color[u]) {
+                    ok = false;
+                    break;
+                }
+            }
+        }
+    }
+    std::cout << std::boolalpha << ok << '\n';
+}`,
+  why: String.raw`Breadth-first search gives each neighbour the opposite colour of the node it was reached from. A conflict, where an edge joins two nodes of the same colour, means the graph has an odd cycle and cannot be split.` },
+
+{ n: 27, d: "hard", t: "Count nodes on each level",
+  p: String.raw`A tree has root 1 with children 2 and 3, and node 2 has children 4 and 5. Using a queue, print the number of nodes on each level, from the root downwards, separated by spaces.`,
+  ex: String.raw`1 2 2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> children{{}, {2, 3}, {4, 5}, {}, {}, {}};
+    std::queue<int> level;
+    level.push(1);
+    bool first = true;
+    while (!level.empty()) {
+        const std::size_t n = level.size();
+        std::cout << (first ? "" : " ") << n;
+        first = false;
+        for (std::size_t i = 0; i < n; ++i) {
+            const int v = level.front();
+            level.pop();
+            for (int c : children[v]) level.push(c);
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Taking the queue's size at the start of a pass gives exactly the number of nodes on the current level, since everything still queued belongs to a later level.` },
+
+{ n: 28, d: "hard", t: "Bounded queue that drops the oldest",
+  p: String.raw`Push the values 1 to 5 into a queue that holds at most 3 elements. When it is full, drop the oldest element before pushing. Print the remaining elements from front to back, separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v = 1; v <= 5; ++v) {
+        q.push(v);
+        if (q.size() > 3) q.pop();
+    }
+    while (!q.empty()) {
+        std::cout << q.front() << (q.size() > 1 ? " " : "\n");
+        q.pop();
+    }
+}`,
+  why: String.raw`Dropping from the front when the queue overflows keeps the newest values, which is the behaviour of a fixed-size log or buffer.` },
+
+{ n: 29, d: "hard", t: "Moving average over a stream",
+  p: String.raw`The values 1.0, 2.0, 3.0 and 4.0 arrive one at a time. After each value from the second onward, print the average of the last two values with one decimal place. Separate the averages with spaces.`,
+  ex: String.raw`1.5 2.5 3.5`,
+  code: String.raw`#include <iomanip>
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<double> window;
+    double sum = 0;
+    bool first = true;
+    for (double v : {1.0, 2.0, 3.0, 4.0}) {
+        window.push(v);
+        sum += v;
+        if (window.size() > 2) {
+            sum -= window.front();
+            window.pop();
+        }
+        if (window.size() == 2) {
+            std::cout << (first ? "" : " ") << std::fixed << std::setprecision(1) << sum / 2;
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The queue holds exactly the values in the window. Adding the new value and removing the oldest keeps a running sum current, so each average costs constant time.` },
+
+{ n: 30, d: "hard", t: "Shortest distance in an unweighted graph",
+  p: String.raw`An undirected graph has edges 0-1, 0-2, 1-3, 2-3 and 3-4. Find the fewest edges on a path from 0 to 4 using breadth-first search. Print that number.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> adj{{1, 2}, {0, 3}, {0, 3}, {1, 2, 4}, {3}};
+    std::vector<int> dist(adj.size(), -1);
+    std::queue<int> q;
+    dist[0] = 0;
+    q.push(0);
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop();
+        for (int v : adj[u]) {
+            if (dist[v] != -1) continue;
+            dist[v] = dist[u] + 1;
+            q.push(v);
+        }
+    }
+    std::cout << dist[4] << '\n';
+}`,
+  why: String.raw`Breadth-first search reaches nodes in order of their distance, so the first time a node is labelled its distance is the fewest edges from the start.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Default queue is empty",
+  p: String.raw`Create a default-constructed queue of ints and print its size.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    const std::queue<int> q;
+    std::cout << q.size() << '\n';
+}`,
+  why: String.raw`A default-constructed queue wraps an empty container.` },
+
+{ n: 32, d: "easy", t: "Build a queue from a deque",
+  p: String.raw`Create a queue of ints from the deque 1, 2, 3. Print the front and the back, separated by a space.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q(std::deque<int>{1, 2, 3});
+    std::cout << q.front() << ' ' << q.back() << '\n';
+}`,
+  why: String.raw`A queue can be built from an existing container. Its front is the first element of that container.` },
+
+{ n: 33, d: "medium", t: "Copies are independent",
+  p: String.raw`Push 1, 2 and 3 onto a queue. Copy it, pop the copy once, then print the front of the copy and the size of the original, separated by a space.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    q.push(1); q.push(2); q.push(3);
+    std::queue<int> copy = q;
+    copy.pop();
+    std::cout << copy.front() << ' ' << q.size() << '\n';
+}`,
+  why: String.raw`Copying a queue copies its elements, so popping the copy leaves the original untouched.` },
+
+{ n: 34, d: "easy", t: "Lexicographic comparison of queues",
+  p: String.raw`Compare the queue holding 1 then 2 with the queue holding 1 then 3, using less-than. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> a, b;
+    a.push(1); a.push(2);
+    b.push(1); b.push(3);
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`Queues compare the way their underlying containers do, element by element from the front, so the first difference decides.` },
+
+{ n: 35, d: "medium", t: "emplace returns a reference",
+  p: String.raw`Create an empty queue of ints. Use emplace to push 4, keeping the reference it returns. Set that reference to 9 and print the back element.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    int& r = q.emplace(4);
+    r = 9;
+    std::cout << q.back() << '\n';
+}`,
+  why: String.raw`Since C++17, emplace returns a reference to the new element, so the caller can change it immediately.` },
+
+{ n: 36, d: "medium", t: "Queue of vectors",
+  p: String.raw`Create a queue of vectors of ints. Push the vector 1, 2, then add 3 to the vector at the back, then print the size of the front vector.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::queue<std::vector<int>> q;
+    q.push({1, 2});
+    q.back().push_back(3);
+    std::cout << q.front().size() << '\n';
+}`,
+  why: String.raw`Each element is a full vector. back returns a reference, so the newest vector can be modified in place.` },
+
+{ n: 37, d: "medium", t: "Move the front out of the queue",
+  p: String.raw`Push a std::unique_ptr<int> holding 7 onto a queue. Move the front pointer into a local variable, pop the empty slot, then print the value held by the local variable.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <queue>
+#include <utility>
+
+int main() {
+    std::queue<std::unique_ptr<int>> q;
+    q.push(std::make_unique<int>(7));
+    auto p = std::move(q.front());
+    q.pop();
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`A move-only element leaves the queue by being moved out of front before popping. pop then discards the emptied slot.` },
+
+{ n: 38, d: "easy", t: "Sum by draining",
+  p: String.raw`Push 1, 2, 3 and 4 onto a queue, then pop every element while adding it up. Print the total.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {1, 2, 3, 4}) q.push(v);
+    int total = 0;
+    while (!q.empty()) { total += q.front(); q.pop(); }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`A queue only exposes its front, so visiting every element means removing each one in turn.` },
+
+{ n: 39, d: "medium", t: "Order is preserved into a vector",
+  p: String.raw`Push 1, 2 and 3 onto a queue, then pop them all into a vector. Print the vector's values separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {1, 2, 3}) q.push(v);
+    std::vector<int> out;
+    while (!q.empty()) { out.push_back(q.front()); q.pop(); }
+    for (std::size_t i = 0; i < out.size(); ++i) std::cout << out[i] << (i + 1 < out.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Draining a queue yields values in the order they were pushed, so the vector keeps the first-in order.` },
+
+{ n: 40, d: "medium", t: "Pair elements",
+  p: String.raw`Push the pairs (1, a) and (2, b) onto a queue of pairs of an int and a char. Pop the front pair, then print the char of the new front, which is the second member of the pair.`,
+  ex: String.raw`b`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+
+int main() {
+    std::queue<std::pair<int, char>> q;
+    q.push({1, 'a'});
+    q.push({2, 'b'});
+    q.pop();
+    std::cout << q.front().second << '\n';
+}`,
+  why: String.raw`The front is the oldest remaining pair, so after one pop the next pair in line becomes the front.` },
+
+{ n: 41, d: "easy", t: "Modify the front through a reference",
+  p: String.raw`Push 5 onto a queue. Set the front element to 6 through the reference that front returns, then print the front.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    q.push(5);
+    q.front() = 6;
+    std::cout << q.front() << '\n';
+}`,
+  why: String.raw`front returns a reference, so the oldest element can be changed in place.` },
+
+{ n: 42, d: "easy", t: "Guard against popping an empty queue",
+  p: String.raw`Create an empty queue of ints. If it has an element, print its front. Otherwise print none.`,
+  ex: String.raw`none`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    if (q.empty()) std::cout << "none\n";
+    else std::cout << q.front() << '\n';
+}`,
+  why: String.raw`front and pop are undefined on an empty queue, so checking empty first is required.` },
+
+{ n: 43, d: "medium", t: "Merge two sorted queues",
+  p: String.raw`Two sorted queues hold 1, 4 and 2, 3. Merge them into a new queue that stays sorted, then print its elements from front to back, separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> a, b, out;
+    for (int v : {1, 4}) a.push(v);
+    for (int v : {2, 3}) b.push(v);
+    while (!a.empty() && !b.empty()) {
+        if (a.front() <= b.front()) { out.push(a.front()); a.pop(); }
+        else { out.push(b.front()); b.pop(); }
+    }
+    while (!a.empty()) { out.push(a.front()); a.pop(); }
+    while (!b.empty()) { out.push(b.front()); b.pop(); }
+    while (!out.empty()) {
+        std::cout << out.front() << (out.size() > 1 ? " " : "\n");
+        out.pop();
+    }
+}`,
+  why: String.raw`Each step takes the smaller of the two fronts, which keeps the output sorted. Whatever remains in one queue is already in order and is appended.` },
+
+{ n: 44, d: "easy", t: "Size after mixed operations",
+  p: String.raw`Push 1 to 5 onto a queue, then pop two elements. Print the back element and the size, separated by a space.`,
+  ex: String.raw`5 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v = 1; v <= 5; ++v) q.push(v);
+    q.pop();
+    q.pop();
+    std::cout << q.back() << ' ' << q.size() << '\n';
+}`,
+  why: String.raw`Pops take from the front and leave the back alone, so the back is still the last value pushed.` },
+
+{ n: 45, d: "medium", t: "emplace builds a string in place",
+  p: String.raw`Create an empty queue of strings. Use emplace to add a string of three z characters, then print the front element.`,
+  ex: String.raw`zzz`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> q;
+    q.emplace(3, 'z');
+    std::cout << q.front() << '\n';
+}`,
+  why: String.raw`emplace passes its arguments to the string constructor, so the string is built at the back with no temporary.` },
+
+{ n: 46, d: "medium", t: "Count popped values above a threshold",
+  p: String.raw`Push 1 to 5 onto a queue, then pop them all. Count how many popped values are greater than 2 and print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v = 1; v <= 5; ++v) q.push(v);
+    int count = 0;
+    while (!q.empty()) {
+        if (q.front() > 2) ++count;
+        q.pop();
+    }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Each pop reveals the next element, so a single drain examines every value once in arrival order.` },
+
+{ n: 47, d: "medium", t: "Join values in queue order",
+  p: String.raw`Push x, y and z onto a queue. Build a string by popping every element and separating them with commas. Print the string.`,
+  ex: String.raw`x,y,z`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> q;
+    q.push("x"); q.push("y"); q.push("z");
+    std::string out;
+    while (!q.empty()) {
+        out += q.front();
+        q.pop();
+        if (!q.empty()) out += ',';
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Values come out in arrival order, and the comma is added only between items, so there is no trailing separator.` },
+
+{ n: 48, d: "medium", t: "Equal after the same operations",
+  p: String.raw`Queue a gets 1, 2 and 3 pushed, then one pop. Queue b gets 2 and 3 pushed. Print true if the two queues are equal.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> a, b;
+    a.push(1); a.push(2); a.push(3);
+    a.pop();
+    b.push(2); b.push(3);
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Equality depends only on what the queues contain now, not on the history of operations that produced them.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "easy", t: "Next customer at the counter",
+  p: String.raw`Customers A, B and C join a ticket queue in that order. The first customer is served. Print the customer now at the front of the line.`,
+  ex: String.raw`B`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> line;
+    line.push("A"); line.push("B"); line.push("C");
+    line.pop();
+    std::cout << line.front() << '\n';
+}`,
+  why: String.raw`A ticket line is a first-in, first-out queue. Serving the front customer leaves the next one in line at the front.` },
+
+{ n: 50, d: "easy", t: "Print spooler",
+  p: String.raw`Print jobs 1, 2 and 3 are submitted in that order to a printer that handles them first in, first out. Print the job numbers in the order they are printed, separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> jobs;
+    for (int j : {1, 2, 3}) jobs.push(j);
+    while (!jobs.empty()) {
+        std::cout << jobs.front() << (jobs.size() > 1 ? " " : "\n");
+        jobs.pop();
+    }
+}`,
+  why: String.raw`A spooler processes jobs in the order they arrive, which is exactly the order a queue gives back.` },
+
+{ n: 51, d: "easy", t: "Average over a queue",
+  p: String.raw`A queue holds the readings 2, 4 and 6. Drain it while summing the readings, then print the integer average.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> readings;
+    for (int v : {2, 4, 6}) readings.push(v);
+    int sum = 0, count = 0;
+    while (!readings.empty()) {
+        sum += readings.front();
+        ++count;
+        readings.pop();
+    }
+    std::cout << sum / count << '\n';
+}`,
+  why: String.raw`Draining the queue visits each reading once, and counting as you go gives the divisor without a separate size call.` },
+
+{ n: 52, d: "medium", t: "Message processing pipeline",
+  p: String.raw`Two messages m1 and m2 arrive in a queue. A worker takes each message from the front and processes it, until the queue is empty. Print how many messages were processed.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> inbox;
+    inbox.push("m1");
+    inbox.push("m2");
+    int processed = 0;
+    while (!inbox.empty()) {
+        const std::string msg = inbox.front();
+        inbox.pop();
+        (void)msg;
+        ++processed;
+    }
+    std::cout << processed << '\n';
+}`,
+  why: String.raw`A worker queue decouples producers from consumers. Items are handled strictly in arrival order, and the loop ends when nothing is left.` },
+
+{ n: 53, d: "medium", t: "Degrees of separation",
+  p: String.raw`In a friendship network, Ann is friends with Bob, Bob is friends with Cy, and Cy is friends with Dee. Using breadth-first search from Ann, print the fewest friendship steps needed to reach Dee.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    // 0 Ann, 1 Bob, 2 Cy, 3 Dee
+    const std::vector<std::vector<int>> friends{{1}, {0, 2}, {1, 3}, {2}};
+    std::vector<int> dist(friends.size(), -1);
+    std::queue<int> q;
+    dist[0] = 0;
+    q.push(0);
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop();
+        for (int v : friends[u]) {
+            if (dist[v] != -1) continue;
+            dist[v] = dist[u] + 1;
+            q.push(v);
+        }
+    }
+    std::cout << dist[3] << '\n';
+}`,
+  why: String.raw`Breadth-first search explores everyone one step away before anyone two steps away, so the first time Dee is reached gives the fewest steps.` },
+
+{ n: 54, d: "medium", t: "Cashier serving in turns",
+  p: String.raw`Customers 1, 2 and 3 need 3, 1 and 2 turns of service. At a cashier, each turn serves the customer at the front for one turn, and an unfinished customer goes to the back of the line. Print the customers in the order they finish, separated by spaces.`,
+  ex: String.raw`2 3 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+
+int main() {
+    std::queue<std::pair<int, int>> line;   // (customer, turns left)
+    line.push({1, 3});
+    line.push({2, 1});
+    line.push({3, 2});
+    bool first = true;
+    while (!line.empty()) {
+        auto [id, left] = line.front();
+        line.pop();
+        --left;
+        if (left == 0) {
+            std::cout << (first ? "" : " ") << id;
+            first = false;
+        } else {
+            line.push({id, left});
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Serving one turn and returning unfinished customers to the back gives each customer a fair share of the cashier in turn. Customers finish in the order their last turn happens.` },
+
+{ n: 55, d: "easy", t: "Keyboard input buffer",
+  p: String.raw`Keys a, b and c are pressed in that order and stored in a buffer queue. The program reads them back in the order they were pressed. Print the characters read, with no spaces.`,
+  ex: String.raw`abc`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<char> buffer;
+    for (char k : {'a', 'b', 'c'}) buffer.push(k);
+    while (!buffer.empty()) {
+        std::cout << buffer.front();
+        buffer.pop();
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Keystrokes are delivered in the order they were typed, which is first in, first out. A queue is the natural buffer between typing and reading.` },
+
+{ n: 56, d: "medium", t: "First-in, first-out page cache",
+  p: String.raw`A cache holds at most 2 pages and evicts the oldest one when full. Pages 1, 2 and 3 are loaded in that order. Print the cached pages from front to back, separated by spaces.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    constexpr std::size_t capacity = 2;
+    std::queue<int> cache;
+    for (int page : {1, 2, 3}) {
+        if (cache.size() == capacity) cache.pop();
+        cache.push(page);
+    }
+    while (!cache.empty()) {
+        std::cout << cache.front() << (cache.size() > 1 ? " " : "\n");
+        cache.pop();
+    }
+}`,
+  why: String.raw`Evicting from the front removes the page that was loaded longest ago, which is the first-in, first-out replacement policy.` },
+
+{ n: 57, d: "medium", t: "Flood fill by breadth-first search",
+  p: String.raw`A 2 by 2 grid is entirely open. Starting from the top-left cell, use breadth-first search to visit every open cell that can be reached by moving up, down, left or right. Print how many cells were visited.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const int R = 2, C = 2;
+    std::vector<std::vector<bool>> open(R, std::vector<bool>(C, true));
+    std::vector<std::vector<bool>> seen(R, std::vector<bool>(C, false));
+    std::queue<std::pair<int, int>> q;
+    q.push({0, 0});
+    seen[0][0] = true;
+    int visited = 0;
+    const int dr[] = {1, -1, 0, 0}, dc[] = {0, 0, 1, -1};
+    while (!q.empty()) {
+        const auto [r, c] = q.front();
+        q.pop();
+        ++visited;
+        for (int k = 0; k < 4; ++k) {
+            const int nr = r + dr[k], nc = c + dc[k];
+            if (nr < 0 || nc < 0 || nr >= R || nc >= C) continue;
+            if (!open[nr][nc] || seen[nr][nc]) continue;
+            seen[nr][nc] = true;
+            q.push({nr, nc});
+        }
+    }
+    std::cout << visited << '\n';
+}`,
+  why: String.raw`Breadth-first search marks each reachable cell as seen the moment it is queued, so every open cell is counted exactly once.` },
+
+{ n: 58, d: "easy", t: "Stage backlog",
+  p: String.raw`A pipeline stage receives three items into its input queue, and then the stage processes one item. Print how many items are still waiting.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> input;
+    for (int item : {1, 2, 3}) input.push(item);
+    input.pop();
+    std::cout << input.size() << '\n';
+}`,
+  why: String.raw`Items arrive in one pass and are removed one at a time, so the backlog is the number pushed minus the number processed.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-queue-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 58, label: "Easy", range: "Problems 1–58", badge: "easy" },
+  { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

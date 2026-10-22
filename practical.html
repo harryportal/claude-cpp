@@ -1,0 +1,1969 @@
+<title>C++ Practical Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 70 problems</p>
+    <h1>C++ Practical Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">70</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="70" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Count fields in a CSV line",
+  p: String.raw`Count the fields in the line a,bb,,ccc. Empty fields count. Print the number of fields.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <string_view>
+
+int main() {
+    std::string_view line = "a,bb,,ccc";
+    int fields = 1;
+    for (char c : line)
+        if (c == ',') ++fields;
+    std::cout << fields << '\n';
+}`,
+  why: String.raw`Parsers in logging and data tools often count fields without copying the line, by viewing it through string_view.` },
+
+{ n: 2, d: "easy", t: "Trim spaces",
+  p: String.raw`Remove the leading and trailing spaces from the text "  hi  " without copying it. Print the result between square brackets.`,
+  ex: String.raw`[hi]`,
+  code: String.raw`#include <iostream>
+#include <string_view>
+
+std::string_view trim(std::string_view s) {
+    while (!s.empty() && s.front() == ' ') s.remove_prefix(1);
+    while (!s.empty() && s.back() == ' ') s.remove_suffix(1);
+    return s;
+}
+
+int main() {
+    std::cout << '[' << trim("  hi  ") << "]\n";
+}`,
+  why: String.raw`Returning a view of a sub-range avoids allocation. The caller must make sure the original text outlives the view.` },
+
+{ n: 3, d: "easy", t: "Join with a separator",
+  p: String.raw`Join the strings a, b and c with the separator / between them, and print the result.`,
+  ex: String.raw`a/b/c`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> parts{"a", "b", "c"};
+    std::string out;
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        if (i) out += '/';
+        out += parts[i];
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Building a string with a separator only between items is a routine task in path and command-line code.` },
+
+{ n: 4, d: "easy", t: "Combined hash of a key",
+  p: String.raw`A key has a name and an id. Compute a hash for two equal keys by combining the hashes of the name and the id with the usual mixing step. Print whether the two hashes are equal, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <string>
+
+struct Key {
+    std::string name;
+    int id;
+};
+
+template <class T>
+void hash_combine(std::size_t& seed, const T& v) {
+    seed ^= std::hash<T>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+std::size_t hash_key(const Key& k) {
+    std::size_t s = 0;
+    hash_combine(s, k.name);
+    hash_combine(s, k.id);
+    return s;
+}
+
+int main() {
+    Key a{"x", 1}, b{"x", 1};
+    std::cout << std::boolalpha << (hash_key(a) == hash_key(b)) << '\n';
+}`,
+  why: String.raw`Hash tables need equal keys to produce equal hashes. Mixing each field into one running seed is the standard way to hash a struct.` },
+
+{ n: 5, d: "easy", t: "Permission flags",
+  p: String.raw`Define permission flags Read = 1, Write = 2 and Exec = 4 as a strongly typed enumeration that can be combined with the bitwise or operator. Combine Read and Write, then print the numeric value.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+
+enum class Perm : unsigned { Read = 1, Write = 2, Exec = 4 };
+
+constexpr Perm operator|(Perm a, Perm b) {
+    return static_cast<Perm>(static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+int main() {
+    Perm p = Perm::Read | Perm::Write;
+    std::cout << static_cast<unsigned>(p) << '\n';
+}`,
+  why: String.raw`Scoped enums prevent accidental conversions. Defining the operators yourself keeps flag combinations type-safe.` },
+
+{ n: 6, d: "easy", t: "Cleanup at scope exit",
+  p: String.raw`Create a guard object that runs a cleanup action when it goes out of scope. Inside a block, print body and then create the guard, which prints cleanup when it runs. Print the output followed by a newline.`,
+  ex: String.raw`body cleanup`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+
+class ScopeGuard {
+    std::function<void()> f;
+
+public:
+    explicit ScopeGuard(std::function<void()> fn) : f(std::move(fn)) {}
+    ~ScopeGuard() { f(); }
+};
+
+int main() {
+    {
+        ScopeGuard g([] { std::cout << "cleanup\n"; });
+        std::cout << "body ";
+    }
+}`,
+  why: String.raw`Running cleanup from a destructor ensures it happens on every exit path, including early returns and exceptions.` },
+
+{ n: 7, d: "easy", t: "Right-aligned and left-aligned columns",
+  p: String.raw`Format the number 42 right-aligned in a field of width 5, followed by a pipe, then the text x left-aligned in a field of width 3, followed by a pipe. Print the line.`,
+  ex: String.raw`   42|x  |`,
+  code: String.raw`#include <format>
+#include <iostream>
+
+int main() {
+    std::cout << std::format("{:>5}|{:<3}|", 42, "x") << '\n';
+}`,
+  why: String.raw`Format specifications let you lay out text in columns without manual padding loops, which is why logging libraries lean on them.` },
+
+{ n: 8, d: "easy", t: "Clamp a value",
+  p: String.raw`Clamp the value 15 to the range from 0 to 10 and print the result.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+
+int main() {
+    std::cout << std::clamp(15, 0, 10) << '\n';
+}`,
+  why: String.raw`Clamping keeps configuration values and UI positions within allowed bounds.` },
+
+{ n: 9, d: "easy", t: "Parse a number and keep the rest",
+  p: String.raw`Parse the leading integer from the text 123abc. Print the integer, then the unparsed remainder, separated by a space.`,
+  ex: String.raw`123 abc`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <string_view>
+
+int main() {
+    std::string_view s = "123abc";
+    int v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    std::cout << v << ' ' << std::string_view(p, s.data() + s.size() - p) << '\n';
+}`,
+  why: String.raw`from_chars parses without allocating or depending on locale, and reports exactly where parsing stopped.` },
+
+{ n: 10, d: "easy", t: "Handle each alternative",
+  p: String.raw`A value is either an int or a string. Store the string hi in it, then print str: followed by the text. Use one handler for each alternative.`,
+  ex: String.raw`str:hi`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+template <class... Ts>
+struct Overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
+int main() {
+    std::variant<int, std::string> v{std::string("hi")};
+    std::visit(Overloaded{
+                   [](int i) { std::cout << "int:" << i << '\n'; },
+                   [](const std::string& s) { std::cout << "str:" << s << '\n'; }},
+               v);
+}`,
+  why: String.raw`Tagged unions in parsers and message handlers are dispatched this way, with the compiler checking every alternative is covered.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Fixed-size ring buffer",
+  p: String.raw`A ring buffer holds at most 3 values. Push 1 through 5 into it, so that the oldest values are overwritten when it is full. Print the values it holds from oldest to newest, separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+class Ring {
+    std::vector<int> buf;
+    std::size_t head = 0, count = 0;
+
+public:
+    explicit Ring(std::size_t cap) : buf(cap) {}
+    void push(int v) {
+        buf[(head + count) % buf.size()] = v;
+        if (count < buf.size()) ++count;
+        else head = (head + 1) % buf.size();
+    }
+    int at(std::size_t i) const { return buf[(head + i) % buf.size()]; }
+    std::size_t size() const { return count; }
+};
+
+int main() {
+    Ring r(3);
+    for (int v = 1; v <= 5; ++v) r.push(v);
+    for (std::size_t i = 0; i < r.size(); ++i)
+        std::cout << r.at(i) << (i + 1 < r.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Log buffers and audio pipelines use fixed-size rings so memory never grows. The oldest entry is dropped when a new one arrives.` },
+
+{ n: 12, d: "medium", t: "Least recently used eviction",
+  p: String.raw`A cache holds at most 2 entries and evicts the entry that was used least recently. Put key 1 with value a, then key 2 with value b. Read key 1. Put key 3 with value c. Print whether key 2 is still present, then the value stored for key 1, separated by a space. Print true or false for presence.`,
+  ex: String.raw`false a`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+#include <unordered_map>
+
+class LRU {
+    using Entry = std::pair<int, std::string>;
+    std::size_t cap;
+    std::list<Entry> order;
+    std::unordered_map<int, std::list<Entry>::iterator> idx;
+
+public:
+    explicit LRU(std::size_t c) : cap(c) {}
+    std::string get(int k) {
+        auto it = idx.find(k);
+        if (it == idx.end()) return "-";
+        order.splice(order.begin(), order, it->second);
+        return it->second->second;
+    }
+    void put(int k, std::string v) {
+        auto it = idx.find(k);
+        if (it != idx.end()) {
+            it->second->second = v;
+            order.splice(order.begin(), order, it->second);
+            return;
+        }
+        if (order.size() == cap) {
+            idx.erase(order.back().first);
+            order.pop_back();
+        }
+        order.emplace_front(k, v);
+        idx[k] = order.begin();
+    }
+    bool has(int k) const { return idx.count(k) > 0; }
+};
+
+int main() {
+    LRU c(2);
+    c.put(1, "a");
+    c.put(2, "b");
+    c.get(1);
+    c.put(3, "c");
+    std::cout << std::boolalpha << c.has(2) << ' ' << c.get(1) << '\n';
+}`,
+  why: String.raw`A hash map finds entries quickly, and a linked list keeps their recency order. Moving a node to the front on access is constant time with splice.` },
+
+{ n: 13, d: "medium", t: "Reuse a released slot",
+  p: String.raw`A pool hands out integer slots 0 to 3 from a free list. Acquire three slots, release the second one you acquired, then acquire again. Print true if the new slot is the same number as the released one.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+class Pool {
+    std::vector<int> free_list;
+
+public:
+    explicit Pool(std::size_t n) {
+        for (std::size_t i = n; i-- > 0;) free_list.push_back(static_cast<int>(i));
+    }
+    int acquire() {
+        int i = free_list.back();
+        free_list.pop_back();
+        return i;
+    }
+    void release(int i) { free_list.push_back(i); }
+};
+
+int main() {
+    Pool p(4);
+    int a = p.acquire();
+    int b = p.acquire();
+    int c = p.acquire();
+    (void)a;
+    (void)c;
+    p.release(b);
+    int d = p.acquire();
+    std::cout << std::boolalpha << (d == b) << '\n';
+}`,
+  why: String.raw`Object pools avoid repeated allocation in hot loops. A free list makes both acquire and release constant time.` },
+
+{ n: 14, d: "medium", t: "Aligned bump allocation",
+  p: String.raw`A bump allocator starts at offset 0. Allocate 3 bytes, then allocate 8 bytes that must start on an 8-byte boundary. Print the offset at which the 8-byte allocation starts.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+int main() {
+    std::size_t offset = 0;
+    offset += 3;
+    const std::size_t align = 8;
+    offset = (offset + align - 1) & ~(align - 1);
+    std::cout << offset << '\n';
+}`,
+  why: String.raw`Rounding an offset up to a power-of-two boundary is a single mask operation. Arena allocators in compilers rely on it heavily.` },
+
+{ n: 15, d: "medium", t: "Compare version strings",
+  p: String.raw`Compare the version 1.10.0 with the version 1.9.9 by their numeric parts, comparing the major number first, then the minor, then the patch. Print -1 if the first is smaller, 1 if it is larger, or 0 if they are equal.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+std::array<int, 3> parse(const std::string& s) {
+    std::array<int, 3> v{};
+    std::stringstream ss(s);
+    std::string part;
+    for (int i = 0; i < 3 && std::getline(ss, part, '.'); ++i) v[i] = std::stoi(part);
+    return v;
+}
+
+int main() {
+    auto a = parse("1.10.0"), b = parse("1.9.9");
+    int c = a < b ? -1 : (a > b ? 1 : 0);
+    std::cout << c << '\n';
+}`,
+  why: String.raw`Comparing numeric components rather than text is what makes 1.10.0 sort after 1.9.9. Arrays compare element by element.` },
+
+{ n: 16, d: "medium", t: "Wildcard matching",
+  p: String.raw`Check whether the pattern test_*.txt matches the names test_1.txt and test.txt. In the pattern, * matches any run of characters, including none, and other characters match themselves. Print true or false for each name, separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <string_view>
+
+bool match(std::string_view p, std::string_view s) {
+    if (p.empty()) return s.empty();
+    if (p[0] == '*')
+        return match(p.substr(1), s) || (!s.empty() && match(p, s.substr(1)));
+    if (s.empty()) return false;
+    if (p[0] == s[0]) return match(p.substr(1), s.substr(1));
+    return false;
+}
+
+int main() {
+    std::cout << std::boolalpha << match("test_*.txt", "test_1.txt") << ' '
+              << match("test_*.txt", "test.txt") << '\n';
+}`,
+  why: String.raw`Build tools and file filters use glob patterns. Trying each way the star could absorb characters is a direct way to decide a match.` },
+
+{ n: 17, d: "medium", t: "Normalise a path lexically",
+  p: String.raw`Normalise the path a/./b/../c without touching the file system, so that . and .. segments are resolved. Print the result.`,
+  ex: String.raw`a/c`,
+  code: String.raw`#include <filesystem>
+#include <iostream>
+
+int main() {
+    std::filesystem::path p("a/./b/../c");
+    std::cout << p.lexically_normal().generic_string() << '\n';
+}`,
+  why: String.raw`Lexical normalisation works on the text alone, so it is safe for paths that do not exist yet.` },
+
+{ n: 18, d: "medium", t: "Variable-length integer encoding",
+  p: String.raw`Encode the unsigned value 300 in the variable-length format used by binary protocols. Seven bits go into each byte, low bits first. Every byte except the last has its high bit set. Print the byte values in decimal, separated by spaces.`,
+  ex: String.raw`172 2`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::uint32_t v = 300;
+    std::vector<unsigned> out;
+    while (v >= 0x80) {
+        out.push_back((v & 0x7F) | 0x80);
+        v >>= 7;
+    }
+    out.push_back(v);
+    for (std::size_t i = 0; i < out.size(); ++i)
+        std::cout << out[i] << (i + 1 < out.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Protocol buffers use this encoding so small numbers take one byte. Only the top bit of each byte is spent on framing.` },
+
+{ n: 19, d: "medium", t: "Base64 encoding",
+  p: String.raw`Encode the three-character text Man using the standard Base64 alphabet, without padding since the input length is a multiple of three. Print the encoded text.`,
+  ex: String.raw`TWFu`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string tbl =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const std::string in = "Man";
+    std::string out;
+    for (std::size_t i = 0; i < in.size(); i += 3) {
+        unsigned n = static_cast<unsigned char>(in[i]) << 16;
+        if (i + 1 < in.size()) n |= static_cast<unsigned char>(in[i + 1]) << 8;
+        if (i + 2 < in.size()) n |= static_cast<unsigned char>(in[i + 2]);
+        for (int k = 0; k < 4; ++k) out += tbl[(n >> (18 - 6 * k)) & 63];
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Base64 turns three bytes into four printable characters. Network protocols and config files embed binary data this way.` },
+
+{ n: 20, d: "medium", t: "Retry delays with a cap",
+  p: String.raw`A client retries a failed request four times. The first delay is 100 milliseconds, and each later delay doubles, but never exceeds 500 milliseconds. Print the four delays separated by spaces.`,
+  ex: String.raw`100 200 400 500`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+
+int main() {
+    int delay = 100;
+    for (int i = 0; i < 4; ++i) {
+        std::cout << delay << (i < 3 ? ' ' : '\n');
+        delay = std::min(delay * 2, 500);
+    }
+}`,
+  why: String.raw`Capped exponential backoff spreads retries out when a service is struggling, without letting the wait grow without limit.` },
+
+{ n: 21, d: "medium", t: "Count tokens in a sequence",
+  p: String.raw`Count the number of tokens in the expression x = 3 + y1;. A token is either a run of letters and digits, or a single other non-space character. Print the count.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string_view>
+#include <vector>
+
+std::vector<std::string_view> tokenize(std::string_view s) {
+    std::vector<std::string_view> out;
+    std::size_t i = 0;
+    while (i < s.size()) {
+        unsigned char c = s[i];
+        if (std::isspace(c)) { ++i; continue; }
+        std::size_t j = i + 1;
+        if (std::isalnum(c))
+            while (j < s.size() && std::isalnum(static_cast<unsigned char>(s[j]))) ++j;
+        out.push_back(s.substr(i, j - i));
+        i = j;
+    }
+    return out;
+}
+
+int main() {
+    std::cout << tokenize("x = 3 + y1;").size() << '\n';
+}`,
+  why: String.raw`Lexers split input into tokens in one left-to-right pass, with string_view avoiding a copy for each token.` },
+
+{ n: 22, d: "medium", t: "Shortest unique prefix",
+  p: String.raw`Given the words car, cart and dog, find the shortest prefix of cart that no other word in the list starts with. Print that prefix.`,
+  ex: String.raw`cart`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> words{"car", "cart", "dog"};
+    const std::string target = "cart";
+    std::string best = target;
+    for (std::size_t len = 1; len <= target.size(); ++len) {
+        const std::string pre = target.substr(0, len);
+        bool unique = true;
+        for (const auto& w : words)
+            if (w != target && w.compare(0, len, pre) == 0) unique = false;
+        if (unique) { best = pre; break; }
+    }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`Autocomplete and abbreviation tools display the shortest unambiguous prefix so the user types as little as possible.` },
+
+{ n: 23, d: "medium", t: "Split with quoted fields",
+  p: String.raw`Parse the line a,"b,c",d into fields. Commas inside double quotes do not separate fields, and the quote characters themselves are not part of the field. Print the number of fields, then the second field, separated by a space.`,
+  ex: String.raw`3 b,c`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+std::vector<std::string> parse(const std::string& s) {
+    std::vector<std::string> out;
+    std::string cur;
+    bool quoted = false;
+    for (char c : s) {
+        if (c == '"') quoted = !quoted;
+        else if (c == ',' && !quoted) { out.push_back(cur); cur.clear(); }
+        else cur += c;
+    }
+    out.push_back(cur);
+    return out;
+}
+
+int main() {
+    auto f = parse("a,\"b,c\",d");
+    std::cout << f.size() << ' ' << f[1] << '\n';
+}`,
+  why: String.raw`Real CSV parsers must handle quoted fields that contain the separator. Treating the quote as a state switch is the simplest correct approach for one pass.` },
+
+{ n: 24, d: "medium", t: "Config file sections",
+  p: String.raw`Read the configuration text below and store each key as section.key. The text is:
+[net]
+port=80
+host=local
+Print the value stored for net.port.`,
+  ex: String.raw`80`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("[net]\nport=80\nhost=local\n");
+    std::map<std::string, std::string> kv;
+    std::string section, line;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        if (line.front() == '[') {
+            section = line.substr(1, line.size() - 2);
+            continue;
+        }
+        auto eq = line.find('=');
+        kv[section + "." + line.substr(0, eq)] = line.substr(eq + 1);
+    }
+    std::cout << kv["net.port"] << '\n';
+}`,
+  why: String.raw`INI files group keys under section headers. Tracking the current section while reading lines gives each key a full name.` },
+
+{ n: 25, d: "medium", t: "Subscriber removed by its handle",
+  p: String.raw`An event bus lets callers subscribe a handler and receive a handle. When the handle is destroyed, its handler is removed automatically. Subscribe two handlers that each add 1 to a counter. Destroy the second handle, then emit an event once. Print the counter.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+class Bus;
+
+class Subscription {
+    Bus* bus;
+    int id;
+
+public:
+    Subscription(Bus* b, int i) : bus(b), id(i) {}
+    ~Subscription();
+};
+
+class Bus {
+public:
+    std::vector<std::pair<int, std::function<void()>>> handlers;
+    int next = 0;
+    Subscription subscribe(std::function<void()> f) {
+        handlers.push_back({next, std::move(f)});
+        return Subscription(this, next++);
+    }
+    void remove(int id) {
+        std::erase_if(handlers, [&](const auto& h) { return h.first == id; });
+    }
+    void emit() {
+        for (auto& h : handlers) h.second();
+    }
+};
+
+Subscription::~Subscription() { bus->remove(id); }
+
+int main() {
+    Bus bus;
+    int count = 0;
+    auto s1 = bus.subscribe([&] { ++count; });
+    {
+        auto s2 = bus.subscribe([&] { ++count; });
+    }
+    bus.emit();
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Tying a subscription's lifetime to a handle object means forgotten unsubscribes cannot leave dangling callbacks behind.` },
+
+{ n: 26, d: "medium", t: "Worker pool with futures",
+  p: String.raw`Build a pool of three worker threads that run submitted tasks. Submit five tasks, where task i returns i times i for i from 1 to 5. Collect each result through its future, then print the sum of the results.`,
+  ex: String.raw`55`,
+  code: String.raw`#include <condition_variable>
+#include <functional>
+#include <future>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+
+class Pool {
+    std::mutex m;
+    std::condition_variable cv;
+    std::queue<std::function<void()>> tasks;
+    bool stop = false;
+    std::vector<std::thread> workers;
+
+public:
+    explicit Pool(int n) {
+        for (int i = 0; i < n; ++i)
+            workers.emplace_back([this] {
+                for (;;) {
+                    std::function<void()> job;
+                    {
+                        std::unique_lock lk(m);
+                        cv.wait(lk, [&] { return stop || !tasks.empty(); });
+                        if (stop && tasks.empty()) return;
+                        job = std::move(tasks.front());
+                        tasks.pop();
+                    }
+                    job();
+                }
+            });
+    }
+    template <class F>
+    auto submit(F f) -> std::future<decltype(f())> {
+        auto task = std::make_shared<std::packaged_task<decltype(f())()>>(std::move(f));
+        auto fut = task->get_future();
+        {
+            std::lock_guard g(m);
+            tasks.emplace([task] { (*task)(); });
+        }
+        cv.notify_one();
+        return fut;
+    }
+    ~Pool() {
+        {
+            std::lock_guard g(m);
+            stop = true;
+        }
+        cv.notify_all();
+        for (auto& t : workers) t.join();
+    }
+};
+
+int main() {
+    Pool pool(3);
+    std::vector<std::future<int>> fs;
+    for (int i = 1; i <= 5; ++i)
+        fs.push_back(pool.submit([i] { return i * i; }));
+    int sum = 0;
+    for (auto& f : fs) sum += f.get();
+    std::cout << sum << '\n';
+}`,
+  why: String.raw`A fixed set of workers pulls tasks from one queue, and futures carry each result back to the submitter. Joining in the destructor makes shutdown orderly.` },
+
+{ n: 27, d: "medium", t: "Count words with a prefix",
+  p: String.raw`Store the words car, cart and dog in a prefix tree, where each node records how many words pass through it. Count the words that start with ca and print the number.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <memory>
+#include <string>
+
+struct TrieNode {
+    std::array<std::unique_ptr<TrieNode>, 26> kids;
+    int count = 0;
+};
+
+void insert(TrieNode& root, const std::string& w) {
+    TrieNode* n = &root;
+    for (char c : w) {
+        auto& k = n->kids[c - 'a'];
+        if (!k) k = std::make_unique<TrieNode>();
+        n = k.get();
+        ++n->count;
+    }
+}
+
+int prefix_count(const TrieNode& root, const std::string& p) {
+    const TrieNode* n = &root;
+    for (char c : p) {
+        const auto& k = n->kids[c - 'a'];
+        if (!k) return 0;
+        n = k.get();
+    }
+    return n->count;
+}
+
+int main() {
+    TrieNode root;
+    for (const char* w : {"car", "cart", "dog"}) insert(root, w);
+    std::cout << prefix_count(root, "ca") << '\n';
+}`,
+  why: String.raw`Autocomplete systems answer prefix queries in time proportional to the prefix length, using counts stored on the path.` },
+
+{ n: 28, d: "medium", t: "Lookup after collisions",
+  p: String.raw`A hash table with 8 slots places each key at its key modulo 8, and on collision moves to the next slot. Insert key 1 with value 10, then key 9 with value 90, which collides with key 1. Erase key 1, leaving its slot marked as deleted so that later lookups keep searching past it. Look up key 9 and key 17, printing its value or missing. Separate the two answers with a space.`,
+  ex: String.raw`90 missing`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+class Table {
+    struct Slot {
+        enum { Empty, Used, Dead } st = Empty;
+        int key = 0;
+        int val = 0;
+    };
+    std::vector<Slot> s;
+
+public:
+    Table() : s(8) {}
+    void insert(int k, int v) {
+        std::size_t i = k % s.size();
+        while (s[i].st == Slot::Used && s[i].key != k) i = (i + 1) % s.size();
+        s[i] = {Slot::Used, k, v};
+    }
+    void erase(int k) {
+        std::size_t i = k % s.size();
+        for (std::size_t n = 0; n < s.size(); ++n, i = (i + 1) % s.size()) {
+            if (s[i].st == Slot::Empty) return;
+            if (s[i].st == Slot::Used && s[i].key == k) { s[i].st = Slot::Dead; return; }
+        }
+    }
+    std::optional<int> find(int k) const {
+        std::size_t i = k % s.size();
+        for (std::size_t n = 0; n < s.size(); ++n, i = (i + 1) % s.size()) {
+            if (s[i].st == Slot::Empty) return std::nullopt;
+            if (s[i].st == Slot::Used && s[i].key == k) return s[i].val;
+        }
+        return std::nullopt;
+    }
+};
+
+int main() {
+    Table t;
+    t.insert(1, 10);
+    t.insert(9, 90);
+    t.erase(1);
+    if (auto v = t.find(9)) std::cout << *v; else std::cout << "missing";
+    std::cout << ' ';
+    if (auto v = t.find(17)) std::cout << *v; else std::cout << "missing";
+    std::cout << '\n';
+}`,
+  why: String.raw`Open addressing keeps everything in one array. Deleted slots must be marked rather than emptied, or lookups past them would stop too early.` },
+
+{ n: 29, d: "medium", t: "Intrusive list reordering",
+  p: String.raw`Three nodes with values 1, 2 and 3 are linked into a circular list that stores the links inside the nodes themselves. Move the node with value 1 to the end of the list. Print the values in order, separated by spaces.`,
+  ex: String.raw`2 3 1`,
+  code: String.raw`#include <iostream>
+
+struct Node {
+    int v;
+    Node* prev = nullptr;
+    Node* next = nullptr;
+};
+
+struct List {
+    Node head{0};
+    List() { head.prev = head.next = &head; }
+    void push_back(Node* n) {
+        n->prev = head.prev;
+        n->next = &head;
+        head.prev->next = n;
+        head.prev = n;
+    }
+    void unlink(Node* n) {
+        n->prev->next = n->next;
+        n->next->prev = n->prev;
+        n->prev = n->next = nullptr;
+    }
+};
+
+int main() {
+    Node a{1}, b{2}, c{3};
+    List l;
+    l.push_back(&a);
+    l.push_back(&b);
+    l.push_back(&c);
+    l.unlink(&a);
+    l.push_back(&a);
+    for (Node* p = l.head.next; p != &l.head; p = p->next)
+        std::cout << p->v << (p->next != &l.head ? ' ' : '\n');
+}`,
+  why: String.raw`Intrusive lists embed their links in the objects they hold, so inserting or removing needs no allocation. The Linux kernel and many engines use this layout.` },
+
+{ n: 30, d: "medium", t: "Build order from dependencies",
+  p: String.raw`Targets have these dependencies: a must be built before b and c, b must be built before c, and c must be built before d. Print a build order, using a queue of targets whose dependencies are all built, and taking ties alphabetically. Separate the names with spaces.`,
+  ex: String.raw`a b c d`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <queue>
+#include <string>
+#include <vector>
+
+int main() {
+    std::map<std::string, std::vector<std::string>> adj{
+        {"a", {"b", "c"}}, {"b", {"c"}}, {"c", {"d"}}, {"d", {}}};
+    std::map<std::string, int> indeg;
+    for (auto& [k, v] : adj) {
+        indeg.try_emplace(k, 0);
+        for (auto& w : v) ++indeg[w];
+    }
+    std::queue<std::string> q;
+    for (auto& [k, d] : indeg)
+        if (d == 0) q.push(k);
+    bool first = true;
+    while (!q.empty()) {
+        auto u = q.front();
+        q.pop();
+        std::cout << (first ? "" : " ") << u;
+        first = false;
+        for (auto& w : adj[u])
+            if (--indeg[w] == 0) q.push(w);
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Build systems run targets in dependency order. Repeatedly taking targets whose inputs are all done produces a valid order, and it reports a cycle when some targets never become ready.` },
+
+// ---------- Hard ----------
+{ n: 31, d: "hard", t: "Small vector with inline storage",
+  p: String.raw`A small vector stores up to two ints inline in the object itself, and moves all of its elements to heap storage once a third value is pushed. Push the values 0 through 4. Print its size, then true or false for whether it has moved to heap storage, separated by a space.`,
+  ex: String.raw`5 true`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <vector>
+
+class SmallVec {
+    std::array<int, 2> inl{};
+    std::size_t n = 0;
+    std::vector<int> heap;
+
+public:
+    void push(int v) {
+        if (n < 2) inl[n] = v;
+        else {
+            if (heap.empty()) heap.assign(inl.begin(), inl.end());
+            heap.push_back(v);
+        }
+        ++n;
+    }
+    std::size_t size() const { return n; }
+    bool spilled() const { return !heap.empty(); }
+};
+
+int main() {
+    SmallVec s;
+    for (int v = 0; v < 5; ++v) s.push(v);
+    std::cout << s.size() << ' ' << std::boolalpha << s.spilled() << '\n';
+}`,
+  why: String.raw`Most containers in a program hold only a few elements. Storing those inline avoids an allocation, and the heap is used only when they grow. LLVM's SmallVector works this way.` },
+
+{ n: 32, d: "hard", t: "Intern strings to stable ids",
+  p: String.raw`Intern strings so that each distinct string gets a small integer id the first time it is seen, and the same id is returned every time after that. Intern foo, then bar, then foo again. Print the three ids separated by spaces.`,
+  ex: String.raw`0 1 0`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+class Interner {
+    std::unordered_map<std::string, int> ids;
+    std::vector<std::string> names;
+
+public:
+    int intern(const std::string& s) {
+        auto [it, inserted] = ids.try_emplace(s, static_cast<int>(names.size()));
+        if (inserted) names.push_back(s);
+        return it->second;
+    }
+};
+
+int main() {
+    Interner in;
+    std::cout << in.intern("foo") << ' ' << in.intern("bar") << ' ' << in.intern("foo") << '\n';
+}`,
+  why: String.raw`Compilers and symbol tables intern identifiers so that later comparisons are integer comparisons. The id stays valid for the life of the table.` },
+
+{ n: 33, d: "hard", t: "Store and find with deletion markers",
+  p: String.raw`Use an 8-slot hash table keyed by integers, where a key lands at its value modulo 8 and collisions move to the next slot. Insert key 1 with value 10 and key 9 with value 90. Delete key 1, marking its slot so later searches continue past it. Look up key 9, then key 17, printing the value or missing. Separate the answers with a space.`,
+  ex: String.raw`90 missing`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+class Table {
+    struct Slot {
+        enum { Empty, Used, Dead } st = Empty;
+        int key = 0;
+        int val = 0;
+    };
+    std::vector<Slot> s;
+
+public:
+    Table() : s(8) {}
+    void insert(int k, int v) {
+        std::size_t i = k % s.size();
+        while (s[i].st == Slot::Used && s[i].key != k) i = (i + 1) % s.size();
+        s[i] = {Slot::Used, k, v};
+    }
+    void erase(int k) {
+        std::size_t i = k % s.size();
+        for (std::size_t n = 0; n < s.size(); ++n, i = (i + 1) % s.size()) {
+            if (s[i].st == Slot::Empty) return;
+            if (s[i].st == Slot::Used && s[i].key == k) { s[i].st = Slot::Dead; return; }
+        }
+    }
+    std::optional<int> find(int k) const {
+        std::size_t i = k % s.size();
+        for (std::size_t n = 0; n < s.size(); ++n, i = (i + 1) % s.size()) {
+            if (s[i].st == Slot::Empty) return std::nullopt;
+            if (s[i].st == Slot::Used && s[i].key == k) return s[i].val;
+        }
+        return std::nullopt;
+    }
+};
+
+int main() {
+    Table t;
+    t.insert(1, 10);
+    t.insert(9, 90);
+    t.erase(1);
+    if (auto v = t.find(9)) std::cout << *v; else std::cout << "missing";
+    std::cout << ' ';
+    if (auto v = t.find(17)) std::cout << *v; else std::cout << "missing";
+    std::cout << '\n';
+}`,
+  why: String.raw`Deletion from a probing table cannot simply empty the slot, because a later key may have been placed beyond it. A tombstone keeps the probe chain intact.` },
+
+{ n: 34, d: "hard", t: "Event handler with unsubscribe by id",
+  p: String.raw`Write an event bus where subscribing returns an integer id, and unsubscribing by id removes that handler only. Subscribe handler A, which adds 1 to a counter, then handler B, which adds 10. Unsubscribe A, then emit an event. Print the counter.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+class Bus {
+    std::vector<std::pair<int, std::function<void()>>> handlers;
+    int next = 0;
+
+public:
+    int subscribe(std::function<void()> f) {
+        handlers.push_back({next, std::move(f)});
+        return next++;
+    }
+    void unsubscribe(int id) {
+        std::erase_if(handlers, [&](const auto& h) { return h.first == id; });
+    }
+    void emit() {
+        for (auto& h : handlers) h.second();
+    }
+};
+
+int main() {
+    Bus bus;
+    int counter = 0;
+    int a = bus.subscribe([&] { counter += 1; });
+    bus.subscribe([&] { counter += 10; });
+    bus.unsubscribe(a);
+    bus.emit();
+    std::cout << counter << '\n';
+}`,
+  why: String.raw`Returning ids instead of pointers keeps the bus free of dangling references. The cost is a lookup on removal.` },
+
+{ n: 35, d: "hard", t: "Splice in the middle of a list",
+  p: String.raw`A doubly linked list holds the values 1, 2, 3 and 4 in that order. Remove the values 2 and 3 from the list and reinsert them after the value 4, keeping their relative order. Print the values in list order, separated by spaces.`,
+  ex: String.raw`1 4 2 3`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4};
+    std::list<int> moved;
+    auto it = l.begin();
+    ++it;
+    moved.splice(moved.end(), l, it, std::next(it, 2));
+    l.splice(l.end(), moved);
+    for (auto v : l) std::cout << v << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Splicing moves nodes between lists without copying values or invalidating iterators to them. Moving a whole range is constant time.` },
+
+{ n: 36, d: "hard", t: "Thread-safe bounded queue with shutdown",
+  p: String.raw`Build a bounded queue that holds at most two items. One producer thread pushes the numbers 1 through 6 and then closes the queue. One consumer thread pops items until the queue is closed and empty, adding them up. Print the total.`,
+  ex: String.raw`21`,
+  code: String.raw`#include <condition_variable>
+#include <deque>
+#include <iostream>
+#include <mutex>
+#include <optional>
+#include <thread>
+
+class BoundedQueue {
+    std::mutex m;
+    std::condition_variable not_full, not_empty;
+    std::deque<int> q;
+    std::size_t cap;
+    bool closed = false;
+
+public:
+    explicit BoundedQueue(std::size_t c) : cap(c) {}
+    void push(int v) {
+        std::unique_lock lk(m);
+        not_full.wait(lk, [&] { return q.size() < cap; });
+        q.push_back(v);
+        not_empty.notify_one();
+    }
+    void close() {
+        {
+            std::lock_guard g(m);
+            closed = true;
+        }
+        not_empty.notify_all();
+    }
+    std::optional<int> pop() {
+        std::unique_lock lk(m);
+        not_empty.wait(lk, [&] { return !q.empty() || closed; });
+        if (q.empty()) return std::nullopt;
+        int v = q.front();
+        q.pop_front();
+        not_full.notify_one();
+        return v;
+    }
+};
+
+int main() {
+    BoundedQueue bq(2);
+    int total = 0;
+    std::thread consumer([&] {
+        while (auto v = bq.pop()) total += *v;
+    });
+    std::thread producer([&] {
+        for (int i = 1; i <= 6; ++i) bq.push(i);
+        bq.close();
+    });
+    producer.join();
+    consumer.join();
+    std::cout << total << '\n';
+}`,
+  why: String.raw`A capacity bound gives backpressure, so a fast producer waits instead of exhausting memory. Closing the queue lets the consumer finish cleanly.` },
+
+{ n: 37, d: "hard", t: "Wait for a deadline with cancellation",
+  p: String.raw`A worker thread is given a cancellation request before it begins. The worker checks its cancellation state and records cancelled if it was asked to stop, otherwise done. Create the worker so that the stop request is already in place when it starts, join it, and print the recorded state.`,
+  ex: String.raw`cancelled`,
+  code: String.raw`#include <iostream>
+#include <stop_token>
+#include <string>
+#include <thread>
+
+int main() {
+    std::stop_source src;
+    src.request_stop();
+    std::string state;
+    std::jthread t([&state](std::stop_token st) {
+        state = st.stop_requested() ? "cancelled" : "done";
+    }, src.get_token());
+    t.join();
+    std::cout << state << '\n';
+}`,
+  why: String.raw`Cancellation is cooperative. A task that starts after a request still sees it, so it can skip work it no longer needs.` },
+
+{ n: 38, d: "hard", t: "Memory-mapped record reader simulation",
+  p: String.raw`A file of fixed-size records is read through an index. Each record is 4 bytes: a 2-byte id and a 2-byte value. The bytes for the records with ids 1 and 2 are 01 00 0a 00 and 02 00 14 00. Read the record for id 2 by computing its byte offset from its index, then print its value in decimal.`,
+  ex: String.raw`20`,
+  code: String.raw`#include <cstdint>
+#include <cstring>
+#include <iostream>
+
+int main() {
+    const unsigned char file[] = {0x01, 0x00, 0x0a, 0x00, 0x02, 0x00, 0x14, 0x00};
+    const std::size_t record_size = 4;
+    const std::size_t index = 1;
+    std::uint16_t value = 0;
+    std::memcpy(&value, file + index * record_size + 2, sizeof value);
+    std::cout << value << '\n';
+}`,
+  why: String.raw`Fixed-size records make the byte offset of any record a multiplication. Reading through memcpy avoids undefined behaviour from misaligned or aliased access. Little-endian is assumed here, which holds on common hardware.` },
+
+{ n: 39, d: "hard", t: "Pimpl with a copyable wrapper",
+  p: String.raw`A wrapper holds its implementation through a pointer so that its header stays small. Give the wrapper a copy operation that creates an independent copy of the implementation. Copy a wrapper holding the value 7, change the copy to 9, then print the original's value followed by the copy's value, separated by a space.`,
+  ex: String.raw`7 9`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+class Widget {
+    struct Impl { int v; };
+    std::unique_ptr<Impl> p;
+
+public:
+    explicit Widget(int v) : p(std::make_unique<Impl>(Impl{v})) {}
+    Widget(const Widget& o) : p(std::make_unique<Impl>(*o.p)) {}
+    Widget& operator=(const Widget& o) {
+        if (this != &o) *p = *o.p;
+        return *this;
+    }
+    void set(int v) { p->v = v; }
+    int value() const { return p->v; }
+};
+
+int main() {
+    Widget a(7);
+    Widget b = a;
+    b.set(9);
+    std::cout << a.value() << ' ' << b.value() << '\n';
+}`,
+  why: String.raw`A unique pointer makes the wrapper move-only by default. Writing the copy operations explicitly is how you give a pimpl-based type value semantics.` },
+
+{ n: 40, d: "hard", t: "Mixin with static dispatch",
+  p: String.raw`Write a base template that gives every derived type a describe method. The base calls the derived type's own name function without using virtual functions. Define a circle type whose name is circle, call describe on it, and print the result.`,
+  ex: String.raw`circle`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+template <class D>
+struct Shape {
+    std::string describe() const { return static_cast<const D&>(*this).name(); }
+};
+
+struct Circle : Shape<Circle> {
+    std::string name() const { return "circle"; }
+};
+
+int main() {
+    Circle c;
+    std::cout << c.describe() << '\n';
+}`,
+  why: String.raw`The curiously recurring template pattern gives compile-time polymorphism. Numerical libraries such as Eigen use it to avoid the cost of virtual calls in inner loops.` },
+
+{ n: 41, d: "hard", t: "Resolve a config with fallbacks",
+  p: String.raw`Look up a setting in a list of sources in priority order. The sources are a command-line map with timeout set to 30, an environment map with timeout set to 60 and retries set to 3, and a defaults map with retries set to 5 and host set to localhost. Return the first value found for each key. Print timeout, retries and host, separated by spaces.`,
+  ex: String.raw`30 3 localhost`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+#include <vector>
+
+using Source = std::map<std::string, int>;
+
+std::optional<int> lookup(const std::vector<Source>& sources, const std::string& key) {
+    for (const auto& s : sources) {
+        auto it = s.find(key);
+        if (it != s.end()) return it->second;
+    }
+    return std::nullopt;
+}
+
+int main() {
+    const std::vector<Source> sources{
+        {{"timeout", 30}},
+        {{"timeout", 60}, {"retries", 3}},
+        {{"retries", 5}, {"host", 0}}};
+    std::cout << *lookup(sources, "timeout") << ' ' << *lookup(sources, "retries") << ' '
+              << (lookup(sources, "host") ? "localhost" : "none") << '\n';
+}`,
+  why: String.raw`Layered configuration is resolved by searching sources from highest to lowest priority, and the first hit wins. Real tools do this for flags, environment and file settings.` },
+
+{ n: 42, d: "hard", t: "Round-trip a record through bytes",
+  p: String.raw`Write a record with an id of 258 and a flag of true into a byte buffer, using 4 bytes for the id in little-endian order and 1 byte for the flag. Read the record back from those bytes and print the id, then the flag as 0 or 1, separated by a space.`,
+  ex: String.raw`258 1`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::uint32_t id = 258;
+    const bool flag = true;
+    std::vector<unsigned char> buf;
+    for (int i = 0; i < 4; ++i) buf.push_back(static_cast<unsigned char>((id >> (8 * i)) & 0xFF));
+    buf.push_back(flag ? 1 : 0);
+
+    std::uint32_t rid = 0;
+    for (int i = 0; i < 4; ++i) rid |= static_cast<std::uint32_t>(buf[i]) << (8 * i);
+    const bool rflag = buf[4] != 0;
+    std::cout << rid << ' ' << (rflag ? 1 : 0) << '\n';
+}`,
+  why: String.raw`Serialisation formats fix the byte order explicitly, so a file written on one machine reads back the same on another.` },
+
+{ n: 43, d: "hard", t: "Mutable state in a const method",
+  p: String.raw`A cache answers a lookup through a const method, but it must still count how many lookups it has served. The count is updated even from const methods, and the cached answer is computed the first time only. Call the lookup for key 5 three times, then print the number of lookups served, followed by the value returned.`,
+  ex: String.raw`3 25`,
+  code: String.raw`#include <iostream>
+
+class SquareCache {
+    mutable int served = 0;
+    mutable int cached = -1;
+
+public:
+    int get(int k) const {
+        ++served;
+        if (cached < 0) cached = k * k;
+        return cached;
+    }
+    int count() const { return served; }
+};
+
+int main() {
+    SquareCache c;
+    int v = 0;
+    for (int i = 0; i < 3; ++i) v = c.get(5);
+    std::cout << c.count() << ' ' << v << '\n';
+}`,
+  why: String.raw`Caches and counters are logically unchanged by a read, so they are declared mutable and modified through const methods.` },
+
+{ n: 44, d: "hard", t: "Retry with a deadline",
+  p: String.raw`An operation fails on its first two attempts and succeeds on the third. Retry it with delays of 100, 200 and 400 milliseconds between attempts. Give up if the total delay would exceed 500 milliseconds. Print the number of attempts made, then the total delay used, separated by a space.`,
+  ex: String.raw`3 300`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const int succeed_on = 3;
+    const int delays[] = {100, 200, 400};
+    int attempts = 0, total = 0;
+    for (int i = 0; i <= 2; ++i) {
+        ++attempts;
+        if (attempts == succeed_on) break;
+        if (total + delays[i] > 500) break;
+        total += delays[i];
+    }
+    std::cout << attempts << ' ' << total << '\n';
+}`,
+  why: String.raw`A deadline bounds the total time a caller will wait, which is often more useful than a fixed retry count for user-facing requests.` },
+
+{ n: 45, d: "hard", t: "Cancel a computation partway",
+  p: String.raw`Sum the numbers 1 through 1000, but stop as soon as the running total would exceed 100. Print the last number added, then the running total, separated by a space.`,
+  ex: String.raw`13 91`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int total = 0, last = 0;
+    for (int i = 1; i <= 1000; ++i) {
+        if (total + i > 100) break;
+        total += i;
+        last = i;
+    }
+    std::cout << last << ' ' << total << '\n';
+}`,
+  why: String.raw`Early exit is how long computations respond to a cancellation or a budget. Checking before doing the work keeps the stopping point exact.` },
+
+{ n: 46, d: "hard", t: "Ordered map with prefix range",
+  p: String.raw`Store the keys apple, apricot, banana and blueberry in an ordered map. Print the keys that start with ap, in order, separated by spaces, by scanning only the part of the map where such keys can be.`,
+  ex: String.raw`apple apricot`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, int> m{{"apple", 1}, {"apricot", 2}, {"banana", 3}, {"blueberry", 4}};
+    const std::string prefix = "ap";
+    bool first = true;
+    for (auto it = m.lower_bound(prefix); it != m.end() && it->first.compare(0, prefix.size(), prefix) == 0; ++it) {
+        std::cout << (first ? "" : " ") << it->first;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Keys in an ordered map sort lexicographically, so all keys sharing a prefix sit next to each other. A single search finds the start of that run.` },
+
+{ n: 47, d: "hard", t: "Event timeline with a priority queue",
+  p: String.raw`Events occur at times 5, 1 and 3 and must be processed in time order. Processing the event at time 1 also schedules a new event at time 2 with the name D. Print the names of the events in the order they are processed, separated by spaces. The original events are named A at time 1, B at time 3 and C at time 5.`,
+  ex: String.raw`A D B C`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+#include <vector>
+
+int main() {
+    using Event = std::pair<int, std::string>;
+    std::priority_queue<Event, std::vector<Event>, std::greater<>> events;
+    events.push({5, "C"});
+    events.push({1, "A"});
+    events.push({3, "B"});
+    bool first = true;
+    while (!events.empty()) {
+        Event e = events.top();
+        events.pop();
+        std::cout << (first ? "" : " ") << e.second;
+        first = false;
+        if (e.second == "A") events.push({2, "D"});
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A discrete-event simulator in a network or game engine is a priority queue keyed by time. Handling an event can schedule later ones.` },
+
+{ n: 48, d: "hard", t: "Parse a command line into a struct",
+  p: String.raw`Parse the arguments --verbose, --port=8080 and then the file name input.txt. Store verbose as a flag, the port as an integer and each non-option argument in a list. Print verbose as 0 or 1, the port, and the list size, separated by spaces.`,
+  ex: String.raw`1 8080 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+struct Options {
+    bool verbose = false;
+    int port = 0;
+    std::vector<std::string> files;
+};
+
+Options parse(const std::vector<std::string>& args) {
+    Options o;
+    for (const auto& a : args) {
+        if (a == "--verbose") o.verbose = true;
+        else if (a.rfind("--port=", 0) == 0) o.port = std::stoi(a.substr(7));
+        else o.files.push_back(a);
+    }
+    return o;
+}
+
+int main() {
+    const Options o = parse({"--verbose", "--port=8080", "input.txt"});
+    std::cout << (o.verbose ? 1 : 0) << ' ' << o.port << ' ' << o.files.size() << '\n';
+}`,
+  why: String.raw`Turning argument strings into a typed options struct once, at startup, keeps the rest of the program free of string parsing.` },
+
+// ---------- Extension ----------
+{ n: 49, d: "extension", t: "Expected-style error results",
+  p: String.raw`Write a parser that returns either a value or an error message. Parse the text x, which is not a number, and if it fails, print the error message bad input. Otherwise print the value.`,
+  ex: String.raw`bad input`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> parse(const std::string& s) {
+    try {
+        return std::stoi(s);
+    } catch (...) {
+        return std::unexpected(std::string("bad input"));
+    }
+}
+
+int main() {
+    auto r = parse("x");
+    if (!r) std::cout << r.error() << '\n';
+    else std::cout << *r << '\n';
+}`,
+  why: String.raw`Returning an error value rather than throwing makes failure part of the function's signature. Callers cannot ignore it without the compiler noticing.` },
+
+{ n: 50, d: "extension", t: "Vector on a fixed buffer",
+  p: String.raw`Create a vector that allocates from a fixed 256-byte buffer on the stack instead of the heap. Push three ints into it, then print its size.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <memory_resource>
+#include <vector>
+
+int main() {
+    std::byte buf[256];
+    std::pmr::monotonic_buffer_resource mr(buf, sizeof buf);
+    std::pmr::vector<int> v(&mr);
+    v.push_back(1);
+    v.push_back(2);
+    v.push_back(3);
+    std::cout << v.size() << '\n';
+}`,
+  why: String.raw`Memory resources let a container choose where its storage comes from. A monotonic buffer is cheap to allocate from and frees everything at once.` },
+
+{ n: 51, d: "extension", t: "Hide implementation behind a pointer",
+  p: String.raw`A class declares a value function but keeps its data in a separate implementation object that is defined elsewhere. Construct the object and print the value it reports, which is 42.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> p;
+
+public:
+    Widget();
+    ~Widget();
+    int value() const;
+};
+
+struct Widget::Impl {
+    int v = 42;
+};
+
+Widget::Widget() : p(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;
+int Widget::value() const { return p->v; }
+
+int main() {
+    Widget w;
+    std::cout << w.value() << '\n';
+}`,
+  why: String.raw`Keeping the data out of the header means changing the implementation does not force every user to recompile. Declaring the destructor out of line lets the unique pointer see the complete type.` },
+
+{ n: 52, d: "extension", t: "Bit set operations",
+  p: String.raw`Create a bit set of 8 bits and set the bits at positions 1, 3 and 5. Print how many bits are set.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <bitset>
+#include <iostream>
+
+int main() {
+    std::bitset<8> b;
+    b.set(1);
+    b.set(3);
+    b.set(5);
+    std::cout << b.count() << '\n';
+}`,
+  why: String.raw`Bit sets pack flags into a small fixed space and answer membership and counting questions with bit operations.` },
+
+{ n: 53, d: "extension", t: "Hash set of coordinate pairs",
+  p: String.raw`Store coordinate pairs in an unordered set, using a custom hash for pairs. Insert (1,2), (2,1) and (1,2) again. Print the number of distinct pairs stored.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <unordered_set>
+#include <utility>
+
+struct PairHash {
+    std::size_t operator()(const std::pair<int, int>& p) const {
+        return std::hash<int>{}(p.first) * 31 ^ std::hash<int>{}(p.second);
+    }
+};
+
+int main() {
+    std::unordered_set<std::pair<int, int>, PairHash> s;
+    s.insert({1, 2});
+    s.insert({2, 1});
+    s.insert({1, 2});
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Hash containers need a hash for every key type. Grid and graph code uses coordinate pairs as keys, so a custom hash is common.` },
+
+{ n: 54, d: "extension", t: "Optional configuration value",
+  p: String.raw`A configuration value may be absent. Read an absent string setting and print its value, or the text default if it is absent.`,
+  ex: String.raw`default`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+int main() {
+    std::optional<std::string> cfg;
+    std::cout << cfg.value_or("default") << '\n';
+}`,
+  why: String.raw`Optional values make "not set" explicit in the type, so callers must decide what to do with the absence.` },
+
+{ n: 55, d: "extension", t: "Visit alternatives and sum",
+  p: String.raw`A list holds the values 2 (an int) and 0.5 (a double). Convert each to a double by visiting the alternative it holds, add them up, and print the total.`,
+  ex: String.raw`2.5`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+int main() {
+    std::vector<std::variant<int, double>> vs{2, 0.5};
+    double total = 0;
+    for (auto& v : vs)
+        total += std::visit([](auto x) { return static_cast<double>(x); }, v);
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Visiting with a generic lambda handles every alternative with one body, which suits numeric pipelines that accept mixed types.` },
+
+{ n: 56, d: "extension", t: "Undo through stored actions",
+  p: String.raw`A counter starts at 0. Add 2 to it, then add 3, recording how to reverse each addition. Undo the most recent addition, then print the counter.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <stack>
+
+int main() {
+    int value = 0;
+    std::stack<std::function<void()>> undo;
+    auto add = [&](int d) {
+        value += d;
+        undo.push([&value, d] { value -= d; });
+    };
+    add(2);
+    add(3);
+    undo.top()();
+    undo.pop();
+    std::cout << value << '\n';
+}`,
+  why: String.raw`Storing an inverse action with each change is the basis of undo in editors and in transactional systems.` },
+
+{ n: 57, d: "extension", t: "Deduplicate normalised paths",
+  p: String.raw`Three paths are a/./b, a/b and a/b/../b. Normalise each one lexically, add the results to a set, and print how many distinct paths remain.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <filesystem>
+#include <iostream>
+#include <set>
+#include <string>
+
+int main() {
+    std::set<std::string> s;
+    for (const char* p : {"a/./b", "a/b", "a/b/../b"})
+        s.insert(std::filesystem::path(p).lexically_normal().generic_string());
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Equivalent paths must compare equal before they are used as keys, otherwise the same file gets processed twice.` },
+
+{ n: 58, d: "extension", t: "Format a duration",
+  p: String.raw`Format 3725 seconds as hours, minutes and seconds, in the form 1h 2m 5s. Print the result.`,
+  ex: String.raw`1h 2m 5s`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int s = 3725;
+    std::cout << s / 3600 << "h " << (s % 3600) / 60 << "m " << s % 60 << "s\n";
+}`,
+  why: String.raw`Splitting a total into mixed units uses integer division and remainders. Logs and progress displays use this constantly.` },
+
+{ n: 59, d: "extension", t: "Reverse the bytes of an integer",
+  p: String.raw`Reverse the four bytes of the 32-bit value 0x12345678 so that its byte order is flipped. Print the result as lowercase hexadecimal with no prefix.`,
+  ex: String.raw`78563412`,
+  code: String.raw`#include <cstdint>
+#include <iomanip>
+#include <iostream>
+
+int main() {
+    std::uint32_t v = 0x12345678;
+    std::uint32_t r = ((v & 0xFF) << 24) | ((v & 0xFF00) << 8) | ((v >> 8) & 0xFF00) | (v >> 24);
+    std::cout << std::hex << r << '\n';
+}`,
+  why: String.raw`Converting between big-endian and little-endian data is a byte shuffle. Network code and file formats do this at their boundaries.` },
+
+{ n: 60, d: "extension", t: "Additive checksum",
+  p: String.raw`Compute the checksum of the text abc by adding the byte values of its characters and keeping only the low 8 bits of the sum. Print the checksum.`,
+  ex: String.raw`38`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "abc";
+    unsigned sum = 0;
+    for (unsigned char c : s) sum += c;
+    std::cout << (sum & 0xFF) << '\n';
+}`,
+  why: String.raw`Simple checksums detect accidental corruption in transmitted data. Masking to the low bits keeps the value in a fixed width.` },
+
+{ n: 61, d: "extension", t: "Count chunks of a vector",
+  p: String.raw`Split the vector 1 2 3 4 5 into consecutive chunks of at most two elements. Print the number of chunks.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5};
+    std::size_t chunks = 0;
+    for (auto it = v.begin(); it != v.end();) {
+        auto n = std::min<std::ptrdiff_t>(2, v.end() - it);
+        it += n;
+        ++chunks;
+    }
+    std::cout << chunks << '\n';
+}`,
+  why: String.raw`Batching work in fixed-size chunks is how databases, network writers and GPU uploads keep their unit of work bounded.` },
+
+{ n: 62, d: "extension", t: "Generic lambda with explicit template",
+  p: String.raw`Define a lambda that adds two values of the same type, declaring its template parameter explicitly. Call it with 2 and 3 and print the result.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    auto add = []<typename T>(T a, T b) { return a + b; };
+    std::cout << add(2, 3) << '\n';
+}`,
+  why: String.raw`Explicit template parameters on lambdas let a generic function name its type, which is useful when the parameters are not deduced from the arguments alone.` },
+
+// ---------- Applications ----------
+{ n: 63, d: "applications", t: "Level-filtered logger",
+  p: String.raw`A logger drops messages below its minimum level, which is Warn. Log a Debug message, an Info message and an Error message. Print how many messages were actually written.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+enum class Level { Debug, Info, Warn, Error };
+
+class Logger {
+    Level min;
+
+public:
+    int written = 0;
+    explicit Logger(Level m) : min(m) {}
+    void log(Level l, const std::string& msg) {
+        (void)msg;
+        if (l < min) return;
+        ++written;
+    }
+};
+
+int main() {
+    Logger lg(Level::Warn);
+    lg.log(Level::Debug, "a");
+    lg.log(Level::Info, "b");
+    lg.log(Level::Error, "c");
+    std::cout << lg.written << '\n';
+}`,
+  why: String.raw`Filtering by level at the call site keeps verbose output out of production logs without changing the code that logs.` },
+
+{ n: 64, d: "applications", t: "Layered configuration merge",
+  p: String.raw`Start with the defaults host=localhost and port=80. Apply the overrides port=8080. Print the host and port, separated by a space.`,
+  ex: String.raw`localhost 8080`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, std::string> defaults{{"host", "localhost"}, {"port", "80"}};
+    std::map<std::string, std::string> overrides{{"port", "8080"}};
+    auto merged = defaults;
+    for (auto& [k, v] : overrides) merged[k] = v;
+    std::cout << merged["host"] << ' ' << merged["port"] << '\n';
+}`,
+  why: String.raw`Applying overrides on top of defaults in one loop gives each layer a clear place in the precedence order.` },
+
+{ n: 65, d: "applications", t: "Token bucket rate limiter",
+  p: String.raw`A rate limiter holds at most 2 tokens and gains 1 token per time step, up to that cap. It starts full at time 0. Requests arrive at times 0, 0, 0 and 1. Each request that finds a token is allowed and uses one token. Print how many requests were allowed.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int cap = 2;
+    int tokens = cap;
+    int last = 0;
+    int allowed = 0;
+    const std::vector<int> times{0, 0, 0, 1};
+    for (int t : times) {
+        tokens = std::min(cap, tokens + (t - last));
+        last = t;
+        if (tokens > 0) {
+            --tokens;
+            ++allowed;
+        }
+    }
+    std::cout << allowed << '\n';
+}`,
+  why: String.raw`A token bucket allows short bursts up to its capacity while holding the long-run rate to the refill rate. Refilling lazily from the elapsed time avoids a timer.` },
+
+{ n: 66, d: "applications", t: "Undo and redo for a text buffer",
+  p: String.raw`A text buffer starts empty. Append a, then append b. Undo the last append, then redo it. Print the final text.`,
+  ex: String.raw`ab`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::string text;
+    std::vector<std::string> history, redo;
+    auto edit = [&](const std::string& s) {
+        history.push_back(text);
+        text += s;
+        redo.clear();
+    };
+    auto undo = [&] {
+        if (!history.empty()) {
+            redo.push_back(text);
+            text = history.back();
+            history.pop_back();
+        }
+    };
+    auto redo_op = [&] {
+        if (!redo.empty()) {
+            history.push_back(text);
+            text = redo.back();
+            redo.pop_back();
+        }
+    };
+    edit("a");
+    edit("b");
+    undo();
+    redo_op();
+    std::cout << text << '\n';
+}`,
+  why: String.raw`Keeping a stack of previous states, and a second stack of undone states that is cleared by any new edit, is the usual undo model in editors.` },
+
+{ n: 67, d: "applications", t: "Length of the longest common subsequence",
+  p: String.raw`Find the length of the longest sequence of characters that appears in both abcde and ace, keeping their order but not requiring them to be adjacent. Print that length.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::string a = "abcde", b = "ace";
+    std::vector<std::vector<int>> dp(a.size() + 1, std::vector<int>(b.size() + 1, 0));
+    for (std::size_t i = 1; i <= a.size(); ++i)
+        for (std::size_t j = 1; j <= b.size(); ++j)
+            dp[i][j] = a[i - 1] == b[j - 1] ? dp[i - 1][j - 1] + 1
+                                            : std::max(dp[i - 1][j], dp[i][j - 1]);
+    std::cout << dp[a.size()][b.size()] << '\n';
+}`,
+  why: String.raw`Diff tools compare files by their longest common subsequence of lines. The same table works on characters, and fills in one cell at a time.` },
+
+{ n: 68, d: "applications", t: "Matrix product",
+  p: String.raw`Multiply the 2 by 2 matrix [[1,2],[3,4]] by the matrix [[5,6],[7,8]]. Print the four entries of the result, row by row, separated by spaces.`,
+  ex: String.raw`19 22 43 50`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<int>> A{{1, 2}, {3, 4}}, B{{5, 6}, {7, 8}};
+    std::vector<std::vector<int>> C(2, std::vector<int>(2, 0));
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            for (int k = 0; k < 2; ++k) C[i][j] += A[i][k] * B[k][j];
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            std::cout << C[i][j] << (i == 1 && j == 1 ? '\n' : ' ');
+}`,
+  why: String.raw`Linear algebra in graphics and physics engines is built from this triple loop. Cache-friendly versions reorder it, but the arithmetic is the same.` },
+
+{ n: 69, d: "applications", t: "Balance from an event log",
+  p: String.raw`An account's history is a list of events: deposit 10, withdraw 3, deposit 5. Replay them in order, starting from a balance of 0, and print the final balance.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+struct Deposit { int amount; };
+struct Withdraw { int amount; };
+using Event = std::variant<Deposit, Withdraw>;
+
+int main() {
+    const std::vector<Event> log{Deposit{10}, Withdraw{3}, Deposit{5}};
+    long balance = 0;
+    for (const auto& e : log)
+        std::visit([&](auto ev) {
+            if constexpr (std::is_same_v<decltype(ev), Deposit>) balance += ev.amount;
+            else balance -= ev.amount;
+        }, e);
+    std::cout << balance << '\n';
+}`,
+  why: String.raw`Event sourcing stores what happened rather than the current state. Replaying the log rebuilds any state, and makes audits possible.` },
+
+{ n: 70, d: "applications", t: "Run-length encoding",
+  p: String.raw`Encode the text aaabcc by replacing each run of a repeated character with its length followed by the character. Print the encoded text.`,
+  ex: String.raw`3a1b2c`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "aaabcc";
+    std::string out;
+    for (std::size_t i = 0; i < s.size();) {
+        std::size_t j = i;
+        while (j < s.size() && s[j] == s[i]) ++j;
+        out += std::to_string(j - i);
+        out += s[i];
+        i = j;
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Run-length encoding is the simplest compression scheme, and it appears in image formats and in the storage of sparse data.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-practical-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 10, label: "Easy", range: "Problems 1–10", badge: "easy" },
+  { from: 11, to: 30, label: "Medium", range: "Problems 11–30", badge: "medium" },
+  { from: 31, to: 48, label: "Hard", range: "Problems 31–48", badge: "hard" },
+  { from: 49, to: 62, label: "Extension", range: "Problems 49–62", badge: null },
+  { from: 63, to: 70, label: "Applications", range: "Problems 63–70", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

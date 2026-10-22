@@ -1,0 +1,826 @@
+<title>C++ Memory Model and Layout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 32 problems</p>
+    <h1>C++ Memory Model and Layout Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">32</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Sizes of the basic types", idiom: "Sizes and alignment",
+  p: String.raw`Print sizeof of char, int, double and void pointer, separated by spaces, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`1 4 8 8`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    std::cout << sizeof(char) << " " << sizeof(int) << " " << sizeof(double) << " " << sizeof(void*) << "\n";
+}`,
+  why: String.raw`sizeof reports the storage each type occupies. Pointer size depends on the platform's address width, not on what it points to.` },
+
+{ n: 2, d: "easy", t: "Standard-layout check on two structs", idiom: "Standard type layout",
+  p: String.raw`Define Plain with two int members and Virt with an int member and a virtual function. Print is_standard_layout for Plain and for Virt, separated by a space, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+struct Plain { int a; int b; };
+struct Virt {
+    int a;
+    virtual void f() {}
+};
+
+int main() {
+    std::cout << std::is_standard_layout_v<Plain> << " " << std::is_standard_layout_v<Virt> << "\n";
+}`,
+  why: String.raw`A virtual function adds a hidden pointer to each object, so the type's layout is no longer the plain sequence of its members. Standard layout is the property that makes a struct safe to treat as a sequence of bytes in C-compatible ways.` },
+
+{ n: 3, d: "easy", t: "Byte order of a 32-bit value", idiom: "Bit-level layout",
+  p: String.raw`Store the value 0x01020304 in a 32-bit unsigned integer. Print the four bytes in their memory order from lowest address to highest, separated by spaces, then a newline. Print each byte as a plain decimal number.`,
+  ex: String.raw`4 3 2 1`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+int main() {
+    std::uint32_t v = 0x01020304;
+    unsigned char* b = reinterpret_cast<unsigned char*>(&v);
+    for (int i = 0; i < 4; ++i)
+        std::cout << static_cast<int>(b[i]) << (i < 3 ? " " : "\n");
+}`,
+  why: String.raw`Byte order is a property of the machine. This program shows the little-endian order used on common x86-64 systems, where the least significant byte is stored first.` },
+
+{ n: 4, d: "easy", t: "Copy a float's bit pattern into an integer", idiom: "Copying and type punning",
+  p: String.raw`Take the float value 1.0f and obtain its 32-bit pattern as an unsigned integer, without converting the numeric value. Print that pattern in hexadecimal, then a newline.`,
+  ex: String.raw`3f800000`,
+  code: String.raw`#include <cstdint>
+#include <cstring>
+#include <iostream>
+
+int main() {
+    float f = 1.0f;
+    std::uint32_t bits;
+    std::memcpy(&bits, &f, sizeof bits);
+    std::cout << std::hex << bits << "\n";
+}`,
+  why: String.raw`Copying the object representation with a byte copy is the portable way to read the bits of a float. Converting the value with a cast would give 1, not the bit pattern.` },
+
+{ n: 5, d: "easy", t: "Construct and destroy into a buffer", idiom: "Object lifetime",
+  p: String.raw`Struct Noisy prints construct in its constructor and destroy in its destructor. Reserve aligned raw storage large enough for one Noisy. Construct a Noisy in that storage, then end its lifetime explicitly. Do not print anything else.`,
+  ex: String.raw`construct
+destroy`,
+  code: String.raw`#include <iostream>
+#include <new>
+
+struct Noisy {
+    Noisy() { std::cout << "construct\n"; }
+    ~Noisy() { std::cout << "destroy\n"; }
+};
+
+int main() {
+    alignas(Noisy) unsigned char buf[sizeof(Noisy)];
+    Noisy* p = new (buf) Noisy;
+    p->~Noisy();
+}`,
+  why: String.raw`An object's lifetime is separate from the storage it occupies. Construction creates the object in that storage, and the destructor ends its life without releasing the memory.` },
+
+{ n: 6, d: "easy", t: "Global variables start at zero", idiom: "Storage duration",
+  p: String.raw`Declare a global int with no initializer. In main, print its value followed by a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+
+int counter;
+
+int main() {
+    std::cout << counter << "\n";
+}`,
+  why: String.raw`Objects with static storage duration are zero-initialised before any other initialisation runs, so an unset global int reads as zero.` },
+
+{ n: 7, d: "easy", t: "Assert a struct's size at compile time", idiom: "Measuring layout",
+  p: String.raw`Define Packet with two 32-bit unsigned integer members, id and len. Check at compile time that sizeof Packet is 8. If the check passes, main prints ok followed by a newline.`,
+  ex: String.raw`ok`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct Packet {
+    std::uint32_t id;
+    std::uint32_t len;
+};
+
+static_assert(sizeof(Packet) == 8, "Packet must be 8 bytes");
+
+int main() {
+    std::cout << "ok\n";
+}`,
+  why: String.raw`A static_assert checks layout assumptions when the program is compiled, so a size change breaks the build rather than failing silently at run time.` },
+
+{ n: 8, d: "easy", t: "Data written before a join is visible after it", idiom: "Data races without atomics",
+  p: String.raw`Declare an int x set to zero. Start a thread that sets x to 42. Join it, then print x followed by a newline.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+int main() {
+    int x = 0;
+    std::thread t([&x] { x = 42; });
+    t.join();
+    std::cout << x << "\n";
+}`,
+  why: String.raw`Joining a thread means its work happens before join returns. Reading x after the join is therefore race-free, even though x is an ordinary int.` },
+
+// ---------- Medium ----------
+{ n: 9, d: "medium", t: "Padding in a mixed struct", idiom: "Sizes and alignment",
+  p: String.raw`Define S with a char a, an int b and a char c, in that order. Print sizeof S followed by a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <iostream>
+
+struct S {
+    char a;
+    int b;
+    char c;
+};
+
+int main() {
+    std::cout << sizeof(S) << "\n";
+}`,
+  why: String.raw`An int must start at a multiple of four, so three bytes of padding follow a. The struct is then padded at the end so that its size is a multiple of its alignment.` },
+
+{ n: 10, d: "medium", t: "Member order changes the size", idiom: "Sizes and alignment",
+  p: String.raw`Define S with members in the order char a, int b, char c. Define T with the same three members in the order char a, char c, int b. Print sizeof S and sizeof T, separated by a space, then a newline.`,
+  ex: String.raw`12 8`,
+  code: String.raw`#include <iostream>
+
+struct S {
+    char a;
+    int b;
+    char c;
+};
+
+struct T {
+    char a;
+    char c;
+    int b;
+};
+
+int main() {
+    std::cout << sizeof(S) << " " << sizeof(T) << "\n";
+}`,
+  why: String.raw`Placing the two chars together lets them share one aligned slot before the int, which removes most padding. Ordering members by alignment is a simple way to keep structs small.` },
+
+{ n: 11, d: "medium", t: "Standard layout of a derived class with no data", idiom: "Standard type layout",
+  p: String.raw`Define Base with one int member x. Define OnlyBase as a struct deriving from Base with no members. Define BothData as a struct deriving from Base that adds an int member y. Print is_standard_layout for OnlyBase and for BothData, separated by a space, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+struct Base { int x; };
+struct OnlyBase : Base {};
+struct BothData : Base { int y; };
+
+int main() {
+    std::cout << std::is_standard_layout_v<OnlyBase> << " " << std::is_standard_layout_v<BothData> << "\n";
+}`,
+  why: String.raw`Standard layout requires that all non-static data members be declared in a single class in the hierarchy. OnlyBase keeps all its data in Base, but BothData splits its data across two classes.` },
+
+{ n: 12, d: "medium", t: "Pointer to a struct equals pointer to its first member", idiom: "Standard type layout",
+  p: String.raw`Define Pair with int members a and b. Create a Pair with a set to 7 and b set to 9. Obtain an int pointer that refers to the start of the Pair object. Print the int it points to, a space, then 1 if that pointer equals the address of a, or 0 otherwise, then a newline.`,
+  ex: String.raw`7 1`,
+  code: String.raw`#include <iostream>
+
+struct Pair {
+    int a;
+    int b;
+};
+
+int main() {
+    Pair p{7, 9};
+    int* first = reinterpret_cast<int*>(&p);
+    std::cout << *first << " " << (first == &p.a) << "\n";
+}`,
+  why: String.raw`For a standard-layout struct, a pointer to the struct can be converted to a pointer to its first member, and the two addresses are the same.` },
+
+{ n: 13, d: "medium", t: "Count the bits of a bit-field struct", idiom: "Bit-level layout",
+  p: String.raw`Define Flags with an unsigned bit-field a of width 3 and an unsigned bit-field b of width 5. Create a Flags object with all members zeroed, set a to 5 and b to 17, then print sizeof Flags, a and b, separated by spaces, then a newline.`,
+  ex: String.raw`4 5 17`,
+  code: String.raw`#include <iostream>
+
+struct Flags {
+    unsigned a : 3;
+    unsigned b : 5;
+};
+
+int main() {
+    Flags f{};
+    f.a = 5;
+    f.b = 17;
+    std::cout << sizeof(Flags) << " " << f.a << " " << f.b << "\n";
+}`,
+  why: String.raw`Bit-fields pack several small members into the same storage unit. Eight bits in total fit in one unsigned int, so the struct is four bytes.` },
+
+{ n: 14, d: "medium", t: "Bit-field values that do not fit", idiom: "Bit-level layout",
+  p: String.raw`Define S with an unsigned bit-field a of width 3 and a signed int bit-field s of width 3. Create an S with both zeroed. Store the value 9 in a and the value 5 in s, using variables for the values. Print a and s, separated by a space, then a newline. Values are kept modulo the field width.`,
+  ex: String.raw`1 -3`,
+  code: String.raw`#include <iostream>
+
+struct S {
+    unsigned a : 3;
+    int s : 3;
+};
+
+int main() {
+    S x{};
+    unsigned nine = 9;
+    int five = 5;
+    x.a = nine;
+    x.s = five;
+    std::cout << x.a << " " << x.s << "\n";
+}`,
+  why: String.raw`Storing a value into a bit-field keeps only the bits the field has room for. For a signed field of width three, the bit pattern 101 is read back as negative three.` },
+
+{ n: 15, d: "medium", t: "Copy a struct's bytes into another struct", idiom: "Copying and type punning",
+  p: String.raw`Define P with int members x and y. Create a P with x 3 and y 4. Create a second P with both zeroed, then copy the bytes of the first into the second, byte for byte. Print the sum of the second object's x and y, then a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <cstring>
+#include <iostream>
+
+struct P {
+    int x;
+    int y;
+};
+
+int main() {
+    P a{3, 4};
+    P b{};
+    std::memcpy(&b, &a, sizeof(P));
+    std::cout << b.x + b.y << "\n";
+}`,
+  why: String.raw`A trivially copyable type can be duplicated by copying its object representation. The result is an equal object whenever the source has no padding whose value matters.` },
+
+{ n: 16, d: "medium", t: "Read a double's bit pattern", idiom: "Copying and type punning",
+  p: String.raw`Obtain the 64-bit unsigned integer pattern of the double value 1.0, without converting its numeric value. Print the pattern in hexadecimal, then a newline.`,
+  ex: String.raw`3ff0000000000000`,
+  code: String.raw`#include <bit>
+#include <cstdint>
+#include <iostream>
+
+int main() {
+    std::uint64_t bits = std::bit_cast<std::uint64_t>(1.0);
+    std::cout << std::hex << bits << "\n";
+}`,
+  why: String.raw`std::bit_cast copies the bytes of a value into a type of the same size, so the result is the raw bit pattern. The sign, exponent and fraction fields are visible in the hex digits.` },
+
+{ n: 17, d: "medium", t: "Reuse one buffer for two types", idiom: "Object lifetime",
+  p: String.raw`Let live be a global counter. Class A increments live in its constructor and decrements it in its destructor. Class B has an int member v set to 7 and does the same counting. Reserve one aligned buffer big enough for either type. Construct an A in the buffer and print live followed by its value. End the A's lifetime, construct a B in the same buffer, and print live followed by a space, v, and a newline. End the B's lifetime and print live.`,
+  ex: String.raw`live 1
+live 1 v 7
+live 0`,
+  code: String.raw`#include <iostream>
+#include <new>
+
+int live = 0;
+
+struct A {
+    A() { ++live; }
+    ~A() { --live; }
+};
+
+struct B {
+    int v = 7;
+    B() { ++live; }
+    ~B() { --live; }
+};
+
+int main() {
+    alignas(B) unsigned char buf[sizeof(B) > sizeof(A) ? sizeof(B) : sizeof(A)];
+    A* a = new (buf) A;
+    std::cout << "live " << live << "\n";
+    a->~A();
+    B* b = new (buf) B;
+    std::cout << "live " << live << " v " << b->v << "\n";
+    b->~B();
+    std::cout << "live " << live << "\n";
+}`,
+  why: String.raw`Storage can be reused once the object that occupied it has been destroyed. Each object's own lifetime is what the counter tracks, so it returns to zero at the end.` },
+
+{ n: 18, d: "medium", t: "Replace a value inside an optional", idiom: "Object lifetime",
+  p: String.raw`Define Tracker with an int id. Its constructor prints ctor followed by the id, and its destructor prints dtor followed by the id. Create an empty std::optional of Tracker. Emplace Tracker 1, then emplace Tracker 2 into the same optional, then reset it. Finally print end.`,
+  ex: String.raw`ctor 1
+dtor 1
+ctor 2
+dtor 2
+end`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Tracker {
+    int id;
+    explicit Tracker(int i) : id(i) { std::cout << "ctor " << id << "\n"; }
+    ~Tracker() { std::cout << "dtor " << id << "\n"; }
+};
+
+int main() {
+    std::optional<Tracker> o;
+    o.emplace(1);
+    o.emplace(2);
+    o.reset();
+    std::cout << "end\n";
+}`,
+  why: String.raw`Emplacing into an optional that already holds a value first destroys the old object. Each object's destructor runs exactly once, before the next one is constructed.` },
+
+{ n: 19, d: "medium", t: "Destroy locals in reverse order", idiom: "Storage duration",
+  p: String.raw`Define Tag with a char member c and a destructor that prints c followed by a space. In a nested block of main, create Tag objects 'A', 'B' and 'C' in that order. After the block ends, print a newline.`,
+  ex: String.raw`C B A `,
+  code: String.raw`#include <iostream>
+
+struct Tag {
+    char c;
+    ~Tag() { std::cout << c << " "; }
+};
+
+int main() {
+    {
+        Tag a{'A'};
+        Tag b{'B'};
+        Tag c{'C'};
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Automatic objects are destroyed in the reverse of their construction order when their scope ends. The last object constructed is the first one destroyed.` },
+
+{ n: 20, d: "medium", t: "Thread-local globals start fresh in each thread", idiom: "Storage duration",
+  p: String.raw`Declare a thread_local int named counter with initial value 5. Start two threads. Each thread increments counter three times, then stores its value in its own slot of a vector. Join both threads. Print main's counter, then the two slots, separated by spaces, then a newline.`,
+  ex: String.raw`5 8 8`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+thread_local int counter = 5;
+
+int main() {
+    std::vector<int> seen(2, 0);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 2; ++i)
+        ts.emplace_back([&seen, i] {
+            for (int k = 0; k < 3; ++k) ++counter;
+            seen[i] = counter;
+        });
+    for (auto& t : ts) t.join();
+    std::cout << counter << " " << seen[0] << " " << seen[1] << "\n";
+}`,
+  why: String.raw`Each thread gets its own copy of a thread_local variable, initialised separately. Changes in one thread never show up in another, so main still sees 5.` },
+
+{ n: 21, d: "medium", t: "Protect a shared list with threads writing separate items", idiom: "Data races without atomics",
+  p: String.raw`Create an empty vector of ints and a mutex. Start six threads, numbered 0 to 5. Each thread appends its own number to the vector while holding the mutex. Join all threads, sort the vector, then print its elements, each followed by a space, then a newline.`,
+  ex: String.raw`0 1 2 3 4 5 `,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 6; ++i)
+        ts.emplace_back([&, i] {
+            std::lock_guard g(m);
+            v.push_back(i);
+        });
+    for (auto& t : ts) t.join();
+    std::sort(v.begin(), v.end());
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A mutex makes each append a single step that other threads cannot interleave with. Sorting after the join removes the dependence on which thread appended first.` },
+
+{ n: 22, d: "medium", t: "Build on fields written before a thread starts", idiom: "Data races without atomics",
+  p: String.raw`Define Config with int members a and b. In main, create a Config and set a to 3 and b to 4. Then start a thread that reads both fields, stores their sum in a result variable, and finish by joining. Print the result followed by a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+struct Config {
+    int a;
+    int b;
+};
+
+int main() {
+    Config c{};
+    c.a = 3;
+    c.b = 4;
+    int result = 0;
+    std::thread t([&c, &result] { result = c.a + c.b; });
+    t.join();
+    std::cout << result << "\n";
+}`,
+  why: String.raw`Work done before a thread is started is visible to that thread. Using the fields only after the join is also safe, because the join orders the two threads.` },
+
+{ n: 23, d: "medium", t: "Measure offsets with the offset macro", idiom: "Measuring layout",
+  p: String.raw`Define S with a char a, a short b, an int c and a long long d, in that order. Print the offsets of a, b, c and d within S, separated by spaces, then a newline.`,
+  ex: String.raw`0 2 4 8`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+struct S {
+    char a;
+    short b;
+    int c;
+    long long d;
+};
+
+int main() {
+    std::cout << offsetof(S, a) << " " << offsetof(S, b) << " " << offsetof(S, c) << " " << offsetof(S, d) << "\n";
+}`,
+  why: String.raw`Each member starts at the next offset that satisfies its alignment. The gaps between members are padding, and the offset of each member shows exactly where it lies.` },
+
+{ n: 24, d: "medium", t: "Compare member addresses in bytes", idiom: "Measuring layout",
+  p: String.raw`Define S with a char a, a short b, an int c and a long long d, in that order. Create an S. Print the number of bytes from the address of a to the address of c, then a space, then the number of bytes from the address of a to the address of d, then a newline.`,
+  ex: String.raw`4 8`,
+  code: String.raw`#include <iostream>
+
+struct S {
+    char a;
+    short b;
+    int c;
+    long long d;
+};
+
+int main() {
+    S s{};
+    const char* pa = reinterpret_cast<const char*>(&s.a);
+    const char* pc = reinterpret_cast<const char*>(&s.c);
+    const char* pd = reinterpret_cast<const char*>(&s.d);
+    std::cout << (pc - pa) << " " << (pd - pa) << "\n";
+}`,
+  why: String.raw`Subtracting two byte pointers inside the same object gives the distance between the members. Comparing it with the offsets from the offset macro checks the layout the compiler chose.` },
+
+// ---------- Hard ----------
+{ n: 25, d: "hard", t: "Array stride and total size", idiom: "Sizes and alignment",
+  p: String.raw`Define Vec with alignas 16 holding three floats, x, y and z. Print sizeof Vec, alignof Vec, and sizeof of an array of two Vec objects, separated by spaces, then a newline.`,
+  ex: String.raw`16 16 32`,
+  code: String.raw`#include <iostream>
+
+struct alignas(16) Vec {
+    float x, y, z;
+};
+
+int main() {
+    std::cout << sizeof(Vec) << " " << alignof(Vec) << " " << sizeof(Vec[2]) << "\n";
+}`,
+  why: String.raw`Three floats need twelve bytes, but alignas(16) raises both the alignment and the size to sixteen. Each element of an array then starts at the next sixteen-byte boundary.` },
+
+{ n: 26, d: "hard", t: "Derived type with a base that has data", idiom: "Standard type layout",
+  p: String.raw`Define Base with an int x and a char c. Define Derived that inherits Base publicly and adds a char d. Print sizeof Base and sizeof Derived, separated by a space, then a newline.`,
+  ex: String.raw`8 12`,
+  code: String.raw`#include <iostream>
+
+struct Base {
+    int x;
+    char c;
+};
+
+struct Derived : Base {
+    char d;
+};
+
+int main() {
+    std::cout << sizeof(Base) << " " << sizeof(Derived) << "\n";
+}`,
+  why: String.raw`Base has three bytes of padding after c. Base is a plain-old-data type, and the Itanium C++ ABI lets a derived class reuse a base's tail padding only when the base is not POD. So the extra char starts a new slot after the base, and the size becomes 12.` },
+
+{ n: 27, d: "hard", t: "Pack and read back three bit-fields", idiom: "Bit-level layout",
+  p: String.raw`Define Packed with three unsigned bit-fields: a of width 12, b of width 12, and c of width 8. Print sizeof Packed. Then store 0xABC in a, 0x123 in b and 0xFF in c, and print the three values read back as decimal numbers, separated by spaces, then a newline. Print the size first, followed by a space.`,
+  ex: String.raw`4 2748 291 255`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct Packed {
+    std::uint32_t a : 12;
+    std::uint32_t b : 12;
+    std::uint32_t c : 8;
+};
+
+int main() {
+    Packed p{};
+    p.a = 0xABC;
+    p.b = 0x123;
+    p.c = 0xFF;
+    std::cout << sizeof(Packed) << " " << p.a << " " << p.b << " " << p.c << "\n";
+}`,
+  why: String.raw`The three fields total 32 bits, so they share one four-byte unit. Each field keeps exactly the bits it was given, and reading them back returns the same values.` },
+
+{ n: 28, d: "hard", t: "Round-trip a NaN through its bit pattern", idiom: "Copying and type punning",
+  p: String.raw`Start with the 32-bit unsigned value 0x7fc00001. Reinterpret its bits as a float, then reinterpret that float's bits as an unsigned 32-bit value again. Print the resulting value in hexadecimal, then a space, then 1 if the float is NaN or 0 otherwise, then a space, then 1 if the float equals itself or 0 otherwise, then a newline.`,
+  ex: String.raw`7fc00001 1 0`,
+  code: String.raw`#include <bit>
+#include <cmath>
+#include <cstdint>
+#include <iostream>
+
+int main() {
+    std::uint32_t in = 0x7fc00001u;
+    float f = std::bit_cast<float>(in);
+    std::uint32_t out = std::bit_cast<std::uint32_t>(f);
+    std::cout << std::hex << out << " " << std::dec << std::isnan(f) << " " << (f == f) << "\n";
+}`,
+  why: String.raw`A NaN is a float whose exponent bits are all ones and whose fraction is not zero. Copying the bits keeps the payload, so the value is still NaN, and NaN never compares equal to itself.` },
+
+{ n: 29, d: "hard", t: "Lifetime extended by a reference", idiom: "Object lifetime",
+  p: String.raw`Define Tracker with a default constructor that prints ctor, a destructor that prints dtor, and a const member function value that returns 3. In a nested block, bind a const reference to a newly created Tracker and print use followed by value(), then a newline. Leave the block and print after.`,
+  ex: String.raw`ctor
+use 3
+dtor
+after`,
+  code: String.raw`#include <iostream>
+
+struct Tracker {
+    Tracker() { std::cout << "ctor\n"; }
+    ~Tracker() { std::cout << "dtor\n"; }
+    int value() const { return 3; }
+};
+
+int main() {
+    {
+        const Tracker& r = Tracker();
+        std::cout << "use " << r.value() << "\n";
+    }
+    std::cout << "after\n";
+}`,
+  why: String.raw`Binding a temporary to a const reference extends its lifetime to the lifetime of the reference. The object is destroyed at the end of the block, not at the end of the declaration.` },
+
+{ n: 30, d: "hard", t: "Give each thread its own cache line", idiom: "Data races without atomics",
+  p: String.raw`Define Slot as a struct aligned to 64 bytes holding a long long n that starts at zero. Create an array of two Slot objects. Start two threads, where thread i increments slot i's n a thousand times. Join both threads, then print alignof Slot, sizeof Slot and the sum of the two n values, separated by spaces, then a newline.`,
+  ex: String.raw`64 64 2000`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+struct alignas(64) Slot {
+    long long n = 0;
+};
+
+int main() {
+    Slot slots[2];
+    std::thread a([&slots] { for (int i = 0; i < 1000; ++i) slots[0].n++; });
+    std::thread b([&slots] { for (int i = 0; i < 1000; ++i) slots[1].n++; });
+    a.join();
+    b.join();
+    std::cout << alignof(Slot) << " " << sizeof(Slot) << " " << slots[0].n + slots[1].n << "\n";
+}`,
+  why: String.raw`Two threads writing to the same cache line slow each other down even when they touch different variables. Padding each slot to a full cache line gives each thread its own line, and since each slot is written by only one thread, there is no data race.` },
+
+{ n: 31, d: "hard", t: "Dynamic array and single object destruction", idiom: "Storage duration",
+  p: String.raw`Define T with a destructor that increments a global counter dtors, which starts at zero. Allocate an array of three T on the heap and free it with the matching form of deletion. Print dtors followed by its value and a newline. Then allocate one T on the heap and free it with the single-object form. Print dtors again and a newline.`,
+  ex: String.raw`dtors 3
+dtors 4`,
+  code: String.raw`#include <iostream>
+
+int dtors = 0;
+
+struct T {
+    ~T() { ++dtors; }
+};
+
+int main() {
+    T* arr = new T[3];
+    delete[] arr;
+    std::cout << "dtors " << dtors << "\n";
+    T* one = new T;
+    delete one;
+    std::cout << "dtors " << dtors << "\n";
+}`,
+  why: String.raw`An array allocated with new[] must be freed with delete[], which destroys every element. Using plain delete on it would destroy only the first element, so the counter shows the difference.` },
+
+{ n: 32, d: "hard", t: "Over-aligned object on the stack", idiom: "Measuring layout",
+  p: String.raw`Define Block as a struct aligned to 32 bytes with two int members. Create a Block on the stack with a set to 1 and b set to 2. Print sizeof Block, alignof Block, and 1 if the object's address is a multiple of 32 or 0 otherwise, separated by spaces, then a newline.`,
+  ex: String.raw`32 32 1`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct alignas(32) Block {
+    int a;
+    int b;
+};
+
+int main() {
+    Block blk{1, 2};
+    auto addr = reinterpret_cast<std::uintptr_t>(&blk);
+    std::cout << sizeof(Block) << " " << alignof(Block) << " " << (addr % 32 == 0) << "\n";
+}`,
+  why: String.raw`An alignas request is honoured for automatic objects as well as for heap objects. The compiler places the object at an address that meets the requirement, even though an int pair needs only eight bytes.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-layout-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 8, label: "Easy", range: "Problems 1–8", badge: "easy" },
+  { from: 9, to: 24, label: "Medium", range: "Problems 9–24", badge: "medium" },
+  { from: 25, to: 32, label: "Hard", range: "Problems 25–32", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

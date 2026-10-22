@@ -1,0 +1,1898 @@
+<title>C++ Smart Pointers Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 80 problems</p>
+    <h1>C++ Smart Pointers Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">80</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="80" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Create a unique pointer",
+  p: String.raw`Create a unique_ptr to an int holding 42, using a factory function that allocates the object, and print the value through the pointer.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto p = std::make_unique<int>(42);
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`A unique_ptr owns its object and frees it automatically when it goes out of scope, so no explicit delete is needed.` },
+
+{ n: 2, d: "easy", t: "Reset empties a pointer",
+  p: String.raw`Create a unique_ptr holding 7, then reset it so that it holds nothing. Print true if the pointer is now empty, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto p = std::make_unique<int>(7);
+    p.reset();
+    std::cout << std::boolalpha << (p == nullptr) << '\n';
+}`,
+  why: String.raw`Resetting releases the owned object immediately and leaves the pointer empty, which can be checked against nullptr.` },
+
+{ n: 3, d: "easy", t: "Destroyed at end of scope",
+  p: String.raw`A struct Noisy prints destroyed when it is destroyed. Create a unique_ptr to a Noisy inside an inner block. End the block, then print after.`,
+  ex: String.raw`destroyed
+after`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Noisy {
+    ~Noisy() { std::cout << "destroyed\n"; }
+};
+
+int main() {
+    {
+        std::unique_ptr<Noisy> p = std::make_unique<Noisy>();
+    }
+    std::cout << "after\n";
+}`,
+  why: String.raw`The object is destroyed as soon as its owning pointer leaves scope, before the statements that follow the block.` },
+
+{ n: 4, d: "easy", t: "Move ownership",
+  p: String.raw`Create a unique_ptr holding 5 and move it into a second unique_ptr. Print whether the first is now empty, then the value held by the second, separated by a space. Print true or false for the first answer.`,
+  ex: String.raw`true 5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto a = std::make_unique<int>(5);
+    auto b = std::move(a);
+    std::cout << std::boolalpha << (a == nullptr) << ' ' << *b << '\n';
+}`,
+  why: String.raw`A unique_ptr cannot be copied, only moved, so ownership passes from one pointer to another and the source is left empty.` },
+
+{ n: 5, d: "easy", t: "Count the owners",
+  p: String.raw`Create a shared_ptr holding 3. Make two more copies of it. Print the number of shared_ptr objects that now refer to the int.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(3);
+    auto c1 = s;
+    auto c2 = s;
+    std::cout << s.use_count() << '\n';
+}`,
+  why: String.raw`A shared_ptr keeps a count of how many owners share the object, which is available through use_count.` },
+
+{ n: 6, d: "easy", t: "Count drops after a copy leaves scope",
+  p: String.raw`Create a shared_ptr holding 3. Make a copy of it inside an inner block. After the block ends, print the number of shared_ptr objects that still refer to the int.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(3);
+    {
+        auto c = s;
+    }
+    std::cout << s.use_count() << '\n';
+}`,
+  why: String.raw`Each owner that goes out of scope gives up its share, so the count falls back as copies are destroyed.` },
+
+{ n: 7, d: "easy", t: "Observe with a weak pointer",
+  p: String.raw`Create a shared_ptr holding 9 and a weak_ptr observing the same int. Lock the weak_ptr and print the value it gives, then a space. Reset the shared_ptr, then print true if the weak_ptr has expired and false otherwise.`,
+  ex: String.raw`9 true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(9);
+    std::weak_ptr<int> w = s;
+    if (auto l = w.lock())
+        std::cout << *l << ' ';
+    s.reset();
+    std::cout << std::boolalpha << w.expired() << '\n';
+}`,
+  why: String.raw`A weak_ptr observes an object without owning it, and locking it gives a shared_ptr only while the object still exists.` },
+
+{ n: 8, d: "easy", t: "Sum an array pointer",
+  p: String.raw`Create a unique_ptr to an array of three ints holding 1, 2 and 3. Print the sum of the three values.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    std::unique_ptr<int[]> a(new int[3]{1, 2, 3});
+    std::cout << a[0] + a[1] + a[2] << '\n';
+}`,
+  why: String.raw`A unique_ptr can own an array, and the array form releases the whole array when it is destroyed.` },
+
+{ n: 9, d: "easy", t: "Pass ownership to a function",
+  p: String.raw`A function takes a unique_ptr to an int by value and returns the value it holds plus one. Call it with a unique_ptr holding 4 and print the result.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int plus_one(std::unique_ptr<int> p) {
+    return *p + 1;
+}
+
+int main() {
+    std::cout << plus_one(std::make_unique<int>(4)) << '\n';
+}`,
+  why: String.raw`Passing a unique_ptr by value transfers ownership into the function, which frees the object when the function returns.` },
+
+{ n: 10, d: "easy", t: "Shared pointers compare equal",
+  p: String.raw`Create a shared_ptr to an int holding 1, and a second shared_ptr copied from the first. Print true if the two compare equal, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto a = std::make_shared<int>(1);
+    auto b = a;
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Two shared_ptr objects compare equal when they point to the same object, even if they are separate handles.` },
+{ n: 11, d: "easy", t: "Pass shared pointer by reference or value",
+  p: String.raw`Write two functions that each return the use count of the shared_ptr they receive. One takes it by const reference and the other takes it by value. Create a shared_ptr holding 1, call the first function and then the second, and print both results separated by a space.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+long by_ref(const std::shared_ptr<int>& p) {
+    return p.use_count();
+}
+
+long by_value(std::shared_ptr<int> p) {
+    return p.use_count();
+}
+
+int main() {
+    auto s = std::make_shared<int>(1);
+    std::cout << by_ref(s) << ' ' << by_value(s) << '\n';
+}`,
+  why: String.raw`Taking a shared_ptr by const reference avoids touching the count, while taking it by value adds an owner for the duration of the call.` },
+
+{ n: 12, d: "easy", t: "Non-owning raw pointer view",
+  p: String.raw`A function takes a plain pointer to const int that it only reads and does not own. Create a unique_ptr holding 12, pass its raw pointer to the function, and have the function print the value it points to.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+void show(const int* p) {
+    std::cout << *p << '\n';
+}
+
+int main() {
+    auto p = std::make_unique<int>(12);
+    show(p.get());
+}`,
+  why: String.raw`A raw pointer parameter that does not own its target lets a function look at an object without taking part in its lifetime.` },
+
+{ n: 13, d: "easy", t: "Address survives a move",
+  p: String.raw`Create a unique_ptr holding 3 and remember its raw address. Move it into a second unique_ptr. Print true if the second pointer has the same address as the remembered one, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto a = std::make_unique<int>(3);
+    int* raw = a.get();
+    auto b = std::move(a);
+    std::cout << std::boolalpha << (b.get() == raw) << '\n';
+}`,
+  why: String.raw`Moving a unique_ptr transfers the pointer itself, so the object stays at the same address and any raw pointers to it remain valid.` },
+
+{ n: 14, d: "easy", t: "Move an element out of a container",
+  p: String.raw`Store a unique_ptr holding 8 in a vector. Move the element out of the vector into a separate unique_ptr. Print the value it holds, then true if the vector's slot is now empty, otherwise false. Separate the two answers with a space.`,
+  ex: String.raw`8 true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> v;
+    v.push_back(std::make_unique<int>(8));
+    auto taken = std::move(v[0]);
+    std::cout << *taken << ' ' << std::boolalpha << (v[0] == nullptr) << '\n';
+}`,
+  why: String.raw`Taking an owning pointer out of a container leaves an empty slot behind, so the element can be used elsewhere without being copied.` },
+
+// ---------- Medium ----------
+{ n: 15, d: "medium", t: "Custom deleter for unique pointer",
+  p: String.raw`Create a unique_ptr to a new int holding 1, with a custom deleter that prints deleted and then frees the int. Let the pointer go out of scope inside an inner block, then print after. The output is deleted and then after on separate lines.`,
+  ex: String.raw`deleted
+after`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto del = [](int* p) {
+        std::cout << "deleted\n";
+        delete p;
+    };
+    {
+        std::unique_ptr<int, decltype(del)> p(new int(1), del);
+    }
+    std::cout << "after\n";
+}`,
+  why: String.raw`A deleter is part of the unique_ptr's type, so any cleanup action can run in place of the default delete when the pointer is destroyed.` },
+
+{ n: 16, d: "medium", t: "Custom deleter for shared pointer",
+  p: String.raw`Create a shared_ptr to a new int holding 2, with a deleter that prints freed and then frees the int. Let it go out of scope inside an inner block, then print after. The output is freed and then after on separate lines.`,
+  ex: String.raw`freed
+after`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    {
+        std::shared_ptr<int> p(new int(2), [](int* q) {
+            std::cout << "freed\n";
+            delete q;
+        });
+    }
+    std::cout << "after\n";
+}`,
+  why: String.raw`A shared_ptr stores its deleter alongside the count, so the deleter is not part of the pointer's type.` },
+
+{ n: 17, d: "medium", t: "Shared pointer to self",
+  p: String.raw`A class Node derives from enable_shared_from_this and has a member function that returns a shared_ptr to the same node. Create a shared_ptr to a Node and obtain a second shared_ptr to it through that function. Print the use count of the first pointer.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node : std::enable_shared_from_this<Node> {
+    std::shared_ptr<Node> self() { return shared_from_this(); }
+};
+
+int main() {
+    auto n = std::make_shared<Node>();
+    auto s = n->self();
+    std::cout << n.use_count() << '\n';
+}`,
+  why: String.raw`An object that is already owned by a shared_ptr can hand out further shared_ptr copies of itself safely.` },
+
+{ n: 18, d: "medium", t: "Pointer to a member",
+  p: String.raw`Create a shared_ptr to a struct Pair that has members a and b. Set a to 10 and b to 20. Build a shared_ptr to member b that shares ownership with the original pointer. Print the value of b through the new pointer, then the use count of the original pointer, separated by a space.`,
+  ex: String.raw`20 2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Pair {
+    int a = 0;
+    int b = 0;
+};
+
+int main() {
+    auto p = std::make_shared<Pair>();
+    p->a = 10;
+    p->b = 20;
+    std::shared_ptr<int> pb(p, &p->b);
+    std::cout << *pb << ' ' << p.use_count() << '\n';
+}`,
+  why: String.raw`The aliasing form of shared_ptr points at part of an object while keeping the whole object alive.` },
+
+{ n: 19, d: "medium", t: "Delete through a base pointer",
+  p: String.raw`A base class Base has a virtual destructor. A class Derived that derives from Base prints deleted derived when it is destroyed. Hold a Derived in a unique_ptr to Base, reset the pointer, then print after. The output is deleted derived and then after on separate lines.`,
+  ex: String.raw`deleted derived
+after`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Base {
+    virtual ~Base() = default;
+};
+
+struct Derived : Base {
+    ~Derived() override { std::cout << "deleted derived\n"; }
+};
+
+int main() {
+    std::unique_ptr<Base> p = std::make_unique<Derived>();
+    p.reset();
+    std::cout << "after\n";
+}`,
+  why: String.raw`Deleting through a base pointer runs the derived destructor only when the base destructor is virtual.` },
+
+{ n: 20, d: "medium", t: "Vector of unique pointers",
+  p: String.raw`Store three unique_ptrs to ints holding 1, 2 and 3 in a vector. Print the sum of the values they hold.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> v;
+    v.push_back(std::make_unique<int>(1));
+    v.push_back(std::make_unique<int>(2));
+    v.push_back(std::make_unique<int>(3));
+    int sum = 0;
+    for (const auto& p : v) sum += *p;
+    std::cout << sum << '\n';
+}`,
+  why: String.raw`Containers can hold move-only types such as unique_ptr, and each element is freed when the container is.` },
+
+{ n: 21, d: "medium", t: "Weak pointer counts and expiry",
+  p: String.raw`Create a shared_ptr holding 5 and a weak_ptr to it. Print the use count seen through the weak_ptr, then a space. Reset the shared_ptr, then print true if the weak_ptr has expired and false otherwise.`,
+  ex: String.raw`1 true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(5);
+    std::weak_ptr<int> w = s;
+    std::cout << w.use_count() << ' ';
+    s.reset();
+    std::cout << std::boolalpha << w.expired() << '\n';
+}`,
+  why: String.raw`A weak_ptr does not add to the owner count, and it reports expiry once every owning shared_ptr is gone.` },
+
+{ n: 22, d: "medium", t: "Factory returns unique pointer",
+  p: String.raw`A function returns a unique_ptr to a new std::string holding hello. Store the result and print the length of the string it points to.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+
+std::unique_ptr<std::string> make_text() {
+    return std::make_unique<std::string>("hello");
+}
+
+int main() {
+    auto s = make_text();
+    std::cout << s->size() << '\n';
+}`,
+  why: String.raw`Returning a unique_ptr by value hands ownership to the caller without copying the object.` },
+
+{ n: 23, d: "medium", t: "Release gives up ownership",
+  p: String.raw`Create a unique_ptr to an int holding 8. Take the raw pointer out with a call that stops the unique_ptr from owning it, then delete that raw pointer yourself. Print true if the unique_ptr is now empty, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto p = std::make_unique<int>(8);
+    int* raw = p.release();
+    delete raw;
+    std::cout << std::boolalpha << (p == nullptr) << '\n';
+}`,
+  why: String.raw`release returns the raw pointer and leaves the unique_ptr empty, so the caller becomes responsible for the object.` },
+
+{ n: 24, d: "medium", t: "Cycle keeps nodes alive",
+  p: String.raw`Two nodes each hold a shared_ptr to the other. Create both nodes, keep a weak_ptr to the first node, release both local shared_ptr handles, and print true if the first node has been destroyed, otherwise false.`,
+  ex: String.raw`false`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node {
+    std::shared_ptr<Node> other;
+};
+
+int main() {
+    auto a = std::make_shared<Node>();
+    auto b = std::make_shared<Node>();
+    a->other = b;
+    b->other = a;
+    std::weak_ptr<Node> wa = a;
+    a.reset();
+    b.reset();
+    std::cout << std::boolalpha << wa.expired() << '\n';
+}`,
+  why: String.raw`Two shared_ptr owners that refer to each other keep one another alive, so their memory is never released.` },
+{ n: 25, d: "medium", t: "Reset with a new pointer",
+  p: String.raw`A struct Noisy prints destroyed when it is destroyed. Create a unique_ptr holding a Noisy. Call reset with a newly allocated Noisy, then print replaced. Let main finish afterwards.`,
+  ex: String.raw`destroyed
+replaced
+destroyed`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Noisy {
+    ~Noisy() { std::cout << "destroyed\n"; }
+};
+
+int main() {
+    auto p = std::make_unique<Noisy>();
+    p.reset(new Noisy());
+    std::cout << "replaced\n";
+}`,
+  why: String.raw`reset with a pointer destroys the object it currently owns before taking the new one, so replacing an owned object cleans up the old one at once.` },
+
+{ n: 26, d: "medium", t: "Swap two owners",
+  p: String.raw`Create two unique_ptrs, one holding 1 and one holding 2. Swap their contents with the standard swap function, then print the value held by the first and the value held by the second, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto a = std::make_unique<int>(1);
+    auto b = std::make_unique<int>(2);
+    std::swap(a, b);
+    std::cout << *a << ' ' << *b << '\n';
+}`,
+  why: String.raw`Swapping unique_ptrs exchanges what they own without touching the objects, which makes it cheap even for large objects.` },
+
+{ n: 27, d: "medium", t: "Shared array from a factory",
+  p: String.raw`Create a shared_ptr to an array of three ints, using the standard factory that makes a shared array. Assign 1, 2 and 3 to its elements and print the sum.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto a = std::make_shared<int[]>(3);
+    a[0] = 1;
+    a[1] = 2;
+    a[2] = 3;
+    std::cout << a[0] + a[1] + a[2] << '\n';
+}`,
+  why: String.raw`A factory for shared arrays allocates and manages the whole array, so the correct release happens without a custom deleter.` },
+
+{ n: 28, d: "medium", t: "Moved shared pointer",
+  p: String.raw`Create a shared_ptr holding 5. Move it into a second shared_ptr. Print true if the first is now null, then the use count of the second, separated by a space. Print true or false for the first answer.`,
+  ex: String.raw`true 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto a = std::make_shared<int>(5);
+    auto b = std::move(a);
+    std::cout << std::boolalpha << (a == nullptr) << ' ' << b.use_count() << '\n';
+}`,
+  why: String.raw`Moving a shared_ptr transfers its ownership without changing the number of owners, so the count stays at one.` },
+
+{ n: 29, d: "medium", t: "Pass a unique pointer by reference",
+  p: String.raw`A function takes a reference to a unique_ptr to an int and sets the int it points to to 10. Create a unique_ptr holding 1, pass it to the function, then print the value through the original pointer.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+void set_ten(std::unique_ptr<int>& p) {
+    *p = 10;
+}
+
+int main() {
+    auto p = std::make_unique<int>(1);
+    set_ten(p);
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`Passing a unique_ptr by reference lets a function use the object without taking ownership of it.` },
+
+{ n: 30, d: "medium", t: "Lambda captures a unique pointer",
+  p: String.raw`Create a unique_ptr holding 4. Build a lambda that takes ownership of the pointer by moving it into the lambda, and returns the held value plus one. Call the lambda and print the result.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto p = std::make_unique<int>(4);
+    auto f = [q = std::move(p)]() { return *q + 1; };
+    std::cout << f() << '\n';
+}`,
+  why: String.raw`A lambda can own a move-only value by moving it into a capture, so the closure keeps the resource alive for as long as it exists.` },
+
+{ n: 31, d: "medium", t: "Unique pointers in an ordered set",
+  p: String.raw`Store unique_ptrs to ints in a std::set, ordered by the int each one points to rather than by the pointer address. Insert unique_ptrs holding 3, 1 and 2. Print the values in set order separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <set>
+
+struct ByValue {
+    bool operator()(const std::unique_ptr<int>& a, const std::unique_ptr<int>& b) const {
+        return *a < *b;
+    }
+};
+
+int main() {
+    std::set<std::unique_ptr<int>, ByValue> s;
+    s.insert(std::make_unique<int>(3));
+    s.insert(std::make_unique<int>(1));
+    s.insert(std::make_unique<int>(2));
+    bool first = true;
+    for (const auto& p : s) {
+        std::cout << (first ? "" : " ") << *p;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A comparator passed to an ordered container can compare the objects that smart pointers point to, so the container orders them by content.` },
+
+{ n: 32, d: "medium", t: "Shared pointers in a hashed set",
+  p: String.raw`Create two separate shared_ptrs to ints, each holding 1. Put the first pointer twice and the second pointer once into a std::unordered_set of shared_ptr to int. Print the number of elements in the set.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <unordered_set>
+
+int main() {
+    auto a = std::make_shared<int>(1);
+    auto b = std::make_shared<int>(1);
+    std::unordered_set<std::shared_ptr<int>> s{a, a, b};
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Smart pointers compare and hash by the address they hold, so equal addresses are one element and different addresses are separate ones even when the values match.` },
+
+{ n: 33, d: "medium", t: "Weak pointers keyed by owner",
+  p: String.raw`Create two shared_ptrs to ints, one holding 1 and one holding 2. Make weak_ptrs to the first, to the second, and a second weak_ptr to the first. Store all three weak_ptrs in a std::set that orders them with owner_before. Print the number of elements in the set.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <set>
+
+struct ByOwner {
+    bool operator()(const std::weak_ptr<int>& a, const std::weak_ptr<int>& b) const {
+        return a.owner_before(b);
+    }
+};
+
+int main() {
+    auto a = std::make_shared<int>(1);
+    auto b = std::make_shared<int>(2);
+    std::weak_ptr<int> wa = a;
+    std::weak_ptr<int> wb = b;
+    std::weak_ptr<int> wa2 = a;
+    std::set<std::weak_ptr<int>, ByOwner> s{wa, wb, wa2};
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Weak pointers can serve as keys that identify an object by its owner, even when the object is still alive and no lock is taken.` },
+
+{ n: 34, d: "medium", t: "Retrieve a custom deleter",
+  p: String.raw`Create a shared_ptr to a new int holding 1, using a deleter struct Tag that holds a label string and frees the int. Retrieve the deleter from the shared_ptr with the standard function for that purpose, and print its label.`,
+  ex: String.raw`tagged`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+
+struct Tag {
+    std::string label;
+    void operator()(int* p) const { delete p; }
+};
+
+int main() {
+    std::shared_ptr<int> p(new int(1), Tag{"tagged"});
+    std::cout << std::get_deleter<Tag>(p)->label << '\n';
+}`,
+  why: String.raw`A shared_ptr keeps its deleter inside the control block, and the standard function lets code inspect that deleter if it knows its type.` },
+{ n: 35, d: "medium", t: "Erase type with shared void",
+  p: String.raw`Store a shared_ptr to an int holding 21 in a shared_ptr to void. Cast it back to a shared_ptr to int with the standard static cast for shared pointers, and print the value.`,
+  ex: String.raw`21`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    std::shared_ptr<void> erased = std::make_shared<int>(21);
+    auto back = std::static_pointer_cast<int>(erased);
+    std::cout << *back << '\n';
+}`,
+  why: String.raw`A shared_ptr to void can hold any object while keeping the correct deleter, and a cast returns the original type when it is needed again.` },
+
+{ n: 36, d: "medium", t: "Release malloc memory with free",
+  p: String.raw`Allocate an int with the C function malloc and store the value 5 in it. Give the memory to a unique_ptr whose deleter is the C function free, so that the memory is released correctly. Print the value through the unique_ptr.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <cstdlib>
+#include <iostream>
+#include <memory>
+
+int main() {
+    int* raw = static_cast<int*>(std::malloc(sizeof(int)));
+    *raw = 5;
+    std::unique_ptr<int, decltype(&std::free)> p(raw, &std::free);
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`A unique_ptr can manage memory from any allocator as long as its deleter releases that memory with the matching function.` },
+
+{ n: 37, d: "medium", t: "Return a derived pointer as a base pointer",
+  p: String.raw`A class Base has a virtual function id that returns 0. A class Derived derives from Base and overrides id to return 7. A function returns a unique_ptr to a new Derived. Store its result in a unique_ptr to Base, and print the value of id called through that pointer.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Base {
+    virtual ~Base() = default;
+    virtual int id() const { return 0; }
+};
+
+struct Derived : Base {
+    int id() const override { return 7; }
+};
+
+std::unique_ptr<Derived> make() {
+    return std::make_unique<Derived>();
+}
+
+int main() {
+    std::unique_ptr<Base> b = make();
+    std::cout << b->id() << '\n';
+}`,
+  why: String.raw`A unique_ptr to a derived type converts to one for its base type, so factories can return the specific type and callers can use the general one.` },
+
+// ---------- Hard ----------
+{ n: 38, d: "hard", t: "Break a cycle with a weak link",
+  p: String.raw`Node A holds a shared_ptr to node B. Node B holds a weak_ptr back to node A. Each node prints destroyed followed by its name when it is destroyed. Create both nodes and keep a weak_ptr to A. Release the handle to A first, then the handle to B. Print true if A has expired, otherwise false. Print the destruction messages before the answer.`,
+  ex: String.raw`destroyed A
+destroyed B
+true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node {
+    char name;
+    std::shared_ptr<Node> next;
+    std::weak_ptr<Node> prev;
+    explicit Node(char n) : name(n) {}
+    ~Node() { std::cout << "destroyed " << name << '\n'; }
+};
+
+int main() {
+    auto a = std::make_shared<Node>('A');
+    auto b = std::make_shared<Node>('B');
+    a->next = b;
+    b->prev = a;
+    std::weak_ptr<Node> wa = a;
+    a.reset();
+    b.reset();
+    std::cout << std::boolalpha << wa.expired() << '\n';
+}`,
+  why: String.raw`Making the back link weak means releasing the front node frees it, and the node it held is then freed too.` },
+
+{ n: 39, d: "hard", t: "Lock raises the owner count",
+  p: String.raw`Create a shared_ptr holding 1 and two weak_ptrs made from it. Inside a block, lock the first weak_ptr and print the use count of the locked pointer, then a space. After the block, print the use count of the original shared_ptr.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(1);
+    std::weak_ptr<int> w1 = s;
+    std::weak_ptr<int> w2 = s;
+    {
+        auto l = w1.lock();
+        std::cout << l.use_count() << ' ';
+    }
+    std::cout << s.use_count() << '\n';
+}`,
+  why: String.raw`Locking a weak_ptr creates a temporary owner for as long as the locked pointer lives.` },
+
+{ n: 40, d: "hard", t: "Registry takes ownership",
+  p: String.raw`A class Registry stores unique_ptrs to ints in a vector. Its add function takes ownership of a unique_ptr to an int. Create three unique_ptrs holding 1, 2 and 3, move each into a Registry, then print the number of items in the registry and the sum of their values, separated by a space.`,
+  ex: String.raw`3 6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <memory>
+#include <utility>
+#include <vector>
+
+class Registry {
+    std::vector<std::unique_ptr<int>> items;
+public:
+    void add(std::unique_ptr<int> p) { items.push_back(std::move(p)); }
+    std::size_t size() const { return items.size(); }
+    int sum() const {
+        int s = 0;
+        for (const auto& p : items) s += *p;
+        return s;
+    }
+};
+
+int main() {
+    Registry r;
+    auto a = std::make_unique<int>(1);
+    auto b = std::make_unique<int>(2);
+    auto c = std::make_unique<int>(3);
+    r.add(std::move(a));
+    r.add(std::move(b));
+    r.add(std::move(c));
+    std::cout << r.size() << ' ' << r.sum() << '\n';
+}`,
+  why: String.raw`A function that stores a unique_ptr parameter takes ownership, which makes the caller's move explicit in the code.` },
+
+{ n: 41, d: "hard", t: "Stateful deleter counts frees",
+  p: String.raw`A deleter struct holds a pointer to an int counter and increments that counter each time it frees an int. Create two unique_ptrs to new ints, both using this deleter with the same counter, and let them go out of scope inside a block. Print the counter.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Counting {
+    int* freed;
+    void operator()(int* p) const {
+        ++*freed;
+        delete p;
+    }
+};
+
+int main() {
+    int freed = 0;
+    {
+        std::unique_ptr<int, Counting> a(new int(1), Counting{&freed});
+        std::unique_ptr<int, Counting> b(new int(2), Counting{&freed});
+    }
+    std::cout << freed << '\n';
+}`,
+  why: String.raw`A deleter can carry state, so the same cleanup can report or record what it has done.` },
+
+{ n: 42, d: "hard", t: "Shared pointer to an array",
+  p: String.raw`Create a shared_ptr to a dynamically allocated array of four ints holding 1, 2, 3 and 4. Give it a deleter that frees the whole array. Print the sum of the four values.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    std::shared_ptr<int> a(new int[4]{1, 2, 3, 4}, [](int* p) { delete[] p; });
+    std::cout << a.get()[0] + a.get()[1] + a.get()[2] + a.get()[3] << '\n';
+}`,
+  why: String.raw`A shared_ptr does not know the array form, so its deleter must release the array with the matching delete[].` },
+
+{ n: 43, d: "hard", t: "Weak pointer cache",
+  p: String.raw`A cache maps string keys to weak_ptrs to strings. Store the string hello under key a through a shared_ptr that stays alive. Store the string temp under key b through a shared_ptr that is destroyed before any lookup. Print true if key a still refers to a live string, then true or false for key b, separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+
+int main() {
+    std::map<std::string, std::weak_ptr<std::string>> cache;
+    auto a = std::make_shared<std::string>("hello");
+    cache["a"] = a;
+    {
+        auto b = std::make_shared<std::string>("temp");
+        cache["b"] = b;
+    }
+    auto live = [&](const std::string& k) {
+        auto it = cache.find(k);
+        return it != cache.end() && !it->second.expired();
+    };
+    std::cout << std::boolalpha << live("a") << ' ' << live("b") << '\n';
+}`,
+  why: String.raw`A cache built on weak pointers does not keep its entries alive, so an entry whose object is gone reads as empty.` },
+
+{ n: 44, d: "hard", t: "Pimpl with unique pointer",
+  p: String.raw`A class Widget keeps its data in a private struct Impl, which is declared inside Widget and held by a unique_ptr, so Widget's declaration does not need Impl's definition. Impl holds the number 42. Widget's value function returns the number stored in Impl. Create a Widget and print the result of value.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> p;
+public:
+    Widget();
+    ~Widget();
+    int value() const;
+};
+
+struct Widget::Impl {
+    int v = 42;
+};
+
+Widget::Widget() : p(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;
+int Widget::value() const { return p->v; }
+
+int main() {
+    Widget w;
+    std::cout << w.value() << '\n';
+}`,
+  why: String.raw`Hiding the implementation behind a unique_ptr keeps the class's header stable, and the destructor is defined where the implementation is complete.` },
+
+{ n: 45, d: "hard", t: "Pointers survive vector growth",
+  p: String.raw`Store unique_ptrs to ints in a vector. Push ten of them, holding the values 0 through 9, so the vector must grow several times. Print the sum of all the values.`,
+  ex: String.raw`45`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> v;
+    for (int i = 0; i < 10; ++i)
+        v.push_back(std::make_unique<int>(i));
+    int sum = 0;
+    for (const auto& p : v) sum += *p;
+    std::cout << sum << '\n';
+}`,
+  why: String.raw`Moving a unique_ptr is cheap and leaves the object in place, so the vector can reallocate without copying the objects it holds.` },
+
+{ n: 46, d: "hard", t: "Copies across threads",
+  p: String.raw`Create a shared_ptr to an int. Start two threads, each of which makes a thousand temporary copies of the shared_ptr, one at a time, and lets each copy go. Join both threads, then print the use count of the original shared_ptr.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <thread>
+
+int main() {
+    auto s = std::make_shared<int>(0);
+    std::thread t1([&s] {
+        for (int i = 0; i < 1000; ++i) {
+            auto c = s;
+        }
+    });
+    std::thread t2([&s] {
+        for (int i = 0; i < 1000; ++i) {
+            auto c = s;
+        }
+    });
+    t1.join();
+    t2.join();
+    std::cout << s.use_count() << '\n';
+}`,
+  why: String.raw`Reference counts on a shared_ptr are updated safely when copies are made and destroyed on different threads.` },
+
+{ n: 47, d: "hard", t: "Read through a weak pointer",
+  p: String.raw`A function takes a weak_ptr to an int and returns the int it refers to, or -1 if the object no longer exists. Create a shared_ptr holding 4 and a weak_ptr to it. Print the result of the function, then a space, then the result again after the shared_ptr is reset. Print both results on one line.`,
+  ex: String.raw`4 -1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int read(const std::weak_ptr<int>& w) {
+    if (auto p = w.lock())
+        return *p;
+    return -1;
+}
+
+int main() {
+    auto s = std::make_shared<int>(4);
+    std::weak_ptr<int> w = s;
+    std::cout << read(w) << ' ';
+    s.reset();
+    std::cout << read(w) << '\n';
+}`,
+  why: String.raw`Locking a weak_ptr inside the function gives a safe check that the object still exists before it is used.` },
+{ n: 48, d: "hard", t: "Copy on write text",
+  p: String.raw`Build a class Text whose string is held in a shared_ptr. Copying a Text shares the string. Its append function must not change text that another copy can see, so it first makes its own copy of the string when the string is shared. Create a Text holding hi, copy it into b, append ! to b, then print a's text, b's text, a's owner count and b's owner count, separated by spaces.`,
+  ex: String.raw`hi hi! 1 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+class Text {
+    std::shared_ptr<std::string> data;
+public:
+    explicit Text(std::string s) : data(std::make_shared<std::string>(std::move(s))) {}
+    void append(const std::string& s) {
+        if (data.use_count() > 1)
+            data = std::make_shared<std::string>(*data);
+        *data += s;
+    }
+    const std::string& str() const { return *data; }
+    long owners() const { return data.use_count(); }
+};
+
+int main() {
+    Text a("hi");
+    Text b = a;
+    b.append("!");
+    std::cout << a.str() << ' ' << b.str() << ' ' << a.owners() << ' ' << b.owners() << '\n';
+}`,
+  why: String.raw`Sharing a value through shared_ptr and copying it only when a write is needed keeps copies cheap while preventing changes from leaking between them.` },
+
+{ n: 49, d: "hard", t: "Delete a derived object through a base pointer without a virtual destructor",
+  p: String.raw`A class Base has no virtual destructor. A class Derived derives from Base and prints deleted derived when it is destroyed. Create a shared_ptr to Base initialised from a new Derived, reset that pointer, then print after. The output is deleted derived and then after on separate lines.`,
+  ex: String.raw`deleted derived
+after`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Base {};
+
+struct Derived : Base {
+    ~Derived() { std::cout << "deleted derived\n"; }
+};
+
+int main() {
+    std::shared_ptr<Base> p(new Derived());
+    p.reset();
+    std::cout << "after\n";
+}`,
+  why: String.raw`A shared_ptr remembers the real type when it is created, so the correct destructor runs even when the base class does not declare one as virtual.` },
+
+{ n: 50, d: "hard", t: "Clone polymorphic objects",
+  p: String.raw`Define an abstract class Shape with a pure virtual function clone that returns a unique_ptr to a new copy of the object, and a pure virtual function size. A class Square derives from Shape, stores a side length, and implements clone by returning a copy of itself. Put Squares with sides 3 and 4 in a vector of unique_ptr to Shape. Clone every element into a second vector and print the sum of the sizes in the second vector.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Shape {
+    virtual ~Shape() = default;
+    virtual std::unique_ptr<Shape> clone() const = 0;
+    virtual int size() const = 0;
+};
+
+struct Square : Shape {
+    int s;
+    explicit Square(int x) : s(x) {}
+    std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Square>(*this);
+    }
+    int size() const override { return s; }
+};
+
+int main() {
+    std::vector<std::unique_ptr<Shape>> a;
+    a.push_back(std::make_unique<Square>(3));
+    a.push_back(std::make_unique<Square>(4));
+    std::vector<std::unique_ptr<Shape>> b;
+    for (const auto& s : a) b.push_back(s->clone());
+    int total = 0;
+    for (const auto& s : b) total += s->size();
+    std::cout << total << '\n';
+}`,
+  why: String.raw`A virtual clone function lets code copy objects through a base pointer without knowing their concrete types, which is how polymorphic containers are duplicated.` },
+
+// ---------- Extension ----------
+{ n: 51, d: "extension", t: "Hand-written owning move",
+  p: String.raw`A class Owner holds a heap-allocated int that it frees in its destructor. Give it a move constructor that leaves the source holding nothing. Create an Owner holding 9, move it into a second Owner, and print whether the first is now empty, then the second's value, separated by a space. Print true or false for the first answer.`,
+  ex: String.raw`true 9`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+class Owner {
+    int* p;
+public:
+    explicit Owner(int v) : p(new int(v)) {}
+    Owner(Owner&& o) noexcept : p(std::exchange(o.p, nullptr)) {}
+    ~Owner() { delete p; }
+    bool empty() const { return p == nullptr; }
+    int value() const { return *p; }
+};
+
+int main() {
+    Owner a(9);
+    Owner b(std::move(a));
+    std::cout << std::boolalpha << a.empty() << ' ' << b.value() << '\n';
+}`,
+  why: String.raw`Moving transfers the resource and leaves the source with nothing to free, which is the rule every owning smart pointer follows.` },
+
+{ n: 52, d: "extension", t: "Tree with weak parent links",
+  p: String.raw`A Node holds an int value, a weak_ptr to its parent, and a vector of shared_ptrs to its children. Make a root with value 1 and a child with value 2. Attach the child under the root, set the child's parent to the root, then print the value of the child's parent.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Node {
+    int v;
+    std::weak_ptr<Node> parent;
+    std::vector<std::shared_ptr<Node>> kids;
+    explicit Node(int x) : v(x) {}
+};
+
+int main() {
+    auto root = std::make_shared<Node>(1);
+    auto child = std::make_shared<Node>(2);
+    root->kids.push_back(child);
+    child->parent = root;
+    std::cout << child->parent.lock()->v << '\n';
+}`,
+  why: String.raw`Children own their parent-free links strongly, while the back reference to the parent is weak so the pair does not form a cycle.` },
+
+{ n: 53, d: "extension", t: "Unique pointer becomes shared",
+  p: String.raw`Create a unique_ptr to an int holding 5. Move it into a shared_ptr. Print the use count of the shared_ptr, then the value it holds, separated by a space.`,
+  ex: String.raw`1 5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    std::unique_ptr<int> u = std::make_unique<int>(5);
+    std::shared_ptr<int> s = std::move(u);
+    std::cout << s.use_count() << ' ' << *s << '\n';
+}`,
+  why: String.raw`A unique_ptr can be converted to a shared_ptr when its ownership is no longer needed to be exclusive.` },
+
+{ n: 54, d: "extension", t: "Convert to a const pointer",
+  p: String.raw`Create a shared_ptr to an int holding 3. Make a shared_ptr to const int from it. Print the use count of the original shared_ptr.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto s = std::make_shared<int>(3);
+    std::shared_ptr<const int> c = s;
+    std::cout << s.use_count() << '\n';
+}`,
+  why: String.raw`A shared_ptr to a non-const type converts to one for a const type, and both share the same ownership.` },
+
+{ n: 55, d: "extension", t: "Deleter runs once",
+  p: String.raw`Create a shared_ptr to a new int with a deleter that adds one to a counter variable and then frees the int. Make two extra copies of the pointer. Let all three pointers go out of scope in an inner block, then print the counter.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    int released = 0;
+    {
+        std::shared_ptr<int> s(new int(3), [&released](int* p) {
+            ++released;
+            delete p;
+        });
+        auto t = s;
+        auto u = t;
+    }
+    std::cout << released << '\n';
+}`,
+  why: String.raw`A shared deleter runs once, when the last owner releases the object, no matter how many copies were made.` },
+
+{ n: 56, d: "extension", t: "Allocate without initialising",
+  p: String.raw`Create a unique_ptr to an int using the standard function that allocates without initialising the value. Assign 6 to the int and print it.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto p = std::make_unique_for_overwrite<int>();
+    *p = 6;
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`make_unique_for_overwrite skips value initialisation, which is useful when the object is about to be overwritten anyway.` },
+
+{ n: 57, d: "extension", t: "Aliases share an owner",
+  p: String.raw`Create a shared_ptr to a struct Pair with members a equal to 1 and b equal to 2. Make two shared_ptr<int> values that point at its members a and b, sharing its ownership. Print true if neither owner is ordered before the other, then true if the two pointers hold the same address, otherwise false. Separate the two answers with a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Pair {
+    int a;
+    int b;
+};
+
+int main() {
+    auto p = std::make_shared<Pair>(Pair{1, 2});
+    std::shared_ptr<int> pa(p, &p->a);
+    std::shared_ptr<int> pb(p, &p->b);
+    bool same_owner = !pa.owner_before(pb) && !pb.owner_before(pa);
+    std::cout << std::boolalpha << same_owner << ' ' << (pa.get() == pb.get()) << '\n';
+}`,
+  why: String.raw`Ownership comparison looks at the controlling object rather than the stored pointer, so aliases of one object compare as sharing an owner.` },
+
+{ n: 58, d: "extension", t: "Exception does not leak",
+  p: String.raw`A function creates a unique_ptr to an object from a class that counts its live instances, then throws a runtime_error. Call the function inside a try block, catch the error, and print the number of live instances.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <stdexcept>
+
+struct Tr {
+    static inline int live = 0;
+    Tr() { ++live; }
+    ~Tr() { --live; }
+};
+
+void work() {
+    auto p = std::make_unique<Tr>();
+    throw std::runtime_error("fail");
+}
+
+int main() {
+    try {
+        work();
+    } catch (const std::runtime_error&) {
+    }
+    std::cout << Tr::live << '\n';
+}`,
+  why: String.raw`Automatic destruction during stack unwinding releases the unique_ptr's object even when the function never returns normally.` },
+
+{ n: 59, d: "extension", t: "Static cast of a shared pointer",
+  p: String.raw`A base class Base has a virtual destructor. A class Derived derives from Base and has a function get that returns 7. Hold a Derived in a shared_ptr to Base, cast that pointer back to a shared_ptr to Derived with the standard static cast for shared pointers, and print the result of get.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Base {
+    virtual ~Base() = default;
+};
+
+struct Derived : Base {
+    int get() const { return 7; }
+};
+
+int main() {
+    std::shared_ptr<Base> b = std::make_shared<Derived>();
+    auto d = std::static_pointer_cast<Derived>(b);
+    std::cout << d->get() << '\n';
+}`,
+  why: String.raw`A cast of a shared_ptr keeps the shared ownership, so the converted pointer still counts toward the same object.` },
+
+{ n: 60, d: "extension", t: "Failed dynamic cast gives empty",
+  p: String.raw`Two classes A and B both derive from a base class Base that has a virtual destructor. Hold an A in a shared_ptr to Base. Use the standard dynamic cast for shared pointers to convert it to a shared_ptr to B. Print true if the result is empty, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Base {
+    virtual ~Base() = default;
+};
+
+struct A : Base {};
+struct B : Base {};
+
+int main() {
+    std::shared_ptr<Base> b = std::make_shared<A>();
+    auto x = std::dynamic_pointer_cast<B>(b);
+    std::cout << std::boolalpha << (x == nullptr) << '\n';
+}`,
+  why: String.raw`A dynamic cast to a type the object is not returns an empty pointer instead of throwing, which makes the failure easy to test.` },
+
+// ---------- Applications ----------
+{ n: 61, d: "applications", t: "Notify live subscribers only",
+  p: String.raw`A list holds weak_ptrs to listeners. Create two listeners, subscribe both through weak_ptrs, then destroy the second listener. Notify every subscriber, where a listener that is still alive prints got when notified. Print how many listeners were notified, on its own line after the messages.`,
+  ex: String.raw`got
+1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Listener {
+    void on_event() { std::cout << "got\n"; }
+};
+
+int main() {
+    std::vector<std::weak_ptr<Listener>> subs;
+    auto a = std::make_shared<Listener>();
+    auto b = std::make_shared<Listener>();
+    subs.push_back(a);
+    subs.push_back(b);
+    b.reset();
+    int count = 0;
+    for (auto& w : subs) {
+        if (auto l = w.lock()) {
+            l->on_event();
+            ++count;
+        }
+    }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Observers held as weak pointers never keep their subjects' listeners alive, and dead entries are skipped during notification.` },
+
+{ n: 62, d: "applications", t: "Erase a resource from a vector",
+  p: String.raw`A struct Session prints closing when it is destroyed. Store two sessions in a vector of unique_ptrs. Erase the first element from the vector, then print the number of sessions left. The remaining session is destroyed when main finishes.`,
+  ex: String.raw`closing
+1
+closing`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Session {
+    ~Session() { std::cout << "closing\n"; }
+};
+
+int main() {
+    std::vector<std::unique_ptr<Session>> sessions;
+    sessions.push_back(std::make_unique<Session>());
+    sessions.push_back(std::make_unique<Session>());
+    sessions.erase(sessions.begin());
+    std::cout << sessions.size() << '\n';
+}`,
+  why: String.raw`Erasing an owning element from a container releases the resource it held at that moment, which makes container cleanup predictable.` },
+
+{ n: 63, d: "applications", t: "Shared interning pool",
+  p: String.raw`A pool hands out shared_ptrs to const strings. Asking for the same name returns the existing string while any earlier handle to it is still alive, and otherwise creates a new one. Call get with x twice, keeping both results alive. Print true if the two results point to the same string, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+
+class Pool {
+    std::map<std::string, std::weak_ptr<const std::string>> cache;
+public:
+    std::shared_ptr<const std::string> get(const std::string& name) {
+        auto& w = cache[name];
+        if (auto p = w.lock())
+            return p;
+        auto made = std::make_shared<const std::string>(name);
+        w = made;
+        return made;
+    }
+};
+
+int main() {
+    Pool pool;
+    auto a = pool.get("x");
+    auto b = pool.get("x");
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`A pool built on weak pointers shares live objects without keeping unused ones around once every handle is released.` },
+
+{ n: 64, d: "applications", t: "Sum a tree of unique pointers",
+  p: String.raw`A Node holds an int value and a vector of unique_ptrs to its children. Build a root with value 1. Give it two children with values 2 and 3, and give the child with value 2 one child with value 4. Print the sum of all values in the tree.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Node {
+    int v;
+    std::vector<std::unique_ptr<Node>> kids;
+    explicit Node(int x) : v(x) {}
+};
+
+int sum(const Node& n) {
+    int s = n.v;
+    for (const auto& k : n.kids) s += sum(*k);
+    return s;
+}
+
+int main() {
+    auto root = std::make_unique<Node>(1);
+    root->kids.push_back(std::make_unique<Node>(2));
+    root->kids.push_back(std::make_unique<Node>(3));
+    root->kids[0]->kids.push_back(std::make_unique<Node>(4));
+    std::cout << sum(*root) << '\n';
+}`,
+  why: String.raw`Each node owns its children, so destroying the root releases the whole tree without any manual cleanup.` },
+
+{ n: 65, d: "applications", t: "Singly linked list of unique nodes",
+  p: String.raw`Build a singly linked list whose nodes are owned by unique_ptrs. Insert the values 3, then 2, then 1, each at the front. Walk the list from the front and print the values separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node {
+    int v = 0;
+    std::unique_ptr<Node> next;
+};
+
+int main() {
+    std::unique_ptr<Node> head;
+    for (int x : {3, 2, 1}) {
+        auto n = std::make_unique<Node>();
+        n->v = x;
+        n->next = std::move(head);
+        head = std::move(n);
+    }
+    bool first = true;
+    for (const Node* p = head.get(); p; p = p->next.get()) {
+        std::cout << (first ? "" : " ") << p->v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A list of unique_ptr nodes frees itself node by node when its head is released, and inserting at the front just rearranges the pointers.` },
+
+{ n: 66, d: "applications", t: "Shared configuration",
+  p: String.raw`Create a shared_ptr to a const int holding 100. Store three copies of it in a vector to represent three components that share the configuration. Print the use count of the original shared_ptr.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+int main() {
+    auto cfg = std::make_shared<const int>(100);
+    std::vector<std::shared_ptr<const int>> components(3, cfg);
+    std::cout << cfg.use_count() << '\n';
+}`,
+  why: String.raw`Several components that all hold one shared object keep it alive until the last of them is gone.` },
+
+{ n: 67, d: "applications", t: "Scope guard with a deleter",
+  p: String.raw`Use a unique_ptr to an int with a deleter that prints unlocked and then frees the int, to stand in for a lock that is released at the end of a scope. Inside a block, print working, then let the block end. Print done after the block.`,
+  ex: String.raw`working
+unlocked
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto unlock = [](int* p) {
+        std::cout << "unlocked\n";
+        delete p;
+    };
+    {
+        std::unique_ptr<int, decltype(unlock)> guard(new int(0), unlock);
+        std::cout << "working\n";
+    }
+    std::cout << "done\n";
+}`,
+  why: String.raw`A unique_ptr with a deleter can run a release action automatically at the end of a scope, even on an early return.` },
+
+{ n: 68, d: "applications", t: "Button with a weak listener",
+  p: String.raw`A Button holds a weak_ptr to a Listener. Clicking the button calls the listener's heard function if the listener still exists, and otherwise prints no listener. Create a listener, make a button for it, and click once. Destroy the listener and click the button again. Print the output of both clicks.`,
+  ex: String.raw`heard
+no listener`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+struct Listener {
+    void heard() { std::cout << "heard\n"; }
+};
+
+class Button {
+    std::weak_ptr<Listener> target;
+public:
+    explicit Button(std::weak_ptr<Listener> t) : target(std::move(t)) {}
+    void click() {
+        if (auto l = target.lock())
+            l->heard();
+        else
+            std::cout << "no listener\n";
+    }
+};
+
+int main() {
+    auto l = std::make_shared<Listener>();
+    Button b(l);
+    b.click();
+    l.reset();
+    b.click();
+}`,
+  why: String.raw`A widget that refers to its handler weakly never keeps the handler alive, and it can detect when the handler has gone.` },
+
+{ n: 69, d: "applications", t: "Drain a queue of unique jobs",
+  p: String.raw`A queue holds unique_ptrs to ints with the values 1, 2 and 3. Pop every job from the front, moving each one out before it is removed. Print the sum of the values taken from the queue.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <queue>
+
+int main() {
+    std::queue<std::unique_ptr<int>> q;
+    q.push(std::make_unique<int>(1));
+    q.push(std::make_unique<int>(2));
+    q.push(std::make_unique<int>(3));
+    int sum = 0;
+    while (!q.empty()) {
+        auto p = std::move(q.front());
+        q.pop();
+        sum += *p;
+    }
+    std::cout << sum << '\n';
+}`,
+  why: String.raw`Moving the front element out of the queue before popping it transfers ownership of each job to a local owner.` },
+
+{ n: 70, d: "applications", t: "Parent and child with weak back link",
+  p: String.raw`A parent holds shared_ptrs to its children, and each child holds a weak_ptr back to the parent. Create a parent and a child, link them both ways, then print the use count of the parent.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Parent;
+
+struct Child {
+    std::weak_ptr<Parent> parent;
+};
+
+struct Parent {
+    std::vector<std::shared_ptr<Child>> kids;
+};
+
+int main() {
+    auto p = std::make_shared<Parent>();
+    auto c = std::make_shared<Child>();
+    c->parent = p;
+    p->kids.push_back(c);
+    std::cout << p.use_count() << '\n';
+}`,
+  why: String.raw`The weak back link lets a child find its parent without adding to the parent's count, so the parent is not kept alive by its own children.` },
+{ n: 71, d: "applications", t: "Shared document between editors",
+  p: String.raw`A struct Doc holds a text string. A class Editor holds a shared_ptr to a Doc and has a function append that adds text to it. Create one Doc and give it to two editors. The first editor appends hello, and the second appends a space followed by world. Print the Doc's text.`,
+  ex: String.raw`hello world`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+struct Doc {
+    std::string text;
+};
+
+class Editor {
+    std::shared_ptr<Doc> doc;
+public:
+    explicit Editor(std::shared_ptr<Doc> d) : doc(std::move(d)) {}
+    void append(const std::string& s) { doc->text += s; }
+};
+
+int main() {
+    auto d = std::make_shared<Doc>();
+    Editor a(d);
+    Editor b(d);
+    a.append("hello");
+    b.append(" world");
+    std::cout << d->text << '\n';
+}`,
+  why: String.raw`Several editors that share one document through shared_ptr all see each other's changes, and the document lives until the last editor is gone.` },
+
+{ n: 72, d: "applications", t: "Undo through a snapshot stack",
+  p: String.raw`Keep a stack of shared_ptr snapshots of a string. Push the snapshots one, two and three, in that order. Undo twice, where each undo pops the top snapshot. After each undo, print the text now on top of the stack, separated by a space.`,
+  ex: String.raw`two one`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::shared_ptr<const std::string>> history;
+    history.push_back(std::make_shared<const std::string>("one"));
+    history.push_back(std::make_shared<const std::string>("two"));
+    history.push_back(std::make_shared<const std::string>("three"));
+    history.pop_back();
+    std::cout << *history.back() << ' ';
+    history.pop_back();
+    std::cout << *history.back() << '\n';
+}`,
+  why: String.raw`Snapshots held as shared pointers to immutable values can be kept on a history stack and restored without copying the text.` },
+
+{ n: 73, d: "applications", t: "Persistent list shares its tail",
+  p: String.raw`Build an immutable linked node type whose next pointer is a shared_ptr to a const node. Make a tail node holding 9, then two nodes holding 1 and 2 that both link to that same tail. Print the use count of the tail.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+struct Node {
+    int v;
+    std::shared_ptr<const Node> next;
+    Node(int x, std::shared_ptr<const Node> n) : v(x), next(std::move(n)) {}
+};
+
+int main() {
+    auto tail = std::make_shared<const Node>(9, nullptr);
+    auto a = std::make_shared<const Node>(1, tail);
+    auto b = std::make_shared<const Node>(2, tail);
+    std::cout << tail.use_count() << '\n';
+}`,
+  why: String.raw`Immutable structures can share common suffixes safely, because nothing that holds them is able to change them.` },
+
+{ n: 74, d: "applications", t: "Library handle released once",
+  p: String.raw`A library handle is held by a shared_ptr whose deleter increments a global unload counter and then frees the handle. Load the handle, then give it to two components by copying the pointer. Let all three pointers go out of scope inside an inner block, then print the unload counter.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int unloads = 0;
+
+int main() {
+    {
+        std::shared_ptr<int> lib(new int(1), [](int* h) {
+            ++unloads;
+            delete h;
+        });
+        std::shared_ptr<int> ui = lib;
+        std::shared_ptr<int> audio = lib;
+    }
+    std::cout << unloads << '\n';
+}`,
+  why: String.raw`A shared resource is released once, when the last component holding it lets go, no matter how many components were given it.` },
+
+{ n: 75, d: "applications", t: "Run tasks through a base pointer",
+  p: String.raw`A base class Task has a virtual function run. A class Print derives from Task, stores a character, and prints that character when run. Store Print tasks for the characters A, B and C in a vector of unique_ptr to Task. Run each task in order, then print a newline.`,
+  ex: String.raw`ABC`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Task {
+    virtual ~Task() = default;
+    virtual void run() const = 0;
+};
+
+struct Print : Task {
+    char name;
+    explicit Print(char n) : name(n) {}
+    void run() const override { std::cout << name; }
+};
+
+int main() {
+    std::vector<std::unique_ptr<Task>> tasks;
+    tasks.push_back(std::make_unique<Print>('A'));
+    tasks.push_back(std::make_unique<Print>('B'));
+    tasks.push_back(std::make_unique<Print>('C'));
+    for (const auto& t : tasks) t->run();
+    std::cout << '\n';
+}`,
+  why: String.raw`A container of base pointers can hold different kinds of work, and each owned task runs its own behaviour when called through the base.` },
+
+{ n: 76, d: "applications", t: "Pool reuses released objects",
+  p: String.raw`A pool hands out handles built on unique_ptr to int. The handle's deleter returns the int to the pool instead of freeing it. Acquire a handle, note its address, release it by leaving a block, then acquire again. Print true if the second handle has the same address as the first, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Pool;
+
+struct Return {
+    Pool* pool;
+    void operator()(int* p) const;
+};
+
+struct Pool {
+    using Handle = std::unique_ptr<int, Return>;
+    std::vector<int*> free_list;
+
+    ~Pool() {
+        for (int* p : free_list) delete p;
+    }
+
+    Handle acquire() {
+        int* p;
+        if (free_list.empty()) {
+            p = new int(0);
+        } else {
+            p = free_list.back();
+            free_list.pop_back();
+        }
+        return Handle(p, Return{this});
+    }
+};
+
+void Return::operator()(int* p) const {
+    pool->free_list.push_back(p);
+}
+
+int main() {
+    Pool pool;
+    int* first = nullptr;
+    {
+        auto h = pool.acquire();
+        first = h.get();
+    }
+    auto h2 = pool.acquire();
+    std::cout << std::boolalpha << (h2.get() == first) << '\n';
+}`,
+  why: String.raw`A deleter that hands an object back to a pool lets the pool recycle expensive objects instead of allocating new ones every time.` },
+
+{ n: 77, d: "applications", t: "Expression tree with owned nodes",
+  p: String.raw`Build an expression tree for the value of 1 plus 2, multiplied by 3. Each expression node owns its child nodes through unique_ptrs, and each node can report its value. Print the value of the whole tree.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+struct Expr {
+    virtual ~Expr() = default;
+    virtual int eval() const = 0;
+};
+
+struct Num : Expr {
+    int n;
+    explicit Num(int v) : n(v) {}
+    int eval() const override { return n; }
+};
+
+struct Add : Expr {
+    std::unique_ptr<Expr> l, r;
+    Add(std::unique_ptr<Expr> a, std::unique_ptr<Expr> b) : l(std::move(a)), r(std::move(b)) {}
+    int eval() const override { return l->eval() + r->eval(); }
+};
+
+struct Mul : Expr {
+    std::unique_ptr<Expr> l, r;
+    Mul(std::unique_ptr<Expr> a, std::unique_ptr<Expr> b) : l(std::move(a)), r(std::move(b)) {}
+    int eval() const override { return l->eval() * r->eval(); }
+};
+
+int main() {
+    auto e = std::make_unique<Mul>(
+        std::make_unique<Add>(std::make_unique<Num>(1), std::make_unique<Num>(2)),
+        std::make_unique<Num>(3));
+    std::cout << e->eval() << '\n';
+}`,
+  why: String.raw`A tree whose nodes own their children is cleaned up automatically, so the whole expression is released when its root is.` },
+
+{ n: 78, d: "applications", t: "Image views share pixels",
+  p: String.raw`The pixels of an image are held in a shared vector of const ints, holding 1 through 6. A view holds a shared_ptr to the pixels and a range of positions, and can sum the pixels in its range. Create the pixels, then two views: one covering the first three pixels and one covering the last three. Print the use count of the pixels, then the total of both views' sums, separated by a space.`,
+  ex: String.raw`3 21`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <memory>
+#include <vector>
+
+struct View {
+    std::shared_ptr<const std::vector<int>> data;
+    std::size_t begin;
+    std::size_t end;
+    int sum() const {
+        int s = 0;
+        for (std::size_t i = begin; i < end; ++i) s += (*data)[i];
+        return s;
+    }
+};
+
+int main() {
+    auto pixels = std::make_shared<const std::vector<int>>(std::vector<int>{1, 2, 3, 4, 5, 6});
+    View a{pixels, 0, 3};
+    View b{pixels, 3, 6};
+    std::cout << pixels.use_count() << ' ' << a.sum() + b.sum() << '\n';
+}`,
+  why: String.raw`Views that refer to a shared buffer let many parts of a program look at the same data without copying it.` },
+
+{ n: 79, d: "applications", t: "Replace a service while it is in use",
+  p: String.raw`A Services container holds a shared_ptr to a Logger whose name is old. A caller takes a handle to the current logger. The container then replaces its logger with one named new. Print the name through the caller's handle, then the name of the container's current logger, separated by a space.`,
+  ex: String.raw`old new`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+struct Logger {
+    std::string name;
+};
+
+class Services {
+    std::shared_ptr<Logger> logger;
+public:
+    explicit Services(std::shared_ptr<Logger> l) : logger(std::move(l)) {}
+    std::shared_ptr<Logger> get() const { return logger; }
+    void replace(std::shared_ptr<Logger> l) { logger = std::move(l); }
+};
+
+int main() {
+    Services svc(std::make_shared<Logger>(Logger{"old"}));
+    auto held = svc.get();
+    svc.replace(std::make_shared<Logger>(Logger{"new"}));
+    std::cout << held->name << ' ' << svc.get()->name << '\n';
+}`,
+  why: String.raw`A caller that holds a shared_ptr keeps the old object valid even after the container has moved on to a replacement.` },
+
+{ n: 80, d: "applications", t: "Factory that may return nothing",
+  p: String.raw`A function returns a unique_ptr to a Connection for a port, or an empty pointer when the port is 0 or less. Call it with 0 and with 8080. Print none if the first result is empty. Then, if the second result is not empty, print open followed by a space and its port number.`,
+  ex: String.raw`none
+open 8080`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Connection {
+    int port;
+    explicit Connection(int p) : port(p) {}
+};
+
+std::unique_ptr<Connection> connect(int port) {
+    if (port <= 0) return nullptr;
+    return std::make_unique<Connection>(port);
+}
+
+int main() {
+    auto bad = connect(0);
+    auto good = connect(8080);
+    if (!bad) std::cout << "none\n";
+    if (good) std::cout << "open " << good->port << '\n';
+}`,
+  why: String.raw`Returning an empty unique_ptr is a simple way for a factory to signal that no resource was created.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-smartptr-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 14, label: "Easy", range: "Problems 1–14", badge: "easy" },
+  { from: 15, to: 37, label: "Medium", range: "Problems 15–37", badge: "medium" },
+  { from: 38, to: 50, label: "Hard", range: "Problems 38–50", badge: "hard" },
+  { from: 51, to: 60, label: "Extension", range: "Problems 51–60", badge: null },
+  { from: 61, to: 80, label: "Applications", range: "Problems 61–80", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

@@ -1,0 +1,1409 @@
+<title>STL Stack Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Stack Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Push, top and pop",
+  p: String.raw`Push 1, 2 and 3 onto a stack. Print the top element, then pop it and print the new size, separated by a space.`,
+  ex: String.raw`3 2`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(1);
+    s.push(2);
+    s.push(3);
+    std::cout << s.top() << ' ';
+    s.pop();
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`A stack gives access only to its top element. push adds to the top, and pop removes the top without returning it.` },
+
+{ n: 2, d: "easy", t: "Empty stack",
+  p: String.raw`Create an empty stack of ints and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    const std::stack<int> s;
+    std::cout << std::boolalpha << s.empty() << '\n';
+}`,
+  why: String.raw`A new stack holds no elements, so empty is true until something is pushed.` },
+
+{ n: 3, d: "easy", t: "Reverse a word with a stack",
+  p: String.raw`Push the characters of stack onto a stack of characters, then pop them all into a string. Print the reversed string.`,
+  ex: String.raw`kcats`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string word = "stack";
+    std::stack<char> s;
+    for (char c : word) s.push(c);
+    std::string out;
+    while (!s.empty()) {
+        out += s.top();
+        s.pop();
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Characters come off a stack in the reverse of their pushing order, so pushing a word and popping it all reverses the word.` },
+
+{ n: 4, d: "easy", t: "Balanced parentheses",
+  p: String.raw`Check whether the string (()()) has balanced parentheses, using a stack. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "(()())";
+    std::stack<char> open;
+    bool ok = true;
+    for (char c : s) {
+        if (c == '(') open.push(c);
+        else if (open.empty()) { ok = false; break; }
+        else open.pop();
+    }
+    std::cout << std::boolalpha << (ok && open.empty()) << '\n';
+}`,
+  why: String.raw`Each closing parenthesis must match the most recent unmatched opening one, which is exactly the top of the stack.` },
+
+{ n: 5, d: "easy", t: "Last in, first out",
+  p: String.raw`Push a, b and c onto a stack, then pop all three, printing each one as it is removed, separated by spaces.`,
+  ex: String.raw`c b a`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> s;
+    s.push("a");
+    s.push("b");
+    s.push("c");
+    while (!s.empty()) {
+        std::cout << s.top() << (s.size() > 1 ? " " : "\n");
+        s.pop();
+    }
+}`,
+  why: String.raw`The last value pushed is the first one popped, which is what last in, first out means.` },
+
+{ n: 6, d: "easy", t: "Choose the underlying container",
+  p: String.raw`Create a stack of ints backed by a std::vector. Push 5 and print the top element.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    std::stack<int, std::vector<int>> s;
+    s.push(5);
+    std::cout << s.top() << '\n';
+}`,
+  why: String.raw`stack is an adapter over another container. The second template argument picks which one, and vector is the default for many uses.` },
+
+{ n: 7, d: "easy", t: "emplace builds in place",
+  p: String.raw`Create a stack of pairs of an int and a string. Use emplace to push the pair 1 and x, then print the string from the top element.`,
+  ex: String.raw`x`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+#include <utility>
+
+int main() {
+    std::stack<std::pair<int, std::string>> s;
+    s.emplace(1, "x");
+    std::cout << s.top().second << '\n';
+}`,
+  why: String.raw`emplace forwards its arguments to the element's constructor, so the pair is built directly on the stack.` },
+
+{ n: 8, d: "easy", t: "Modify the top through a reference",
+  p: String.raw`Push 4 onto a stack. Add 1 to the top element through the reference that top returns, then print the top element.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(4);
+    s.top() += 1;
+    std::cout << s.top() << '\n';
+}`,
+  why: String.raw`top returns a reference to the top element, so it can be changed in place without popping it.` },
+
+{ n: 9, d: "easy", t: "Compare two stacks",
+  p: String.raw`Build the stacks a and b, each with 1 and then 2 pushed in that order. Print true if they are equal.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> a, b;
+    a.push(1); a.push(2);
+    b.push(1); b.push(2);
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Two stacks compare equal when their underlying containers hold the same elements in the same order.` },
+
+{ n: 10, d: "easy", t: "Swap two stacks",
+  p: String.raw`Create the stack a holding 1, and the stack b holding 2 and 3, with the top element pushed last. Swap them, then print the size of a and the size of b, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> a, b;
+    a.push(1);
+    b.push(2);
+    b.push(3);
+    a.swap(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`swap exchanges the underlying containers, so each stack takes over the other's elements in a single step.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Evaluate reverse Polish notation",
+  p: String.raw`Evaluate the expression 3 4 + 2 * written in reverse Polish notation, where each number is pushed and each operator pops two operands. Print the result.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::istringstream in("3 4 + 2 *");
+    std::stack<int> s;
+    for (std::string tok; in >> tok;) {
+        if (tok == "+" || tok == "*") {
+            const int b = s.top(); s.pop();
+            const int a = s.top(); s.pop();
+            s.push(tok == "+" ? a + b : a * b);
+        } else {
+            s.push(std::stoi(tok));
+        }
+    }
+    std::cout << s.top() << '\n';
+}`,
+  why: String.raw`Operands are pushed as they appear. An operator takes the two most recent values from the top, and the right operand is the one on top.` },
+
+{ n: 12, d: "medium", t: "Days until a warmer day",
+  p: String.raw`For the daily temperatures 73, 74, 75, 71, 69, 72, 76, 73, print for each day how many days later a warmer temperature occurs, or 0 if none does. Separate the numbers with spaces.`,
+  ex: String.raw`1 1 4 2 1 1 0 0`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> t{73, 74, 75, 71, 69, 72, 76, 73};
+    std::vector<int> wait(t.size(), 0);
+    std::stack<std::size_t> pending;   // indices still waiting for a warmer day
+    for (std::size_t i = 0; i < t.size(); ++i) {
+        while (!pending.empty() && t[pending.top()] < t[i]) {
+            wait[pending.top()] = static_cast<int>(i - pending.top());
+            pending.pop();
+        }
+        pending.push(i);
+    }
+    for (std::size_t i = 0; i < wait.size(); ++i) std::cout << wait[i] << (i + 1 < wait.size() ? ' ' : '\n');
+}`,
+  why: String.raw`The stack holds days still waiting for a warmer one, with the coldest on top. Each new temperature resolves every waiting day it is warmer than.` },
+
+{ n: 13, d: "medium", t: "Minimum after each push",
+  p: String.raw`Push 5, 3, 7 and 2 onto a stack that also tracks the minimum seen so far. After each push, print the current minimum. Separate the values with spaces.`,
+  ex: String.raw`5 3 3 2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+#include <utility>
+
+int main() {
+    std::stack<std::pair<int, int>> s;   // (value, minimum up to here)
+    for (int v : {5, 3, 7, 2}) {
+        const int m = s.empty() ? v : std::min(v, s.top().second);
+        s.emplace(v, m);
+        std::cout << m << (v == 2 ? "\n" : " ");
+    }
+}`,
+  why: String.raw`Each entry stores the minimum of everything beneath it as well as its own value. Popping an entry restores the previous minimum automatically, so the minimum is always available in constant time.` },
+
+{ n: 14, d: "medium", t: "Reverse each word in place",
+  p: String.raw`Reverse the letters of each word in the sentence ab cd, keeping the words in their original order. Use a stack to reverse each word. Print the result.`,
+  ex: String.raw`ba dc`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::istringstream in("ab cd");
+    std::string out;
+    for (std::string word; in >> word;) {
+        if (!out.empty()) out += ' ';
+        std::stack<char> s;
+        for (char c : word) s.push(c);
+        while (!s.empty()) { out += s.top(); s.pop(); }
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Pushing and popping each word reverses its letters, and the outer loop keeps the words in order.` },
+
+{ n: 15, d: "medium", t: "Remove adjacent duplicates",
+  p: String.raw`Remove adjacent duplicate letters from abbaca by repeatedly cancelling a letter that matches the letter on top of a stack. Print what remains from bottom to top.`,
+  ex: String.raw`ca`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<char> s;
+    for (char c : std::string("abbaca")) {
+        if (!s.empty() && s.top() == c) s.pop();
+        else s.push(c);
+    }
+    std::string out;
+    std::stack<char> rev;
+    while (!s.empty()) { rev.push(s.top()); s.pop(); }
+    while (!rev.empty()) { out += rev.top(); rev.pop(); }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`A duplicate that lands on top of the stack cancels with the letter there, so anything left behind has no adjacent matches. Popping into a second stack restores the original bottom-to-top order for printing.` },
+
+{ n: 16, d: "medium", t: "Sum without destroying the stack",
+  p: String.raw`Push 1, 2 and 3 onto a stack. Compute the sum of its elements without changing the original stack, then print the sum followed by the size of the original stack, separated by a space.`,
+  ex: String.raw`6 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(1); s.push(2); s.push(3);
+    std::stack<int> copy = s;   // work on a copy
+    int sum = 0;
+    while (!copy.empty()) { sum += copy.top(); copy.pop(); }
+    std::cout << sum << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`Popping a copy leaves the original untouched. Stacks offer no iterators, so a copy is the usual way to read every element.` },
+
+{ n: 17, d: "hard", t: "Largest rectangle in a histogram",
+  p: String.raw`Find the area of the largest rectangle that fits under the histogram with bar heights 2, 1, 5, 6, 2, 3. Print the area.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> h{2, 1, 5, 6, 2, 3};
+    std::stack<std::size_t> s;   // indices of increasing heights
+    long long best = 0;
+    for (std::size_t i = 0; i <= h.size(); ++i) {
+        const int cur = i == h.size() ? 0 : h[i];
+        while (!s.empty() && h[s.top()] >= cur) {
+            const int height = h[s.top()];
+            s.pop();
+            const long long left = s.empty() ? -1 : static_cast<long long>(s.top());
+            const long long width = static_cast<long long>(i) - left - 1;
+            best = std::max(best, height * width);
+        }
+        s.push(i);
+    }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`When a bar is popped, the bar below it marks the left boundary and the current index marks the right boundary, so the rectangle built on that bar is fully determined.` },
+
+{ n: 18, d: "medium", t: "Undo sequence with a stack",
+  p: String.raw`Perform these operations on a stack: push 1, push 2, pop, push 3. Print the top element and then the size, separated by a space.`,
+  ex: String.raw`3 2`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(1);
+    s.push(2);
+    s.pop();
+    s.push(3);
+    std::cout << s.top() << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`Operations are applied in order, and each pop removes the most recent surviving push. This is the pattern behind undo history.` },
+
+{ n: 19, d: "medium", t: "Depth of nested brackets",
+  p: String.raw`Find the maximum nesting depth of parentheses in the string (a(b)(c(d))). Print the depth.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "(a(b)(c(d)))";
+    std::stack<char> open;
+    int depth = 0;
+    for (char c : s) {
+        if (c == '(') { open.push(c); depth = std::max(depth, static_cast<int>(open.size())); }
+        else if (c == ')') open.pop();
+    }
+    std::cout << depth << '\n';
+}`,
+  why: String.raw`The stack's size is the current depth, so tracking its maximum across the scan gives the deepest point reached.` },
+
+{ n: 20, d: "medium", t: "Iterative depth-first order",
+  p: String.raw`A graph has edges 0 to 1, 0 to 2 and 1 to 3. Starting from node 0, visit the nodes depth first using an explicit stack, always taking neighbours in the order they were listed. Print the visit order separated by spaces.`,
+  ex: String.raw`0 1 3 2`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> adj{{1, 2}, {3}, {}, {}};
+    std::stack<int> todo;
+    std::vector<bool> seen(adj.size(), false);
+    todo.push(0);
+    bool first = true;
+    while (!todo.empty()) {
+        const int u = todo.top();
+        todo.pop();
+        if (seen[u]) continue;
+        seen[u] = true;
+        std::cout << (first ? "" : " ") << u;
+        first = false;
+        for (auto it = adj[u].rbegin(); it != adj[u].rend(); ++it) todo.push(*it);
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Pushing neighbours in reverse makes the first listed neighbour the next one popped. Skipping nodes already visited keeps each node to a single visit.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Evaluate an infix expression",
+  p: String.raw`Evaluate the infix expression 2+3*4-6/2 using the usual precedence, where * and / bind tighter than + and -, and integer division. Print the result.`,
+  ex: String.raw`11`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <stack>
+#include <string>
+
+int prec(char op) { return (op == '*' || op == '/') ? 2 : 1; }
+
+int apply(char op, int b, int a) {
+    switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        default:  return a / b;
+    }
+}
+
+int main() {
+    const std::string s = "2+3*4-6/2";
+    std::stack<int> values;
+    std::stack<char> ops;
+    auto reduce = [&] {
+        const int b = values.top(); values.pop();
+        const int a = values.top(); values.pop();
+        const char op = ops.top(); ops.pop();
+        values.push(apply(op, b, a));
+    };
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        const char c = s[i];
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            int v = 0;
+            while (i < s.size() && std::isdigit(static_cast<unsigned char>(s[i]))) v = v * 10 + (s[i++] - '0');
+            --i;
+            values.push(v);
+        } else {
+            while (!ops.empty() && prec(ops.top()) >= prec(c)) reduce();
+            ops.push(c);
+        }
+    }
+    while (!ops.empty()) reduce();
+    std::cout << values.top() << '\n';
+}`,
+  why: String.raw`Two stacks drive the shunting-yard method. An operator is applied only once every pending operator of equal or higher precedence has been reduced, which gives the precedence rules without parentheses.` },
+
+{ n: 22, d: "hard", t: "Decode a bracketed repeat",
+  p: String.raw`Decode the string 3[a]2[bc], where k[s] means s repeated k times. Print the decoded string.`,
+  ex: String.raw`aaabcbc`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <stack>
+#include <string>
+#include <utility>
+
+int main() {
+    const std::string s = "3[a]2[bc]";
+    std::stack<std::pair<int, std::string>> frames;   // (repeat count, text before the bracket)
+    std::string cur;
+    int num = 0;
+    for (char c : s) {
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            num = num * 10 + (c - '0');
+        } else if (c == '[') {
+            frames.emplace(num, cur);
+            num = 0;
+            cur.clear();
+        } else if (c == ']') {
+            auto [count, prefix] = frames.top();
+            frames.pop();
+            std::string repeated;
+            for (int i = 0; i < count; ++i) repeated += cur;
+            cur = prefix + repeated;
+        } else {
+            cur += c;
+        }
+    }
+    std::cout << cur << '\n';
+}`,
+  why: String.raw`Each opening bracket saves the text built so far with its repeat count. The matching closing bracket pops that frame and appends the repeated text, so nesting unwinds correctly.` },
+
+{ n: 23, d: "hard", t: "Stock price span",
+  p: String.raw`For the daily prices 100, 80, 60, 70, 60, 75, 85, the span of a day is the number of consecutive days up to and including it with a price no higher than that day's price. Print the spans separated by spaces.`,
+  ex: String.raw`1 1 1 2 1 4 6`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<int> prices{100, 80, 60, 70, 60, 75, 85};
+    std::stack<std::pair<int, int>> s;   // (price, span)
+    for (std::size_t i = 0; i < prices.size(); ++i) {
+        int span = 1;
+        while (!s.empty() && s.top().first <= prices[i]) {
+            span += s.top().second;
+            s.pop();
+        }
+        s.emplace(prices[i], span);
+        std::cout << span << (i + 1 < prices.size() ? ' ' : '\n');
+    }
+}`,
+  why: String.raw`Each stack entry carries the span of the price it represents. When a day absorbs earlier smaller prices, it adds their spans as well, so every price is popped at most once.` },
+
+{ n: 24, d: "hard", t: "Simplify a Unix path",
+  p: String.raw`Simplify the Unix path /a/./b/../../c/ so that . means the current directory, .. means the parent, and repeated slashes are merged, with no trailing slash. Print the canonical path.`,
+  ex: String.raw`/c`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <vector>
+
+int main() {
+    std::istringstream in("/a/./b/../../c/");
+    std::vector<std::string> parts;
+    for (std::string seg; std::getline(in, seg, '/');) {
+        if (seg.empty() || seg == ".") continue;
+        if (seg == "..") { if (!parts.empty()) parts.pop_back(); }
+        else parts.push_back(seg);
+    }
+    std::string out;
+    for (const auto& p : parts) out += "/" + p;
+    std::cout << (out.empty() ? "/" : out) << '\n';
+}`,
+  why: String.raw`Splitting the path into segments and keeping the segments in a stack means .. simply removes the most recent one. Empty segments and . are skipped.` },
+
+{ n: 25, d: "hard", t: "Smallest number after removing digits",
+  p: String.raw`From the number 1432219, remove exactly 3 digits so that the remaining digits form the smallest possible number, keeping their order. Print the result without leading zeros.`,
+  ex: String.raw`1219`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string num = "1432219";
+    int remove = 3;
+    std::stack<char> kept;
+    for (char d : num) {
+        while (remove > 0 && !kept.empty() && kept.top() > d) { kept.pop(); --remove; }
+        kept.push(d);
+    }
+    while (remove-- > 0) kept.pop();
+    std::stack<char> rev;
+    while (!kept.empty()) { rev.push(kept.top()); kept.pop(); }
+    std::string digits;
+    while (!rev.empty()) { digits += rev.top(); rev.pop(); }
+    std::size_t i = 0;
+    while (i + 1 < digits.size() && digits[i] == '0') ++i;
+    std::cout << digits.substr(i) << '\n';
+}`,
+  why: String.raw`Keeping a stack of digits that is increasing from bottom to top lets a larger digit be dropped whenever a smaller one arrives. Whatever remains is the smallest number for the removals allowed.` },
+
+{ n: 26, d: "hard", t: "Sort using auxiliary stacks",
+  p: String.raw`Sort the numbers 3, 1, 2 in ascending order using only stacks as temporary storage, so that the smallest value ends up on top. Print the values popped from the sorted stack separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> input;
+    for (int v : {3, 1, 2}) input.push(v);
+    std::stack<int> sorted;   // smallest on top
+    while (!input.empty()) {
+        const int v = input.top();
+        input.pop();
+        while (!sorted.empty() && sorted.top() < v) {
+            input.push(sorted.top());
+            sorted.pop();
+        }
+        sorted.push(v);
+    }
+    while (!sorted.empty()) {
+        std::cout << sorted.top() << (sorted.size() > 1 ? " " : "\n");
+        sorted.pop();
+    }
+}`,
+  why: String.raw`Each value is inserted into the sorted stack by first moving larger values back to the input. The sorted stack always has its smallest element on top.` },
+
+{ n: 27, d: "hard", t: "Count Tower of Hanoi moves with stacks",
+  p: String.raw`Model three pegs as stacks holding 3 disks, largest at the bottom. Move all disks from the first peg to the third by repeatedly moving the top disk of one peg onto another, never placing a larger disk on a smaller one. Print the number of moves.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int hanoi(int n, std::stack<int>& from, std::stack<int>& via, std::stack<int>& to, int moves) {
+    if (n == 0) return moves;
+    moves = hanoi(n - 1, from, to, via, moves);
+    to.push(from.top());
+    from.pop();
+    ++moves;
+    return hanoi(n - 1, via, from, to, moves);
+}
+
+int main() {
+    std::stack<int> a, b, c;
+    for (int d = 3; d >= 1; --d) a.push(d);
+    std::cout << hanoi(3, a, b, c, 0) << '\n';
+}`,
+  why: String.raw`Moving n disks means moving n-1 disks out of the way, moving the bottom disk, and then moving the n-1 disks back on top. Each peg is a stack, so only its top disk is ever touched.` },
+
+{ n: 28, d: "hard", t: "Trapped rain water",
+  p: String.raw`Given the elevation map 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1 where each bar has width 1, compute how many units of water are trapped between the bars. Print the total.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> h{0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1};
+    std::stack<std::size_t> s;   // indices of bars that may hold water
+    long long water = 0;
+    for (std::size_t i = 0; i < h.size(); ++i) {
+        while (!s.empty() && h[i] > h[s.top()]) {
+            const int bottom = h[s.top()];
+            s.pop();
+            if (s.empty()) break;
+            const std::size_t left = s.top();
+            const int bounded = std::min(h[left], h[i]) - bottom;
+            water += static_cast<long long>(bounded) * static_cast<long long>(i - left - 1);
+        }
+        s.push(i);
+    }
+    std::cout << water << '\n';
+}`,
+  why: String.raw`When a bar is taller than the one on top, the water above the popped bar is bounded by the two walls, the shorter of which decides the level. The stack keeps the walls in order.` },
+
+{ n: 29, d: "hard", t: "Validate a push and pop sequence",
+  p: String.raw`Numbers 1 to 5 are pushed in that order onto a stack, and popping may happen at any time. Check whether the pop order 4, 5, 3, 2, 1 is achievable. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> popped{4, 5, 3, 2, 1};
+    std::stack<int> s;
+    std::size_t next_push = 1, idx = 0;
+    bool ok = true;
+    while (idx < popped.size()) {
+        if (!s.empty() && s.top() == popped[idx]) {
+            s.pop();
+            ++idx;
+        } else if (next_push <= 5) {
+            s.push(static_cast<int>(next_push++));
+        } else {
+            ok = false;
+            break;
+        }
+    }
+    std::cout << std::boolalpha << ok << '\n';
+}`,
+  why: String.raw`Simulating the pushes and pops greedily works because a value must be pushed before it can be popped. If the next required pop is not on top and nothing is left to push, the order is impossible.` },
+
+{ n: 30, d: "hard", t: "Next smaller element for each position",
+  p: String.raw`For the sequence 4, 2, 5, 3, print for each position the first later value that is strictly smaller, or -1 if none exists. Separate the values with spaces.`,
+  ex: String.raw`2 -1 3 -1`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{4, 2, 5, 3};
+    std::vector<int> res(a.size(), -1);
+    std::stack<std::size_t> pending;
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        while (!pending.empty() && a[i] < a[pending.top()]) {
+            res[pending.top()] = a[i];
+            pending.pop();
+        }
+        pending.push(i);
+    }
+    for (std::size_t i = 0; i < res.size(); ++i) std::cout << res[i] << (i + 1 < res.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Positions wait on the stack until a smaller value arrives. Each arrival resolves every waiting position whose value it undercuts.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Default stack has no elements",
+  p: String.raw`Create a default-constructed stack of ints and print its size.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    const std::stack<int> s;
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`A default-constructed stack wraps an empty container.` },
+
+{ n: 32, d: "easy", t: "Build a stack over a deque",
+  p: String.raw`Create a stack of ints backed by a std::deque, constructed from the deque 1, 2, 3. Print its top element.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int, std::deque<int>> s(std::deque<int>{1, 2, 3});
+    std::cout << s.top() << '\n';
+}`,
+  why: String.raw`A stack can be built from an existing container. The last element of the container becomes the top.` },
+
+{ n: 33, d: "medium", t: "Copies are independent",
+  p: String.raw`Push 1, 2 and 3 onto a stack. Copy it, pop the copy once, then print the size of the copy and of the original, separated by a space.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(1); s.push(2); s.push(3);
+    std::stack<int> copy = s;
+    copy.pop();
+    std::cout << copy.size() << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`Copying a stack copies its elements, so popping the copy leaves the original unchanged.` },
+
+{ n: 34, d: "easy", t: "Lexicographic comparison of stacks",
+  p: String.raw`Compare the stack holding 1 then 2 with the stack holding 1 then 3, using less-than. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> a, b;
+    a.push(1); a.push(2);
+    b.push(1); b.push(3);
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`Stacks compare the way their underlying containers do, element by element from the bottom, so the first difference decides.` },
+
+{ n: 35, d: "medium", t: "emplace returns a reference",
+  p: String.raw`Create an empty stack of ints. Use emplace to push 4, keeping the reference it returns. Set that reference to 9 and print the top element.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    int& r = s.emplace(4);
+    r = 9;
+    std::cout << s.top() << '\n';
+}`,
+  why: String.raw`Since C++17, emplace returns a reference to the new element, so the caller can change it right away.` },
+
+{ n: 36, d: "medium", t: "Stack of vectors",
+  p: String.raw`Create a stack of vectors of ints. Push the vector 1, 2 onto it, add 3 to the vector on top, then print the size of the top vector.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    std::stack<std::vector<int>> s;
+    s.push({1, 2});
+    s.top().push_back(3);
+    std::cout << s.top().size() << '\n';
+}`,
+  why: String.raw`Each element is a full vector, and top gives a reference, so the vector on top can be modified in place.` },
+
+{ n: 37, d: "medium", t: "Move the top out of the stack",
+  p: String.raw`Push a std::unique_ptr<int> holding 7 onto a stack. Move the top pointer into a local variable, pop the empty slot, then print the value held by the local variable.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <stack>
+#include <utility>
+
+int main() {
+    std::stack<std::unique_ptr<int>> s;
+    s.push(std::make_unique<int>(7));
+    auto p = std::move(s.top());
+    s.pop();
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`A move-only element can be taken off the stack by moving it out of top before popping. pop then discards the emptied slot.` },
+
+{ n: 38, d: "easy", t: "Sum by popping everything",
+  p: String.raw`Push 1, 2, 3 and 4 onto a stack, then pop every element while adding it up. Print the total.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    for (int v : {1, 2, 3, 4}) s.push(v);
+    int total = 0;
+    while (!s.empty()) { total += s.top(); s.pop(); }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Draining a stack is the only way to visit every element, since the adapter exposes just the top.` },
+
+{ n: 39, d: "medium", t: "Reverse a vector with a stack",
+  p: String.raw`Push the values 1, 2, 3 from a vector onto a stack, then pop them into a new vector. Print the new vector's values separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> src{1, 2, 3};
+    std::stack<int> s;
+    for (int v : src) s.push(v);
+    std::vector<int> out;
+    while (!s.empty()) { out.push_back(s.top()); s.pop(); }
+    for (std::size_t i = 0; i < out.size(); ++i) std::cout << out[i] << (i + 1 < out.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Popping returns the values in the reverse of their pushing order, so the vector comes out reversed.` },
+
+{ n: 40, d: "hard", t: "Iterative inorder traversal",
+  p: String.raw`A binary tree has root 2 with left child 1 and right child 3. Traverse it inorder without recursion, using an explicit stack. Print the values separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+struct Node { int val; int left, right; };   // index into nodes, -1 for none
+
+int main() {
+    const std::vector<Node> nodes{{2, 1, 2}, {1, -1, -1}, {3, -1, -1}};
+    std::stack<int> s;
+    int cur = 0;
+    bool first = true;
+    while (cur != -1 || !s.empty()) {
+        while (cur != -1) { s.push(cur); cur = nodes[cur].left; }
+        cur = s.top();
+        s.pop();
+        std::cout << (first ? "" : " ") << nodes[cur].val;
+        first = false;
+        cur = nodes[cur].right;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The stack holds the nodes whose left subtrees are in progress. Visiting a node after its left side and before its right side gives the inorder sequence.` },
+
+{ n: 41, d: "easy", t: "Mismatched bracket types",
+  p: String.raw`Check whether the string (] has matching bracket pairs, using a stack that holds the expected closing brackets. Print true or false.`,
+  ex: String.raw`false`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "(]";
+    std::stack<char> expect;
+    bool ok = true;
+    for (char c : s) {
+        if (c == '(') expect.push(')');
+        else if (c == '[') expect.push(']');
+        else if (expect.empty() || expect.top() != c) { ok = false; break; }
+        else expect.pop();
+    }
+    std::cout << std::boolalpha << (ok && expect.empty()) << '\n';
+}`,
+  why: String.raw`Pushing the expected closing bracket makes a mismatch a simple comparison with the top. Here ] is not the expected ), so the check fails.` },
+
+{ n: 42, d: "easy", t: "Concatenate in pop order",
+  p: String.raw`Push a, b and c onto a stack, then build a string by popping every element and appending it. Print the string.`,
+  ex: String.raw`cba`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> s;
+    s.push("a"); s.push("b"); s.push("c");
+    std::string out;
+    while (!s.empty()) { out += s.top(); s.pop(); }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Values are concatenated in the order they are popped, so the last pushed appears first.` },
+
+{ n: 43, d: "hard", t: "Insert at the bottom of a stack",
+  p: String.raw`Push 1, 2 and 3 onto a stack. Insert 0 at the bottom of the stack using only push and pop, then pop every element and print them separated by spaces.`,
+  ex: String.raw`3 2 1 0`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+void insert_bottom(std::stack<int>& s, int v) {
+    if (s.empty()) { s.push(v); return; }
+    const int top = s.top();
+    s.pop();
+    insert_bottom(s, v);
+    s.push(top);
+}
+
+int main() {
+    std::stack<int> s;
+    s.push(1); s.push(2); s.push(3);
+    insert_bottom(s, 0);
+    while (!s.empty()) {
+        std::cout << s.top() << (s.size() > 1 ? " " : "\n");
+        s.pop();
+    }
+}`,
+  why: String.raw`Removing elements until the stack is empty, placing the new value, and restoring the removed elements puts the value at the bottom. Recursion holds the removed elements.` },
+
+{ n: 44, d: "hard", t: "Reverse a stack with two stacks",
+  p: String.raw`Push 1, 2 and 3 onto a stack, so 3 is on top. Reverse it using a second stack, so that 1 is on top, then pop everything and print the values separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    s.push(1); s.push(2); s.push(3);
+    std::stack<int> reversed;
+    while (!s.empty()) { reversed.push(s.top()); s.pop(); }
+    while (!reversed.empty()) {
+        std::cout << reversed.top() << (reversed.size() > 1 ? " " : "\n");
+        reversed.pop();
+    }
+}`,
+  why: String.raw`Moving every element to a second stack flips their order, because the element that was on top ends up at the bottom of the second stack.` },
+
+{ n: 45, d: "medium", t: "Capacity-limited stack",
+  p: String.raw`Push the values 1 to 5 onto a stack that accepts at most 3 elements. Ignore pushes when it is full. Print the top element and the size, separated by a space.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    constexpr std::size_t capacity = 3;
+    std::stack<int> s;
+    for (int v = 1; v <= 5; ++v)
+        if (s.size() < capacity) s.push(v);
+    std::cout << s.top() << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`Checking size before each push turns a stack into a bounded one. Rejected values never enter the stack.` },
+
+{ n: 46, d: "medium", t: "Peek below the top",
+  p: String.raw`Push 1 to 5 onto a stack. Print the second element from the top without removing anything from the original stack.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    for (int v = 1; v <= 5; ++v) s.push(v);
+    std::stack<int> copy = s;
+    copy.pop();
+    std::cout << copy.top() << '\n';
+}`,
+  why: String.raw`Only the top is visible, so reaching a deeper element means removing the ones above it. Working on a copy keeps the original intact.` },
+
+{ n: 47, d: "medium", t: "Matching bracket types",
+  p: String.raw`Check whether the string {[()]} has properly nested brackets of all three kinds. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "{[()]}";
+    std::stack<char> open;
+    bool ok = true;
+    for (char c : s) {
+        if (c == '(' || c == '[' || c == '{') open.push(c);
+        else {
+            const char want = c == ')' ? '(' : c == ']' ? '[' : '{';
+            if (open.empty() || open.top() != want) { ok = false; break; }
+            open.pop();
+        }
+    }
+    std::cout << std::boolalpha << (ok && open.empty()) << '\n';
+}`,
+  why: String.raw`Each closing bracket must match the most recent unmatched opener, which is the top of the stack for every kind of bracket.` },
+
+{ n: 48, d: "hard", t: "Count pops above a threshold",
+  p: String.raw`Push 3, 1, 4, 1 and 5 onto a stack, then pop them all one by one. Count how many popped values are greater than 2 and print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    std::stack<int> s;
+    for (int v : {3, 1, 4, 1, 5}) s.push(v);
+    int count = 0;
+    while (!s.empty()) {
+        if (s.top() > 2) ++count;
+        s.pop();
+    }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Each pop reveals the element beneath, so a single drain examines every value exactly once in the order it comes off.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "medium", t: "Browser back navigation",
+  p: String.raw`Visit the pages a, b and c in order. Each visit pushes the current page onto a back stack. Going back twice pops two pages from the back stack. Print the page you are on after going back twice.`,
+  ex: String.raw`a`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> back;
+    std::string current = "a";
+    back.push(current); current = "b";
+    back.push(current); current = "c";
+    for (int i = 0; i < 2; ++i) { current = back.top(); back.pop(); }
+    std::cout << current << '\n';
+}`,
+  why: String.raw`The back stack holds the pages left behind, most recent on top. Going back restores the top page and removes it from the stack.` },
+
+{ n: 50, d: "easy", t: "Text editor undo",
+  p: String.raw`A text editor stores each previous state of the text on an undo stack. Type a, then type b. Undo once, and print the text now shown.`,
+  ex: String.raw`a`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> undo;
+    std::string text;
+    undo.push(text); text += "a";
+    undo.push(text); text += "b";
+    text = undo.top();
+    undo.pop();
+    std::cout << text << '\n';
+}`,
+  why: String.raw`Saving the state before each change means an undo simply restores the most recent saved state.` },
+
+{ n: 51, d: "medium", t: "Call stack after a return",
+  p: String.raw`A program calls f, which calls g, which calls h. Then h returns. Print the function that is now running, using a stack of active calls.`,
+  ex: String.raw`g`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> calls;
+    calls.push("f");
+    calls.push("g");
+    calls.push("h");
+    calls.pop();
+    std::cout << calls.top() << '\n';
+}`,
+  why: String.raw`Each call pushes its frame and each return pops it, so the top of the stack is always the function that is running.` },
+
+{ n: 52, d: "medium", t: "HTML tag matching",
+  p: String.raw`Check whether the tags in <b><i></i></b> are properly nested, meaning each closing tag matches the most recently opened tag. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string html = "<b><i></i></b>";
+    std::stack<std::string> open;
+    bool ok = true;
+    std::size_t i = 0;
+    while (i < html.size()) {
+        const std::size_t close = html.find('>', i);
+        const std::string tag = html.substr(i + 1, close - i - 1);
+        if (!tag.empty() && tag[0] == '/') {
+            if (open.empty() || open.top() != tag.substr(1)) { ok = false; break; }
+            open.pop();
+        } else {
+            open.push(tag);
+        }
+        i = html.find('<', close);
+        if (i == std::string::npos) break;
+    }
+    std::cout << std::boolalpha << (ok && open.empty()) << '\n';
+}`,
+  why: String.raw`Opening tags go on the stack and each closing tag must match the top. Properly nested markup always closes the most recently opened element first.` },
+
+{ n: 53, d: "easy", t: "Reverse the digits of a number",
+  p: String.raw`Reverse the digits of 12345 by pushing each digit onto a stack and popping them. Print the resulting number.`,
+  ex: String.raw`54321`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<char> digits;
+    for (char c : std::string("12345")) digits.push(c);
+    std::string out;
+    while (!digits.empty()) { out += digits.top(); digits.pop(); }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Digits pushed in order come off in reverse, which is the reversal.` },
+
+{ n: 54, d: "medium", t: "Locate an unmatched bracket",
+  p: String.raw`In the string (a)(b, find the index of the opening bracket that is never closed. Use a stack of indices. Print that index.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "(a)(b";
+    std::stack<std::size_t> open;
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '(') open.push(i);
+        else if (s[i] == ')' && !open.empty()) open.pop();
+    }
+    std::cout << open.top() << '\n';
+}`,
+  why: String.raw`Pushing indices instead of characters keeps the position of every unmatched opener, and whatever remains on the stack at the end is unmatched.` },
+
+{ n: 55, d: "easy", t: "Convert a number to binary",
+  p: String.raw`Convert 13 to binary by repeatedly dividing by 2 and pushing each remainder onto a stack. Pop the remainders to print the binary digits with no spaces.`,
+  ex: String.raw`1101`,
+  code: String.raw`#include <iostream>
+#include <stack>
+
+int main() {
+    int n = 13;
+    std::stack<int> bits;
+    do {
+        bits.push(n % 2);
+        n /= 2;
+    } while (n > 0);
+    while (!bits.empty()) { std::cout << bits.top(); bits.pop(); }
+    std::cout << '\n';
+}`,
+  why: String.raw`Remainders come out least significant first, so the stack reverses them into the usual most significant first order.` },
+
+{ n: 56, d: "hard", t: "Infix to postfix",
+  p: String.raw`Convert the infix expression a+b*c into postfix notation using a stack of operators, where * binds tighter than +. Print the postfix form.`,
+  ex: String.raw`abc*+`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int prec(char op) { return op == '*' ? 2 : 1; }
+
+int main() {
+    const std::string infix = "a+b*c";
+    std::stack<char> ops;
+    std::string out;
+    for (char c : infix) {
+        if (c >= 'a' && c <= 'z') {
+            out += c;
+        } else {
+            while (!ops.empty() && prec(ops.top()) >= prec(c)) { out += ops.top(); ops.pop(); }
+            ops.push(c);
+        }
+    }
+    while (!ops.empty()) { out += ops.top(); ops.pop(); }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Operands go straight to the output. An operator waits on the stack until an operator of lower precedence arrives, which is what makes * bind tighter than +.` },
+
+{ n: 57, d: "medium", t: "Nesting depth of a list",
+  p: String.raw`Find the maximum nesting depth of square brackets in the list text [1,[2,[3]]]. Print the depth.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "[1,[2,[3]]]";
+    std::stack<char> open;
+    int depth = 0;
+    for (char c : s) {
+        if (c == '[') { open.push(c); depth = std::max(depth, static_cast<int>(open.size())); }
+        else if (c == ']') open.pop();
+    }
+    std::cout << depth << '\n';
+}`,
+  why: String.raw`The stack size counts how many lists are open at any point, so its peak is the deepest nesting.` },
+
+{ n: 58, d: "hard", t: "Calculator with parentheses",
+  p: String.raw`Evaluate the expression (1+(4+5+2)-3)+(6+8) which uses + and - with parentheses. Print the result.`,
+  ex: String.raw`23`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    const std::string s = "(1+(4+5+2)-3)+(6+8)";
+    std::stack<int> results;   // running total at each open parenthesis
+    std::stack<int> signs;     // sign applied to the next term
+    int total = 0, sign = 1;
+    results.push(0);
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        const char c = s[i];
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            int v = 0;
+            while (i < s.size() && std::isdigit(static_cast<unsigned char>(s[i]))) v = v * 10 + (s[i++] - '0');
+            --i;
+            total += sign * v;
+            sign = 1;
+        } else if (c == '+') {
+            sign = 1;
+        } else if (c == '-') {
+            sign = -1;
+        } else if (c == '(') {
+            results.push(total);
+            signs.push(sign);
+            total = 0;
+            sign = 1;
+        } else if (c == ')') {
+            const int inner = total;
+            total = results.top() + signs.top() * inner;
+            results.pop();
+            signs.pop();
+            sign = 1;
+        }
+    }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Each open parenthesis saves the running total and the sign that applies to the group. The closing parenthesis folds the inner total back into the saved value.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-stack-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 55, label: "Easy", range: "Problems 1–55", badge: "easy" },
+  { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
+  { from: 17, to: 58, label: "Hard", range: "Problems 17–58", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

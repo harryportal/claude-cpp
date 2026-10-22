@@ -1,0 +1,1183 @@
+<title>STL List Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL List Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Push at both ends",
+  p: String.raw`Create the list 2. Push 3 at the back and 1 at the front, then print the elements separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{2};
+    l.push_back(3);
+    l.push_front(1);
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A list is a doubly linked list, so both ends support constant-time insertion and removal.` },
+
+{ n: 2, d: "easy", t: "Size and back",
+  p: String.raw`Create the list 4, 5, 6. Print its size and its last element, separated by a space.`,
+  ex: String.raw`3 6`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    const std::list<int> l{4, 5, 6};
+    std::cout << l.size() << ' ' << l.back() << '\n';
+}`,
+  why: String.raw`A list keeps its size as a member, so size is available directly, unlike forward_list.` },
+
+{ n: 3, d: "easy", t: "Walk backwards from the end",
+  p: String.raw`Create the list 4, 5, 6. Print the last element by stepping back once from end().`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> l{4, 5, 6};
+    std::cout << *std::prev(l.end()) << '\n';
+}`,
+  why: String.raw`List iterators are bidirectional, so they can move backwards as well as forwards.` },
+
+{ n: 4, d: "easy", t: "Insert in the middle",
+  p: String.raw`Create the list 1, 3. Insert 2 between them, then print the elements separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 3};
+    l.insert(std::next(l.begin()), 2);
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`insert places a new node before the given position, and no other nodes move.` },
+
+{ n: 5, d: "easy", t: "Erase by iterator",
+  p: String.raw`Create the list 1, 2, 3. Erase the element at the second position and print the rest separated by spaces.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.erase(std::next(l.begin()));
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`erase unlinks one node. The neighbouring nodes are re-linked to each other, and no elements are copied.` },
+
+{ n: 6, d: "easy", t: "Remove by value",
+  p: String.raw`Create the list 1, 2, 1. Remove every element equal to 1 and print the remaining elements separated by spaces.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 1};
+    l.remove(1);
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`remove is a member for lists, and it unlinks every match in one pass.` },
+
+{ n: 7, d: "easy", t: "Construct a pair at the back",
+  p: String.raw`Create an empty list of pairs of an int and a string. Use emplace_back to add the pair 1 and x, then print the int and the string, separated by a space.`,
+  ex: String.raw`1 x`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+#include <utility>
+
+int main() {
+    std::list<std::pair<int, std::string>> l;
+    l.emplace_back(1, "x");
+    std::cout << l.back().first << ' ' << l.back().second << '\n';
+}`,
+  why: String.raw`emplace_back constructs the pair inside the new node from the given arguments.` },
+
+{ n: 8, d: "easy", t: "Clear and check",
+  p: String.raw`Create the list 1, 2. Clear it and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2};
+    l.clear();
+    std::cout << std::boolalpha << l.empty() << '\n';
+}`,
+  why: String.raw`clear destroys every node and leaves the list empty.` },
+
+{ n: 9, d: "easy", t: "Reverse in place",
+  p: String.raw`Create the list 1, 2, 3 and reverse it. Print the elements separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.reverse();
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`reverse only rewires the links, so the nodes keep their addresses while their order changes.` },
+
+{ n: 10, d: "easy", t: "Count with distance",
+  p: String.raw`Create the list 1, 2, 3, 4, 5. Print the number of elements between begin and end using std::distance.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> l{1, 2, 3, 4, 5};
+    std::cout << std::distance(l.begin(), l.end()) << '\n';
+}`,
+  why: String.raw`std::distance counts the steps between two iterators. For a list each step is a link traversal, unlike the constant-time subtraction of a vector.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Splice a whole list in constant time",
+  p: String.raw`Create the list a = 1, 2 and the list b = 3, 4. Move all of b to the end of a without copying. Print a, then the size of b, separated by a space.`,
+  ex: String.raw`1 2 3 4 0`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 2}, b{3, 4};
+    a.splice(a.end(), b);
+    for (int x : a) std::cout << x << ' ';
+    std::cout << b.size() << '\n';
+}`,
+  why: String.raw`splice relinks the nodes of b into a in constant time. b is left empty and no element is copied.` },
+
+{ n: 12, d: "medium", t: "Splice one element",
+  p: String.raw`Create the list a = 1, 2, 3 and the list b = 9, 8. Move only the first element of b into a, placed before the 2. Print a, then a bar, then b, all separated by spaces.`,
+  ex: String.raw`1 9 2 3 | 8`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 2, 3}, b{9, 8};
+    a.splice(std::next(a.begin()), b, b.begin());
+    for (int x : a) std::cout << x << ' ';
+    std::cout << "| ";
+    for (int x : b) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`The three-argument splice moves a single node from another list to the given position. The moved node keeps its value and address.` },
+
+{ n: 13, d: "medium", t: "Iterators survive a splice",
+  p: String.raw`Create the list a = 1, 2, 3 and keep an iterator to the element 2. Splice the whole of a into an empty list b. Print the element the iterator refers to now.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 2, 3}, b;
+    const auto it = std::next(a.begin());
+    b.splice(b.end(), a);
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`Splicing moves nodes without invalidating their iterators. The iterator still points at the same node, which is now part of b.` },
+
+{ n: 14, d: "medium", t: "Sort a list in place",
+  p: String.raw`Create the list 3, 1, 2. Sort it with the member function and print the elements separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{3, 1, 2};
+    l.sort();
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The member sort relinks nodes instead of moving values, so it is stable and does not copy elements.` },
+
+{ n: 15, d: "medium", t: "Merge two sorted lists",
+  p: String.raw`Merge the sorted lists 1, 4, 6 and 2, 3, 7 into the first list. Print the first list separated by spaces.`,
+  ex: String.raw`1 2 3 4 6 7`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 4, 6}, b{2, 3, 7};
+    a.merge(b);
+    for (int x : a) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`merge takes nodes from the two sorted lists in order. Both inputs must already be sorted.` },
+
+{ n: 16, d: "medium", t: "Remove adjacent duplicates",
+  p: String.raw`Create the list 1, 1, 2, 2, 3. Remove consecutive duplicates and print the result separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 1, 2, 2, 3};
+    l.unique();
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`unique removes runs of equal neighbours in place. Sorting first would remove all duplicates instead of only the adjacent ones.` },
+
+{ n: 17, d: "medium", t: "Keep only the even values",
+  p: String.raw`Create the list 1, 2, 3, 4, 5, 6. Remove every odd value and print the rest separated by spaces.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4, 5, 6};
+    l.remove_if([](int x) { return x % 2 != 0; });
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if on a list unlinks the matching nodes, and the iterators to the kept nodes remain valid.` },
+
+{ n: 18, d: "medium", t: "Erase while iterating",
+  p: String.raw`Create the list 1, 2, 3, 4. Remove every value below 3 during a single forward pass, then print the remaining values separated by spaces.`,
+  ex: String.raw`3 4`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4};
+    for (auto it = l.begin(); it != l.end();) {
+        if (*it < 3) it = l.erase(it);
+        else ++it;
+    }
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`erase returns an iterator to the next element, so the loop can continue without skipping or invalidating anything.` },
+
+{ n: 19, d: "medium", t: "Insert before a matching value",
+  p: String.raw`Create the list 1, 2, 3. Insert 9 directly before the element 3, then print the list separated by spaces.`,
+  ex: String.raw`1 2 9 3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.insert(std::find(l.begin(), l.end(), 3), 9);
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`find returns an iterator to the matching node, and insert places the new node before that position.` },
+
+{ n: 20, d: "medium", t: "Find and erase by value",
+  p: String.raw`Create the list 5, 6, 7. Find the element 6, erase it, and print the remaining elements separated by spaces.`,
+  ex: String.raw`5 7`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{5, 6, 7};
+    const auto it = std::find(l.begin(), l.end(), 6);
+    if (it != l.end()) l.erase(it);
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Erasing through the iterator from find touches only that node, so the other iterators into the list are not affected.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "LRU cache from a list and a map",
+  p: String.raw`Build a cache of capacity 2. Put key 1 with value a, then key 2 with value b, then read key 1, then put key 3 with value c. When the cache is over capacity, evict the least recently used key. Print the keys from most to least recently used, separated by spaces.`,
+  ex: String.raw`3 1`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <unordered_map>
+#include <utility>
+
+int main() {
+    const std::size_t capacity = 2;
+    std::list<std::pair<int, char>> order;   // front is most recent
+    std::unordered_map<int, std::list<std::pair<int, char>>::iterator> index;
+
+    auto touch = [&](int key) {
+        order.splice(order.begin(), order, index[key]);
+    };
+    auto put = [&](int key, char value) {
+        if (auto found = index.find(key); found != index.end()) {
+            found->second->second = value;
+            touch(key);
+            return;
+        }
+        if (order.size() == capacity) {
+            index.erase(order.back().first);
+            order.pop_back();
+        }
+        order.emplace_front(key, value);
+        index[key] = order.begin();
+    };
+    auto get = [&](int key) {
+        if (index.count(key)) touch(key);
+    };
+
+    put(1, 'a');
+    put(2, 'b');
+    get(1);
+    put(3, 'c');
+    bool first = true;
+    for (const auto& [key, value] : order) {
+        std::cout << (first ? "" : " ") << key;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The map finds an entry in constant time, and the list keeps recency order. Moving a node with splice updates its position without reallocating, and the iterators stored in the map stay valid.` },
+
+{ n: 22, d: "hard", t: "Insertion sort by splicing",
+  p: String.raw`Start with the list 4, 1, 3, 2. Repeatedly take the front element and splice it into a second list at its sorted position. Print the sorted second list separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> src{4, 1, 3, 2}, out;
+    while (!src.empty()) {
+        const int x = src.front();
+        const auto pos = std::find_if(out.begin(), out.end(), [x](int y) { return y > x; });
+        out.splice(pos, src, src.begin());
+    }
+    for (int x : out) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Splicing the front node into the output avoids copying values. Each insertion searches the sorted output for its place, so the result is sorted after the last element is moved.` },
+
+{ n: 23, d: "hard", t: "Iterator survives erasing neighbours",
+  p: String.raw`Create the list 1, 2, 3. Keep an iterator to the element 2. Erase the elements 1 and 3, then print the value the iterator refers to.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    const auto it = std::next(l.begin());
+    l.erase(l.begin());
+    l.erase(std::next(it));
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`Erasing a list node invalidates only iterators to that node. The iterator to 2 keeps pointing at its node, so it stays valid.` },
+
+{ n: 24, d: "medium", t: "Rotate by splicing the front",
+  p: String.raw`Create the list 1, 2, 3, 4, 5. Rotate it left by two positions by moving the first two elements to the end, using one splice. Print the list separated by spaces.`,
+  ex: String.raw`3 4 5 1 2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4, 5};
+    l.splice(l.end(), l, l.begin(), std::next(l.begin(), 2));
+    bool first = true;
+    for (int x : l) {
+        std::cout << (first ? "" : " ") << x;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A splice with a range inside the same list moves those nodes to the new position in constant time.` },
+
+{ n: 25, d: "hard", t: "Interleave two lists",
+  p: String.raw`Interleave the lists 1, 3, 5 and 2, 4, 6 so the output alternates between them, starting with the first list. Print the result separated by spaces.`,
+  ex: String.raw`1 2 3 4 5 6`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 3, 5}, b{2, 4, 6}, out;
+    while (!a.empty() || !b.empty()) {
+        if (!a.empty()) out.splice(out.end(), a, a.begin());
+        if (!b.empty()) out.splice(out.end(), b, b.begin());
+    }
+    for (int x : out) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Each splice moves the front node of one list to the end of the output, so the nodes are reused rather than copied.` },
+
+{ n: 26, d: "medium", t: "Keep the first occurrence of each value",
+  p: String.raw`Create the list 3, 1, 3, 2, 1. Remove every value that already appeared earlier in the list, keeping the first occurrence. Print the result separated by spaces.`,
+  ex: String.raw`3 1 2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+#include <unordered_set>
+
+int main() {
+    std::list<int> l{3, 1, 3, 2, 1};
+    std::unordered_set<int> seen;
+    l.remove_if([&seen](int x) { return !seen.insert(x).second; });
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if visits nodes in order, so a set of values seen so far decides which later copies to unlink.` },
+
+{ n: 27, d: "hard", t: "Pointers survive erasing neighbours",
+  p: String.raw`Create the list 1, 2, 3 and keep a pointer to the element 3. Erase the element 2, then print the value the pointer refers to.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    const int* p = &l.back();
+    l.erase(std::next(l.begin()));
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`Only the erased node is destroyed. Pointers to other nodes stay valid because those nodes are never moved.` },
+
+{ n: 28, d: "hard", t: "k-th element from the end",
+  p: String.raw`For the list 1, 2, 3, 4, 5, print the second element from the end by stepping backwards from end().`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> l{1, 2, 3, 4, 5};
+    std::cout << *std::prev(l.end(), 2) << '\n';
+}`,
+  why: String.raw`A list iterator can step backwards, so std::prev from end() reaches any element from the back.` },
+
+{ n: 29, d: "hard", t: "Move-to-front list",
+  p: String.raw`Process the requests 1, 2, 1, 3 in order. For each request, if the value is already in the list, move it to the front. Otherwise insert it at the front. Print the final list separated by spaces.`,
+  ex: String.raw`3 1 2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l;
+    for (int req : {1, 2, 1, 3}) {
+        const auto it = std::find(l.begin(), l.end(), req);
+        if (it != l.end()) l.splice(l.begin(), l, it);
+        else l.push_front(req);
+    }
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`splice with a single iterator moves one node to the front without allocating a new one. The found node keeps its identity.` },
+
+{ n: 30, d: "medium", t: "Merge into a new list",
+  p: String.raw`Merge the sorted lists 1, 4, 6 and 2, 3, 7 into a new empty list, leaving both inputs unchanged. Print the new list separated by spaces.`,
+  ex: String.raw`1 2 3 4 6 7`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> a{1, 4, 6}, b{2, 3, 7};
+    std::list<int> out;
+    std::merge(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(out));
+    for (int x : out) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Using the generic merge copies the values into a new list, which keeps both inputs intact. The member merge would instead take the nodes out of the second list.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Default list is empty",
+  p: String.raw`Create a default-constructed list of ints and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    const std::list<int> l;
+    std::cout << std::boolalpha << l.empty() << '\n';
+}`,
+  why: String.raw`A default-constructed list holds no nodes.` },
+
+{ n: 32, d: "easy", t: "resize shrinks from the back",
+  p: String.raw`Create the list 1, 2, 3. Resize it to two elements and print the rest separated by spaces.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.resize(2);
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`resize removes nodes from the back when shrinking, and appends new nodes when growing.` },
+
+{ n: 33, d: "easy", t: "assign with a count and value",
+  p: String.raw`Create the list 1, 2, 3, 4. Replace its contents with three copies of 7, then print the sum of the elements.`,
+  ex: String.raw`21`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <numeric>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4};
+    l.assign(3, 7);
+    std::cout << std::accumulate(l.begin(), l.end(), 0) << '\n';
+}`,
+  why: String.raw`assign discards the old nodes and builds the new contents from the given values.` },
+
+{ n: 34, d: "easy", t: "insert returns an iterator",
+  p: String.raw`Create the list 1, 2. Insert 5 at the end and keep the iterator that insert returns. Print the value that iterator refers to.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2};
+    const auto it = l.insert(l.end(), 5);
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`insert returns an iterator to the newly inserted element, so the caller can use it without searching for it.` },
+
+{ n: 35, d: "medium", t: "Pointers survive a move between lists",
+  p: String.raw`Create the list a = 1, 2, 3 and keep a pointer to its first element. Splice all of a into list b, then print the value the pointer refers to.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 2, 3}, b;
+    const int* p = &a.front();
+    b.splice(b.end(), a);
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`Splicing relinks the nodes into b, and the nodes themselves stay where they are in memory.` },
+
+{ n: 36, d: "medium", t: "Unique with a custom predicate",
+  p: String.raw`Create the list 1, 2, 3, 6, 7, 9. Remove each element that differs from the element kept before it by at most 1. Print the remaining elements separated by spaces.`,
+  ex: String.raw`1 3 6 9`,
+  code: String.raw`#include <cstdlib>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 6, 7, 9};
+    l.unique([](int next, int kept) { return std::abs(next - kept) <= 1; });
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`The list version of unique passes each element together with the element before it in the list, and removes those that satisfy the predicate. Here 2 goes because it is within 1 of 1, and 7 goes because it is within 1 of 6.` },
+
+{ n: 37, d: "easy", t: "Sort descending",
+  p: String.raw`Create the list 1, 3, 2. Sort it in descending order and print the elements separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 3, 2};
+    l.sort(std::greater<>{});
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`The member sort takes a comparator, and std::greater orders the larger values first.` },
+
+{ n: 38, d: "easy", t: "Lexicographic comparison of lists",
+  p: String.raw`Compare the list 1, 2 with the list 1, 3 using less-than, and print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    const std::list<int> a{1, 2}, b{1, 3};
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`Lists compare element by element, and the first difference decides the order.` },
+
+{ n: 39, d: "easy", t: "swap exchanges the lists",
+  p: String.raw`Create the list a = 1 and the list b = 2, 3. Swap them, then print the size of a and the size of b, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1}, b{2, 3};
+    a.swap(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`swap exchanges the internal heads and tails of the two lists, so no node is moved or copied.` },
+
+{ n: 40, d: "easy", t: "Modify the back in place",
+  p: String.raw`Create the list 1, 2, 3. Set the last element to 9 and print the list separated by spaces.`,
+  ex: String.raw`1 2 9`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.back() = 9;
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`back returns a reference, so assigning through it changes the stored value directly.` },
+
+{ n: 41, d: "easy", t: "Count with a predicate",
+  p: String.raw`Count the even values in the list 1, 2, 3, 4 using a standard algorithm, and print the count.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    const std::list<int> l{1, 2, 3, 4};
+    std::cout << std::count_if(l.begin(), l.end(), [](int x) { return x % 2 == 0; }) << '\n';
+}`,
+  why: String.raw`count_if only needs input iterators, so it works on any list.` },
+
+{ n: 42, d: "medium", t: "Erase a range",
+  p: String.raw`Create the list 1, 2, 3, 4. Erase everything strictly between the first and last elements, then print the rest separated by spaces.`,
+  ex: String.raw`1 4`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4};
+    l.erase(std::next(l.begin()), std::prev(l.end()));
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`erase takes a half-open range, so the first iterator is included and the last one is excluded.` },
+
+{ n: 43, d: "medium", t: "Insert a range from a vector",
+  p: String.raw`Create the list 1 and the vector 7, 8. Append every element of the vector to the list, then print the list separated by spaces.`,
+  ex: String.raw`1 7 8`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <vector>
+
+int main() {
+    std::list<int> l{1};
+    const std::vector<int> v{7, 8};
+    l.insert(l.end(), v.begin(), v.end());
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`insert accepts any input range. Each element is copied into a new node at the insertion point.` },
+
+{ n: 44, d: "medium", t: "Stable sort by length",
+  p: String.raw`Create the list ccc, a, bb, dd. Sort it by string length, keeping equal lengths in their original order. Print the words separated by spaces.`,
+  ex: String.raw`a bb dd ccc`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> l{"ccc", "a", "bb", "dd"};
+    l.sort([](const std::string& x, const std::string& y) { return x.size() < y.size(); });
+    for (const auto& w : l) std::cout << w << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`The member sort is stable, so bb stays before dd, which was its original order.` },
+
+{ n: 45, d: "easy", t: "Advance an iterator",
+  p: String.raw`Create the list 1, 2, 3, 4. Advance an iterator two steps from begin and print the value it refers to.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> l{1, 2, 3, 4};
+    std::cout << *std::next(l.begin(), 2) << '\n';
+}`,
+  why: String.raw`std::next moves an iterator by any number of steps. For a list each step follows one link.` },
+
+{ n: 46, d: "easy", t: "emplace_front on a list",
+  p: String.raw`Create the list 1. Use emplace_front to add 0 at the front, then print the list separated by spaces.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1};
+    l.emplace_front(0);
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`emplace_front constructs the new element at the head of the list directly.` },
+
+{ n: 47, d: "medium", t: "Move one node to the front",
+  p: String.raw`Create the list 1, 2, 3. Move the element 3 to the front using a single splice within the same list. Print the list separated by spaces.`,
+  ex: String.raw`3 1 2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    l.splice(l.begin(), l, std::prev(l.end()));
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`A splice within one list relinks the node in constant time, so reordering needs no copying and no erase/insert pair.` },
+
+{ n: 48, d: "easy", t: "Double every value in place",
+  p: String.raw`Create the list 1, 2, 3. Double each value in place using a range-based loop with references, then print the list separated by spaces.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3};
+    for (int& x : l) x *= 2;
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Binding the loop variable as a reference lets each element be changed where it is stored.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "easy", t: "Reorder browser tabs",
+  p: String.raw`Open tabs are A, B, C and D in that order. Move tab C to the front, keeping the others in order, then print the tabs separated by spaces.`,
+  ex: String.raw`C A B D`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> tabs{"A", "B", "C", "D"};
+    const auto c = std::next(tabs.begin(), 2);
+    tabs.splice(tabs.begin(), tabs, c);
+    for (const auto& t : tabs) std::cout << t << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Moving a tab is a single splice. The other tabs stay where they are and keep their own identity.` },
+
+{ n: 50, d: "easy", t: "Send the current song to the end",
+  p: String.raw`A playlist holds s1, s2 and s3 in order. Move the first song to the end and print the playlist separated by spaces.`,
+  ex: String.raw`s2 s3 s1`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> playlist{"s1", "s2", "s3"};
+    playlist.splice(playlist.end(), playlist, playlist.begin());
+    for (const auto& s : playlist) std::cout << s << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`splice moves the front node to the back without copying the string.` },
+
+{ n: 51, d: "medium", t: "Merge free memory blocks",
+  p: String.raw`Free blocks are stored in address order as start and size pairs: (0, 4), (4, 2) and (10, 3). Merge any block that starts exactly where the previous one ends. Print the merged blocks as start and size values, separated by spaces.`,
+  ex: String.raw`0 6 10 3`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <utility>
+
+int main() {
+    std::list<std::pair<int, int>> blocks{{0, 4}, {4, 2}, {10, 3}};
+    for (auto it = blocks.begin(); it != blocks.end();) {
+        auto next = std::next(it);
+        if (next != blocks.end() && it->first + it->second == next->first) {
+            it->second += next->second;
+            blocks.erase(next);
+        } else {
+            ++it;
+        }
+    }
+    for (const auto& [start, size] : blocks) std::cout << start << ' ' << size << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Erasing a block does not invalidate the iterator to the current one, so the scan can extend the current block and continue. Each block is visited once.` },
+
+{ n: 52, d: "medium", t: "Batch a queue into groups of two",
+  p: String.raw`A queue holds 1, 2, 3, 4 and 5. Move the items into batches of at most two, taking from the front. Print each batch's items separated by spaces, with batches separated by a bar.`,
+  ex: String.raw`1 2 | 3 4 | 5`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> queue{1, 2, 3, 4, 5};
+    bool first_batch = true;
+    while (!queue.empty()) {
+        std::list<int> batch;
+        const auto take = std::min<std::size_t>(2, queue.size());
+        batch.splice(batch.end(), queue, queue.begin(), std::next(queue.begin(), take));
+        if (!first_batch) std::cout << "| ";
+        for (int x : batch) std::cout << x << ' ';
+        first_batch = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A range splice moves a fixed number of nodes into the batch without copying them, and the queue shrinks by the same amount.` },
+
+{ n: 53, d: "easy", t: "Cancel tickets by ID",
+  p: String.raw`A queue holds tickets 1, 2, 3, 4 and 5. Cancel tickets 2 and 4 and print the remaining tickets separated by spaces.`,
+  ex: String.raw`1 3 5`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> tickets{1, 2, 3, 4, 5};
+    tickets.remove_if([](int id) { return id == 2 || id == 4; });
+    for (int id : tickets) std::cout << id << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`remove_if removes each cancelled ticket in one pass, and the remaining tickets keep their order.` },
+
+{ n: 54, d: "medium", t: "Insert a line between two lines",
+  p: String.raw`A document has the lines a and c. Insert the line b between them, then print the lines separated by spaces.`,
+  ex: String.raw`a b c`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> doc{"a", "c"};
+    doc.insert(std::find(doc.begin(), doc.end(), "c"), "b");
+    for (const auto& line : doc) std::cout << line << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Finding the line that follows the insertion point and inserting before it places the new line in the right spot without moving the others.` },
+
+{ n: 55, d: "medium", t: "Keep the newest three events",
+  p: String.raw`Events 1 to 5 arrive in order. Keep only the three most recent in a list, dropping the oldest. Print the remaining events separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> events;
+    for (int e = 1; e <= 5; ++e) {
+        events.push_back(e);
+        if (events.size() > 3) events.pop_front();
+    }
+    for (int e : events) std::cout << e << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`New events go on the back and the oldest leaves from the front. Both are constant-time list operations.` },
+
+{ n: 56, d: "easy", t: "Rotate a round-robin ring",
+  p: String.raw`Three players A, B and C sit in a ring with A at the front. Move the front player to the back four times. Print the order at the end separated by spaces.`,
+  ex: String.raw`B C A`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> ring{"A", "B", "C"};
+    for (int i = 0; i < 4; ++i) ring.splice(ring.end(), ring, ring.begin());
+    for (const auto& p : ring) std::cout << p << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`Moving the front node to the back is one splice, so each turn costs constant time however many players there are.` },
+
+{ n: 57, d: "medium", t: "Copy a section of a list",
+  p: String.raw`From the list 10, 20, 30, 40, 50, copy the elements at positions 2 to 4 into a new list, without changing the original. Print the new list separated by spaces.`,
+  ex: String.raw`20 30 40`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    const std::list<int> src{10, 20, 30, 40, 50};
+    std::list<int> section(std::next(src.begin(), 1), std::next(src.begin(), 4));
+    for (int x : section) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`A range constructor copies the chosen elements into a new list. Unlike splice, this leaves the source untouched.` },
+
+{ n: 58, d: "medium", t: "Track the most recent visitors",
+  p: String.raw`Visitors arrive in the order alice, bob, alice, carol. Keep a list with each visitor at most once, most recent first. A returning visitor moves to the front. Print the list separated by spaces.`,
+  ex: String.raw`carol alice bob`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> recent;
+    for (const std::string v : {"alice", "bob", "alice", "carol"}) {
+        const auto it = std::find(recent.begin(), recent.end(), v);
+        if (it != recent.end()) recent.splice(recent.begin(), recent, it);
+        else recent.push_front(v);
+    }
+    for (const auto& name : recent) std::cout << name << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`A returning visitor's node is moved to the front with splice, so the record is reused rather than rebuilt. The list then reads most recent first.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-list-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
+  { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
+  { from: 21, to: 29, label: "Hard", range: "Problems 21–29", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

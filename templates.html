@@ -1,0 +1,2278 @@
+<title>C++ Templates Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 98 problems</p>
+    <h1>C++ Templates Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">98</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="98" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Larger of two values",
+  p: String.raw`Write a function that returns the larger of two values of the same type. Call it with 3 and 9, and with 2.5 and 1.5. Print both results separated by a space.`,
+  ex: String.raw`9 2.5`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+T larger(T a, T b) {
+    return a > b ? a : b;
+}
+
+int main() {
+    std::cout << larger(3, 9) << ' ' << larger(2.5, 1.5) << '\n';
+}`,
+  why: String.raw`One definition serves every type that supports the comparison, so the same logic is reused for int and double without copying it.` },
+
+{ n: 2, d: "easy", t: "Box holding a value",
+  p: String.raw`Write a class template Box that stores one value of any type and has a function get that returns it. Create a Box holding the string hello and a Box holding the integer 4. Print both contents separated by a space.`,
+  ex: String.raw`hello 4`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+template <typename T>
+class Box {
+    T value;
+public:
+    explicit Box(T v) : value(std::move(v)) {}
+    const T& get() const { return value; }
+};
+
+int main() {
+    Box<std::string> s("hello");
+    Box<int> i(4);
+    std::cout << s.get() << ' ' << i.get() << '\n';
+}`,
+  why: String.raw`A single class definition produces a separate, fully typed class for each element type it is used with.` },
+
+{ n: 3, d: "easy", t: "Count live objects per type",
+  p: String.raw`Write a class template Tracked whose objects increase a count of live objects when constructed and decrease it when destroyed. The count must be kept separately for each type. Create two objects of type Tracked<int> and one object of type Tracked<double>. Print the number of live Tracked<int> objects, then the number of live Tracked<double> objects, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Tracked {
+    static inline int live = 0;
+    Tracked() { ++live; }
+    ~Tracked() { --live; }
+};
+
+int main() {
+    Tracked<int> a, b;
+    Tracked<double> c;
+    std::cout << Tracked<int>::live << ' ' << Tracked<double>::live << '\n';
+}`,
+  why: String.raw`Each instantiation of a class template has its own static members, so the counts for different types do not interfere.` },
+
+{ n: 4, d: "easy", t: "Pair with a defaulted type",
+  p: String.raw`Write a class template Pair with two type parameters, where the second parameter defaults to the first. Each Pair has a member first and a member second. Create a Pair<int> holding 1 and 2, and a Pair<int, std::string> holding 3 and x. Print the four values separated by spaces.`,
+  ex: String.raw`1 2 3 x`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+template <typename T, typename U = T>
+struct Pair {
+    T first;
+    U second;
+};
+
+int main() {
+    Pair<int> p1{1, 2};
+    Pair<int, std::string> p2{3, "x"};
+    std::cout << p1.first << ' ' << p1.second << ' ' << p2.first << ' ' << p2.second << '\n';
+}`,
+  why: String.raw`A default for a template parameter lets common uses stay short while still allowing a different second type when needed.` },
+
+{ n: 5, d: "easy", t: "Alias for a vector template",
+  p: String.raw`Give the name Vec to std::vector of T, for any type T. Create a Vec<int> holding 4 and 5. Print its number of elements and the sum of its elements, separated by a space.`,
+  ex: String.raw`2 9`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+template <typename T>
+using Vec = std::vector<T>;
+
+int main() {
+    Vec<int> v{4, 5};
+    int sum = 0;
+    for (int x : v) sum += x;
+    std::cout << v.size() << ' ' << sum << '\n';
+}`,
+  why: String.raw`A name for a family of types saves repeating long template arguments throughout a program.` },
+
+{ n: 6, d: "easy", t: "Compare two types",
+  p: String.raw`Print whether int and long are the same type, then whether const int and int are the same type. Print each answer as true or false, separated by a space.`,
+  ex: String.raw`false false`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+int main() {
+    std::cout << std::boolalpha
+              << std::is_same_v<int, long> << ' '
+              << std::is_same_v<const int, int> << '\n';
+}`,
+  why: String.raw`Type traits let code ask questions about types at compile time, such as whether two types are identical.` },
+
+{ n: 7, d: "easy", t: "Accept any argument type",
+  p: String.raw`Write a function that accepts an argument of any type and returns twice its value. Call it with 4 and with 1.5. Print the two results separated by a space.`,
+  ex: String.raw`8 3`,
+  code: String.raw`#include <iostream>
+
+auto twice(auto x) {
+    return x + x;
+}
+
+int main() {
+    std::cout << twice(4) << ' ' << twice(1.5) << '\n';
+}`,
+  why: String.raw`A parameter declared with auto makes the function generic, so the compiler creates a version for each argument type it is called with.` },
+
+{ n: 8, d: "easy", t: "Convert to a chosen type",
+  p: String.raw`Write a function template that takes the type to convert to as its first template argument and a value as its argument, and returns the value converted to that type. Call it so that 7 becomes a double, and print the result with exactly one digit after the decimal point.`,
+  ex: String.raw`7.0`,
+  code: String.raw`#include <iomanip>
+#include <iostream>
+
+template <typename To, typename From>
+To convert(From f) {
+    return static_cast<To>(f);
+}
+
+int main() {
+    std::cout << std::fixed << std::setprecision(1) << convert<double>(7) << '\n';
+}`,
+  why: String.raw`Supplying the target type explicitly while letting the source type be deduced is a common pattern in conversion helpers.` },
+
+{ n: 9, d: "easy", t: "Count the arguments",
+  p: String.raw`Write a function that accepts any number of arguments of any types and returns how many it was given. Print the count for a call with 1, the character a and 2.0, then the count for a call with no arguments, separated by a space.`,
+  ex: String.raw`3 0`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <typename... Ts>
+std::size_t count(Ts...) {
+    return sizeof...(Ts);
+}
+
+int main() {
+    std::cout << count(1, 'a', 2.0) << ' ' << count() << '\n';
+}`,
+  why: String.raw`The number of arguments in a parameter pack is available at compile time, so the function can report it without any loop.` },
+
+{ n: 10, d: "easy", t: "Holder shows its value",
+  p: String.raw`Write a class template Holder<T> whose constructor takes a value of type T and whose function show prints that value. Create a Holder<int> with 5 and a Holder<char> with z. Call show on each, printing the two values separated by a space.`,
+  ex: String.raw`5 z`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+class Holder {
+    T value;
+public:
+    explicit Holder(T v) : value(v) {}
+    void show() const { std::cout << value; }
+};
+
+int main() {
+    Holder<int>(5).show();
+    std::cout << ' ';
+    Holder<char>('z').show();
+    std::cout << '\n';
+}`,
+  why: String.raw`The same class template handles numbers and characters alike, with each instance printing the type it was built for.` },
+{ n: 11, d: "easy", t: "Full specialisation for two types",
+  p: String.raw`A class template TypeName<T> has a static function name that returns other for any type. Give full specializations so that TypeName<int> returns int and TypeName<char> returns char. Print the names for int, char and double, separated by spaces.`,
+  ex: String.raw`int char other`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct TypeName {
+    static const char* name() { return "other"; }
+};
+
+template <>
+struct TypeName<int> {
+    static const char* name() { return "int"; }
+};
+
+template <>
+struct TypeName<char> {
+    static const char* name() { return "char"; }
+};
+
+int main() {
+    std::cout << TypeName<int>::name() << ' ' << TypeName<char>::name() << ' '
+              << TypeName<double>::name() << '\n';
+}`,
+  why: String.raw`Full specializations give a specific type its own definition, which is how a generic template can special-case individual types.` },
+
+{ n: 12, d: "easy", t: "Alias for a pair of one type",
+  p: String.raw`Define an alias template Pair2 for std::pair whose two members both have the type T. Create a Pair2<int> holding 3 and 4, and print the sum of its two members.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+template <typename T>
+using Pair2 = std::pair<T, T>;
+
+int main() {
+    Pair2<int> p{3, 4};
+    std::cout << p.first + p.second << '\n';
+}`,
+  why: String.raw`An alias template gives a shorter name to a family of types, so the same pattern can be reused with different element types.` },
+
+{ n: 13, d: "easy", t: "Variable template",
+  p: String.raw`Define a variable template named pi that holds the value 3.14 converted to the requested type. Print pi with int and pi with double, separated by a space.`,
+  ex: String.raw`3 3.14`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+constexpr T pi = static_cast<T>(3.14);
+
+int main() {
+    std::cout << pi<int> << ' ' << pi<double> << '\n';
+}`,
+  why: String.raw`A variable template produces a separate variable for each type it is given, similar to how a class template produces a separate class.` },
+
+{ n: 14, d: "easy", t: "Deduce types without arguments",
+  p: String.raw`Create a std::pair holding the int 1 and the double 2.5, and a std::vector holding 1, 2 and 3, without writing any template arguments. Print the number of elements in the vector, then the second member of the pair, separated by a space.`,
+  ex: String.raw`3 2.5`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::pair p{1, 2.5};
+    std::vector v{1, 2, 3};
+    std::cout << v.size() << ' ' << p.second << '\n';
+}`,
+  why: String.raw`Class template argument deduction lets the compiler work out the template arguments from the constructor arguments.` },
+
+{ n: 15, d: "easy", t: "Choose text by a bool argument",
+  p: String.raw`A function template name takes a bool as a template argument. When the argument is true it returns UP, and when it is false it returns low. Print the result for true and for false, separated by a space.`,
+  ex: String.raw`UP low`,
+  code: String.raw`#include <iostream>
+
+template <bool Upper>
+const char* name() {
+    if constexpr (Upper)
+        return "UP";
+    else
+        return "low";
+}
+
+int main() {
+    std::cout << name<true>() << ' ' << name<false>() << '\n';
+}`,
+  why: String.raw`Template arguments need not be types; a constant value such as a bool can choose behaviour when the function is instantiated.` },
+
+{ n: 16, d: "easy", t: "Trailing return type",
+  p: String.raw`Write a function template add whose return type is the type of adding its two arguments, written after the parameter list. Print add(1, 2.5) and add(1, 2), separated by a space.`,
+  ex: String.raw`3.5 3`,
+  code: String.raw`#include <iostream>
+
+template <typename A, typename B>
+auto add(A a, B b) -> decltype(a + b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << add(1, 2.5) << ' ' << add(1, 2) << '\n';
+}`,
+  why: String.raw`A trailing return type can refer to the parameters by name, so the result type follows whatever the arguments produce.` },
+{ n: 17, d: "easy", t: "Multiply any number of arguments",
+  p: String.raw`Write a function template product that accepts any number of int arguments and returns their product, with the product of no arguments being 1. Print product applied to 2, 3 and 4, then product applied to 5 alone, separated by a space.`,
+  ex: String.raw`24 5`,
+  code: String.raw`#include <iostream>
+
+template <typename... Ts>
+int product(Ts... xs) {
+    return (1 * ... * xs);
+}
+
+int main() {
+    std::cout << product(2, 3, 4) << ' ' << product(5) << '\n';
+}`,
+  why: String.raw`A fold expression applies one operator across every element of a parameter pack, so the function works for any number of arguments.` },
+{ n: 18, d: "easy", t: "Recursive variadic total",
+  p: String.raw`Write a function template total that returns the sum of any number of int arguments, and also works when given a single argument. Print total applied to 1, 2 and 3.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+T total(T x) {
+    return x;
+}
+
+template <typename T, typename... R>
+T total(T x, R... rest) {
+    return x + total(rest...);
+}
+
+int main() {
+    std::cout << total(1, 2, 3) << '\n';
+}`,
+  why: String.raw`A variadic function can recurse on the rest of its arguments, with a base case that handles the last remaining one.` },
+
+{ n: 19, d: "easy", t: "Decay and remove cv-ref",
+  p: String.raw`Print whether std::decay applied to const int& gives int, then whether std::remove_cvref applied to const int& gives int. Print each answer as true or false, separated by a space.`,
+  ex: String.raw`true true`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+int main() {
+    std::cout << std::boolalpha
+              << std::is_same_v<std::decay_t<const int&>, int> << ' '
+              << std::is_same_v<std::remove_cvref_t<const int&>, int> << '\n';
+}`,
+  why: String.raw`Type transformation traits strip references and qualifiers, which is how generic code gets the plain type it works with.` },
+
+// ---------- Medium ----------
+{ n: 20, d: "medium", t: "Special version for bool",
+  p: String.raw`A class template Describe<T> has a function name that returns the text generic for any type. Give it a version for bool whose name returns flag. Print the name for Describe<int> and the name for Describe<bool>, separated by a space.`,
+  ex: String.raw`generic flag`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Describe {
+    static const char* name() { return "generic"; }
+};
+
+template <>
+struct Describe<bool> {
+    static const char* name() { return "flag"; }
+};
+
+int main() {
+    std::cout << Describe<int>::name() << ' ' << Describe<bool>::name() << '\n';
+}`,
+  why: String.raw`A full specialization replaces the general definition for one exact type, which lets a single type behave differently without changing the rest.` },
+
+{ n: 21, d: "medium", t: "Pointer category",
+  p: String.raw`A class template Kind has a function name that returns unknown for any type. Make it return pointer for every pointer type, including pointers to any type. Print the name for int and the name for int*, separated by a space.`,
+  ex: String.raw`unknown pointer`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Kind {
+    static const char* name() { return "unknown"; }
+};
+
+template <typename T>
+struct Kind<T*> {
+    static const char* name() { return "pointer"; }
+};
+
+int main() {
+    std::cout << Kind<int>::name() << ' ' << Kind<int*>::name() << '\n';
+}`,
+  why: String.raw`A partial specialization matches a whole family of types, such as every pointer, using a pattern in the template arguments.` },
+
+{ n: 22, d: "medium", t: "Sum of any array length",
+  p: String.raw`Write a function that accepts an array of int of any length and returns the sum of its elements. Print the sum of the array 1 2 3 4 5 and the sum of the array 7 8 9, separated by a space.`,
+  ex: String.raw`15 24`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <std::size_t N>
+int sum(const int (&a)[N]) {
+    int total = 0;
+    for (std::size_t i = 0; i < N; ++i) total += a[i];
+    return total;
+}
+
+int main() {
+    int data[] = {1, 2, 3, 4, 5};
+    int small[] = {7, 8, 9};
+    std::cout << sum(data) << ' ' << sum(small) << '\n';
+}`,
+  why: String.raw`Taking the array by reference lets the compiler deduce its length from the argument, so one function works for arrays of every size.` },
+
+{ n: 23, d: "medium", t: "Matrix element count",
+  p: String.raw`Create a class template Matrix whose row count and column count are compile-time values. Its size is the row count times the column count. Print the size of a Matrix with 2 rows and 3 columns, then the size of a Matrix with 4 rows and 4 columns, separated by a space.`,
+  ex: String.raw`6 16`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <std::size_t Rows, std::size_t Cols>
+struct Matrix {
+    static constexpr std::size_t size = Rows * Cols;
+    double data[Rows * Cols]{};
+};
+
+int main() {
+    std::cout << Matrix<2, 3>::size << ' ' << Matrix<4, 4>::size << '\n';
+}`,
+  why: String.raw`Dimensions given as template arguments are known at compile time, so sizes can be computed and used as constants.` },
+
+{ n: 24, d: "medium", t: "Print values with commas",
+  p: String.raw`Write a function that prints any number of values, with each value separated from the next by a comma and a space, and ends the output with a newline. Call it with 1, the string hi and 2.5. The output is the three values in that order.`,
+  ex: String.raw`1, hi, 2.5`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+template <typename... Ts>
+void show(const Ts&... xs) {
+    bool first = true;
+    ((std::cout << (first ? "" : ", ") << xs, first = false), ...);
+    std::cout << '\n';
+}
+
+int main() {
+    show(1, std::string("hi"), 2.5);
+}`,
+  why: String.raw`Applying one expression to every element of a parameter pack lets a function handle any mix of argument types in one place.` },
+
+{ n: 25, d: "medium", t: "Half for integers only",
+  p: String.raw`Write a function template half that returns half of its argument, rounding toward zero. It must accept only integer types, so a call with a floating-point value must not compile. Print half of 9.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+T half(T x) {
+    return x / 2;
+}
+
+int main() {
+    std::cout << half(9) << '\n';
+}`,
+  why: String.raw`Making an unused template parameter depend on a type property removes the function from overload resolution for types that do not qualify.` },
+
+{ n: 26, d: "medium", t: "Compile-time type branch",
+  p: String.raw`Write a function template that returns the text integer for integral types, floating for floating-point types, and other for any remaining type. The choice is made at compile time. Print the result for int and for double, separated by a space.`,
+  ex: String.raw`integer floating`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+template <typename T>
+const char* kind() {
+    if constexpr (std::is_integral_v<T>)
+        return "integer";
+    else if constexpr (std::is_floating_point_v<T>)
+        return "floating";
+    else
+        return "other";
+}
+
+int main() {
+    std::cout << kind<int>() << ' ' << kind<double>() << '\n';
+}`,
+  why: String.raw`A compile-time branch discards the branches that do not apply, so each instantiation contains only the code it needs.` },
+
+{ n: 27, d: "medium", t: "Concept for numeric types",
+  p: String.raw`Define a concept named Numeric that is satisfied by types that support both addition and multiplication. Write a function that takes two values of a Numeric type and returns their product. Print the product of 3 and 4.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <concepts>
+#include <iostream>
+
+template <typename T>
+concept Numeric = requires(T a, T b) {
+    a + b;
+    a * b;
+};
+
+template <Numeric T>
+T product(T a, T b) {
+    return a * b;
+}
+
+int main() {
+    std::cout << product(3, 4) << '\n';
+}`,
+  why: String.raw`A concept names a set of requirements, so a template's accepted arguments are stated clearly and checked with readable error messages.` },
+
+{ n: 28, d: "medium", t: "Base calls derived function",
+  p: String.raw`Write a base class template Shape<Derived> with a function area that returns the value computed by the derived class's sq_area function. Define a class Square that derives from Shape<Square>, stores a side of 3, and provides sq_area returning side times side. Print the area of the Square.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+
+template <typename Derived>
+struct Shape {
+    int area() const { return static_cast<const Derived&>(*this).sq_area(); }
+};
+
+struct Square : Shape<Square> {
+    int side;
+    explicit Square(int s) : side(s) {}
+    int sq_area() const { return side * side; }
+};
+
+int main() {
+    Square s(3);
+    std::cout << s.area() << '\n';
+}`,
+  why: String.raw`The base class template calls into the derived class at compile time, so the call needs no virtual dispatch.` },
+
+{ n: 29, d: "medium", t: "Container template argument",
+  p: String.raw`Write a function template that takes a container template as its parameter and returns a container of int, created with the single element 4. Call it with std::vector, and print the number of elements in the result.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+template <template <typename...> class C>
+C<int> make() {
+    return C<int>{4};
+}
+
+int main() {
+    std::cout << make<std::vector>().size() << '\n';
+}`,
+  why: String.raw`Passing a template as an argument lets one function build containers of different kinds while keeping the element type fixed.` },
+{ n: 30, d: "medium", t: "Full specialisation of a function template",
+  p: String.raw`A function template length_of returns the size member of its argument for any type that has one. Give a full specialization for const char* that returns the length of the C string. Print the length of the std::string holding hello and the length of the C string hi, separated by a space.`,
+  ex: String.raw`5 2`,
+  code: String.raw`#include <cstddef>
+#include <cstring>
+#include <iostream>
+#include <string>
+
+template <typename T>
+std::size_t length_of(const T& v) {
+    return v.size();
+}
+
+template <>
+std::size_t length_of<const char*>(const char* const& s) {
+    return std::strlen(s);
+}
+
+int main() {
+    std::string h = "hello";
+    const char* hi = "hi";
+    std::cout << length_of(h) << ' ' << length_of(hi) << '\n';
+}`,
+  why: String.raw`A specialization of a function template overrides the general version for one type, so a type with no size member can still be measured correctly.` },
+
+{ n: 31, d: "medium", t: "Partial specialisation for vectors",
+  p: String.raw`A class template Size<T> has a static function of that returns 1 for any argument. Partially specialize it for std::vector of any element type so that its of function returns the number of elements. Print Size<int>::of applied to 5, then Size<std::vector<int>>::of applied to a vector holding 1, 2 and 3, separated by a space.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+template <typename T>
+struct Size {
+    static std::size_t of(const T&) { return 1; }
+};
+
+template <typename T>
+struct Size<std::vector<T>> {
+    static std::size_t of(const std::vector<T>& v) { return v.size(); }
+};
+
+int main() {
+    std::cout << Size<int>::of(5) << ' ' << Size<std::vector<int>>::of({1, 2, 3}) << '\n';
+}`,
+  why: String.raw`A partial specialization matches a family of types, here every vector, and supplies behaviour for all of them at once.` },
+
+{ n: 32, d: "medium", t: "Overloads constrained by concepts",
+  p: String.raw`Write two overloads of a function named describe. The first accepts any type and returns the text any. The second accepts only integral types and returns the text integral. Print describe applied to 3, then describe applied to 2.5, separated by a space.`,
+  ex: String.raw`integral any`,
+  code: String.raw`#include <concepts>
+#include <iostream>
+
+template <typename T>
+const char* describe(T) {
+    return "any";
+}
+
+template <std::integral T>
+const char* describe(T) {
+    return "integral";
+}
+
+int main() {
+    std::cout << describe(3) << ' ' << describe(2.5) << '\n';
+}`,
+  why: String.raw`When two overloads both fit, the one with stronger constraints is preferred, so a more specific overload can refine a general one.` },
+
+{ n: 33, d: "medium", t: "Count objects per derived type",
+  p: String.raw`Write a base class template Counted<Derived> that keeps a count of how many objects of each derived type currently exist. Derive a class A and a class B from Counted of themselves. Create two A objects and one B object. Print the count for A, then the count for B, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+
+template <typename Derived>
+struct Counted {
+    static inline int live = 0;
+    Counted() { ++live; }
+    ~Counted() { --live; }
+};
+
+struct A : Counted<A> {};
+struct B : Counted<B> {};
+
+int main() {
+    A a1, a2;
+    B b1;
+    std::cout << A::live << ' ' << B::live << '\n';
+}`,
+  why: String.raw`Passing the derived class as the template argument gives each derived type its own counter, with no virtual functions involved.` },
+
+{ n: 34, d: "medium", t: "Deduction guide for a constructor",
+  p: String.raw`A class template Wrapper<T> stores a value of type T and has an explicit constructor that takes a T. Add a deduction guide so that building a Wrapper from a string literal stores a std::string. Create a Wrapper from the literal hi and print the length of the value it stores.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+template <typename T>
+struct Wrapper {
+    T v;
+    explicit Wrapper(T x) : v(std::move(x)) {}
+};
+
+Wrapper(const char*) -> Wrapper<std::string>;
+
+int main() {
+    Wrapper w{"hi"};
+    std::cout << w.v.size() << '\n';
+}`,
+  why: String.raw`A deduction guide tells the compiler which template arguments to choose for a given constructor argument, overriding the default deduction.` },
+
+{ n: 35, d: "medium", t: "Factory that forwards arguments",
+  p: String.raw`Write a factory function template that takes a type and any number of arguments, and constructs the type from them, passing each argument on exactly as it was given. The type Probe has a constructor taking int& that sets its text to lvalue, and a constructor taking int&& that sets its text to rvalue. Print the text of a Probe built from a named int and of a Probe built from the literal 4, separated by a space.`,
+  ex: String.raw`lvalue rvalue`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+struct Probe {
+    std::string how;
+    explicit Probe(int&) : how("lvalue") {}
+    explicit Probe(int&&) : how("rvalue") {}
+};
+
+template <typename T, typename... Args>
+T make(Args&&... args) {
+    return T(std::forward<Args>(args)...);
+}
+
+int main() {
+    int x = 1;
+    std::cout << make<Probe>(x).how << ' ' << make<Probe>(4).how << '\n';
+}`,
+  why: String.raw`Forwarding references keep each argument's value category, so the constructor that matches the original argument is the one that runs.` },
+
+{ n: 36, d: "medium", t: "Member function template",
+  p: String.raw`A class Buffer holds a std::string. Its member function template append accepts any argument that a std::string can be built from, and appends it to the buffer. Append the C string ab, then the std::string c, and print the buffer's contents.`,
+  ex: String.raw`abc`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+class Buffer {
+    std::string s;
+public:
+    template <typename T>
+    void append(const T& v) {
+        s += std::string(v);
+    }
+    const std::string& str() const { return s; }
+};
+
+int main() {
+    Buffer b;
+    b.append("ab");
+    b.append(std::string("c"));
+    std::cout << b.str() << '\n';
+}`,
+  why: String.raw`A member can be a template of its own, so one function accepts several argument types without needing an overload for each.` },
+
+{ n: 37, d: "medium", t: "Element size from a container type",
+  p: String.raw`A function template elem_size takes a container type and returns the size in bytes of that container's value_type. Print elem_size for std::vector of int and for std::vector of char, separated by a space.`,
+  ex: String.raw`4 1`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+template <typename C>
+std::size_t elem_size() {
+    return sizeof(typename C::value_type);
+}
+
+int main() {
+    std::cout << elem_size<std::vector<int>>() << ' ' << elem_size<std::vector<char>>() << '\n';
+}`,
+  why: String.raw`A name that depends on a template parameter must be marked with typename, so the compiler knows it names a type.` },
+
+{ n: 38, d: "medium", t: "Iterator category tags",
+  p: String.raw`Write two overloads of a function named kind. One takes a std::random_access_iterator_tag and returns the word random. The other takes a std::input_iterator_tag and returns the word input. Print kind applied to the iterator category of std::vector of int's iterator, then to the iterator category of std::istream_iterator of int, separated by a space.`,
+  ex: String.raw`random input`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <sstream>
+#include <vector>
+
+const char* kind(std::random_access_iterator_tag) { return "random"; }
+const char* kind(std::input_iterator_tag) { return "input"; }
+
+int main() {
+    std::cout << kind(std::iterator_traits<std::vector<int>::iterator>::iterator_category{}) << ' '
+              << kind(std::iterator_traits<std::istream_iterator<int>>::iterator_category{}) << '\n';
+}`,
+  why: String.raw`Passing an empty tag object selects an overload by type, so each kind of iterator is handled by the code written for it.` },
+
+{ n: 39, d: "medium", t: "Formatting policy",
+  p: String.raw`A class template Message takes a formatting policy as its parameter. Each policy has a static function apply that takes a string and returns a string. Message has a function render that returns the result of the policy's apply on its text. Define the policy Upper, which converts letters to uppercase, and the policy Plain, which returns the text unchanged. Print the rendering of hi with Upper and with Plain, separated by a space.`,
+  ex: String.raw`HI hi`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string>
+
+struct Upper {
+    static std::string apply(std::string s) {
+        for (auto& c : s) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        return s;
+    }
+};
+
+struct Plain {
+    static std::string apply(std::string s) { return s; }
+};
+
+template <typename Policy>
+struct Message {
+    std::string text;
+    std::string render() const { return Policy::apply(text); }
+};
+
+int main() {
+    std::cout << Message<Upper>{"hi"}.render() << ' ' << Message<Plain>{"hi"}.render() << '\n';
+}`,
+  why: String.raw`A policy chosen as a template argument changes how a class behaves without changing the class itself.` },
+
+{ n: 40, d: "medium", t: "Mixin adds a method to a base",
+  p: String.raw`Write a class template Doubler that derives from the type given as its parameter and adds a function twice, which returns twice the value returned by the base's get function. Give the base type Base a function get that returns 21. Print the result of twice on a Doubler of Base.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+
+struct Base {
+    int get() const { return 21; }
+};
+
+template <typename B>
+struct Doubler : B {
+    int twice() const { return 2 * B::get(); }
+};
+
+int main() {
+    Doubler<Base> d;
+    std::cout << d.twice() << '\n';
+}`,
+  why: String.raw`Deriving from a type supplied as a template argument adds behaviour to whatever base is chosen, which is how mixins are built.` },
+
+{ n: 41, d: "medium", t: "Return type from a decltype",
+  p: String.raw`Write a function template count_of that returns the number of elements in a container, with its return type given as the type produced by the container's size function. Print count_of applied to a vector holding 1, 2 and 3.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+template <typename C>
+auto count_of(const C& c) -> decltype(c.size()) {
+    return c.size();
+}
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    std::cout << count_of(v) << '\n';
+}`,
+  why: String.raw`Deriving the return type from an expression ties the function's result to what the operand actually provides.` },
+
+{ n: 42, d: "medium", t: "Alias for a function type",
+  p: String.raw`Define an alias template Unary<R, A> for std::function that takes an A and returns an R. Create a Unary<int, int> holding a lambda that multiplies its argument by 2, call it with 4, and print the result.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <functional>
+#include <iostream>
+
+template <typename R, typename A>
+using Unary = std::function<R(A)>;
+
+int main() {
+    Unary<int, int> f = [](int x) { return x * 2; };
+    std::cout << f(4) << '\n';
+}`,
+  why: String.raw`An alias template can name a whole function signature, so the same callable type can be written once and reused.` },
+{ n: 43, d: "medium", t: "Explicit instantiation of a function template",
+  p: String.raw`A function template bytes returns the size in bytes of its type argument. Explicitly instantiate bytes for char and for long. Then print bytes with char and bytes with long, separated by a space.`,
+  ex: String.raw`1 8`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <typename T>
+std::size_t bytes() {
+    return sizeof(T);
+}
+
+template std::size_t bytes<char>();
+template std::size_t bytes<long>();
+
+int main() {
+    std::cout << bytes<char>() << ' ' << bytes<long>() << '\n';
+}`,
+  why: String.raw`An explicit instantiation definition makes the compiler generate code for a chosen type in one place, rather than in every file that uses it.` },
+{ n: 44, d: "medium", t: "Sum a tuple over all positions",
+  p: String.raw`Write a function that sums the three elements of a tuple of ints, without using a loop. Print the sum for the tuple holding 1, 2 and 3.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <tuple>
+#include <utility>
+
+template <std::size_t... I>
+int sum_tuple(const std::tuple<int, int, int>& t, std::index_sequence<I...>) {
+    return (std::get<I>(t) + ... + 0);
+}
+
+int main() {
+    std::tuple<int, int, int> t{1, 2, 3};
+    std::cout << sum_tuple(t, std::make_index_sequence<3>{}) << '\n';
+}`,
+  why: String.raw`An index sequence turns a list of positions into a parameter pack, so one expression can touch every element of a tuple.` },
+
+{ n: 45, d: "medium", t: "Choose a type at compile time",
+  p: String.raw`Choose a type at compile time: double if the size of char is greater than 1, otherwise int. Print the size in bytes of the chosen type.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+int main() {
+    using T = std::conditional_t<(sizeof(char) > 1), double, int>;
+    std::cout << sizeof(T) << '\n';
+}`,
+  why: String.raw`A conditional type alias picks one of two types from a compile-time condition, letting code choose a representation without any run-time check.` },
+
+{ n: 46, d: "medium", t: "Common type of two types",
+  p: String.raw`Print the size in bytes of the common type of int and double, then the size in bytes of the common type of char and int, separated by a space.`,
+  ex: String.raw`8 4`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+int main() {
+    std::cout << sizeof(std::common_type_t<int, double>) << ' '
+              << sizeof(std::common_type_t<char, int>) << '\n';
+}`,
+  why: String.raw`The common type is the type that both arguments convert to, which is what mixed-type operations such as addition use as their result.` },
+
+{ n: 47, d: "medium", t: "Customise swap through lookup",
+  p: String.raw`In a namespace ns, define a struct Box with an int member v, and a swap function for Box that swaps the v members of its two arguments and prints custom followed by a space. Write a function template do_swap that swaps two values of any type, so that it uses the namespace's swap for Box and the standard swap for other types. Call do_swap on two Box objects holding 1 and 2, and print the two values separated by a space.`,
+  ex: String.raw`custom 2 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+namespace ns {
+struct Box {
+    int v;
+};
+
+void swap(Box& a, Box& b) {
+    std::swap(a.v, b.v);
+    std::cout << "custom ";
+}
+}
+
+template <typename T>
+void do_swap(T& a, T& b) {
+    using std::swap;
+    swap(a, b);
+}
+
+int main() {
+    ns::Box a{1};
+    ns::Box b{2};
+    do_swap(a, b);
+    std::cout << a.v << ' ' << b.v << '\n';
+}`,
+  why: String.raw`Calling swap unqualified after bringing std::swap into scope lets argument-dependent lookup pick a type's own swap, which is the standard customisation point.` },
+
+{ n: 48, d: "medium", t: "Hash specialisation for a user type",
+  p: String.raw`Define a struct Key with an int member id, where two keys are equal when their ids are equal. Give the standard hash template an explicit specialization for Key that hashes the id. Store the keys 1, 1 and 2 in an std::unordered_set, and print its size.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <unordered_set>
+
+struct Key {
+    int id;
+    bool operator==(const Key& o) const { return id == o.id; }
+};
+
+namespace std {
+template <>
+struct hash<Key> {
+    size_t operator()(const Key& k) const { return hash<int>{}(k.id); }
+};
+}
+
+int main() {
+    std::unordered_set<Key> s{Key{1}, Key{1}, Key{2}};
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Specializing the standard hash template for a user type makes that type usable as a key in unordered containers.` },
+
+{ n: 49, d: "medium", t: "Member constrained by a requires clause",
+  p: String.raw`Define a class template Box with a member v of type T and a member function twice that returns twice v as an int. Constrain twice so that it is only available when T is an integral type. Print twice for a Box holding 4.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <concepts>
+#include <iostream>
+
+template <typename T>
+struct Box {
+    T v;
+    int twice() const requires std::integral<T> {
+        return static_cast<int>(v) * 2;
+    }
+};
+
+int main() {
+    Box<int> b{4};
+    std::cout << b.twice() << '\n';
+}`,
+  why: String.raw`A requires clause on a member function makes that member exist only for the types that satisfy its constraint, instead of failing for others.` },
+
+// ---------- Hard ----------
+{ n: 50, d: "hard", t: "Count a type list",
+  p: String.raw`Create a type list holding the types int, char and double. Write a compile-time metafunction that gives the number of types in a type list. Print the number for the list you created.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <type_traits>
+
+template <typename... Ts>
+struct TypeList {};
+
+template <typename L>
+struct Length;
+
+template <typename... Ts>
+struct Length<TypeList<Ts...>> : std::integral_constant<std::size_t, sizeof...(Ts)> {};
+
+int main() {
+    std::cout << Length<TypeList<int, char, double>>::value << '\n';
+}`,
+  why: String.raw`A type list carries types as template arguments, and a metafunction can extract information about it without creating any objects.` },
+
+{ n: 51, d: "hard", t: "Position of a type",
+  p: String.raw`Write a compile-time function that returns the zero-based position of a type within a list of types. If the type is absent, it returns the length of the list. Print the position of char within the list int, char, double.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <type_traits>
+
+template <typename T, typename... Ts>
+constexpr std::size_t index_of() {
+    constexpr bool same[] = {std::is_same_v<T, Ts>..., false};
+    for (std::size_t i = 0; i < sizeof...(Ts); ++i)
+        if (same[i]) return i;
+    return sizeof...(Ts);
+}
+
+int main() {
+    std::cout << index_of<char, int, char, double>() << '\n';
+}`,
+  why: String.raw`Expanding a comparison over a pack produces one flag per type, which a constant function can scan to find a position.` },
+
+{ n: 52, d: "hard", t: "Fibonacci at compile time",
+  p: String.raw`Compute the 20th Fibonacci number at compile time, where the 0th Fibonacci number is 0 and the 1st is 1. Store the result in a constant that is initialised at compile time, then print it.`,
+  ex: String.raw`6765`,
+  code: String.raw`#include <iostream>
+
+constexpr long long fib(int n) {
+    long long a = 0, b = 1;
+    for (int i = 0; i < n; ++i) {
+        long long t = a + b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+int main() {
+    constexpr long long f = fib(20);
+    std::cout << f << '\n';
+}`,
+  why: String.raw`Declaring the result as a constant expression forces the value to be computed by the compiler rather than at run time.` },
+
+{ n: 53, d: "hard", t: "Set bits at compile time",
+  p: String.raw`Write a function template that counts the set bits of any unsigned integer type. Check with static_assert that the count for 255 as an unsigned int is 8. Then print the count for 0xF0F0 as an unsigned long, which must also be 8.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+constexpr int bits_set(T x) {
+    int c = 0;
+    while (x) {
+        x &= x - 1;
+        ++c;
+    }
+    return c;
+}
+
+static_assert(bits_set(255u) == 8);
+
+int main() {
+    std::cout << bits_set(0xF0F0ul) << '\n';
+}`,
+  why: String.raw`A static_assert turns a compile-time expectation into a build error if it fails, so a wrong result cannot go unnoticed.` },
+
+{ n: 54, d: "hard", t: "Print every tuple element",
+  p: String.raw`Print each element of the tuple holding the int 1, the string hello and the double 2.5. Print them in order, separated by spaces.`,
+  ex: String.raw`1 hello 2.5`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <tuple>
+
+int main() {
+    auto t = std::make_tuple(1, std::string("hello"), 2.5);
+    std::apply([](const auto&... xs) {
+        bool first = true;
+        ((std::cout << (first ? "" : " ") << xs, first = false), ...);
+        std::cout << '\n';
+    }, t);
+}`,
+  why: String.raw`A generic lambda applied with a tuple's elements as its arguments handles tuples of any length and element types.` },
+
+{ n: 55, d: "hard", t: "Visitor for a variant",
+  p: String.raw`A variant holds either an int or a string. Write one visitor that prints double the value when it receives an int, and prints the string followed by a colon and the string's length when it receives a string. Print the result for a variant holding the int 4, then for a variant holding the string hi, each on its own line.`,
+  ex: String.raw`8
+hi:2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+template <typename... Fs>
+struct Overloaded : Fs... {
+    using Fs::operator()...;
+};
+
+template <typename... Fs>
+Overloaded(Fs...) -> Overloaded<Fs...>;
+
+int main() {
+    using V = std::variant<int, std::string>;
+    auto show = Overloaded{
+        [](int i) { std::cout << i * 2 << '\n'; },
+        [](const std::string& s) { std::cout << s << ':' << s.size() << '\n'; }};
+    std::visit(show, V{4});
+    std::visit(show, V{std::string("hi")});
+}`,
+  why: String.raw`Combining several lambdas into one callable lets std::visit pick the right branch for whichever alternative the variant holds.` },
+
+{ n: 56, d: "hard", t: "Derived logger from a base",
+  p: String.raw`Write a class template Logger that derives from the type given as its template parameter, and adds a function log that prints logged on its own line. Give the base type Base a function value that returns 3. Create a Logger<Base>, call log on it, then print the value it inherits from Base.`,
+  ex: String.raw`logged
+3`,
+  code: String.raw`#include <iostream>
+
+struct Base {
+    int value() const { return 3; }
+};
+
+template <typename B>
+struct Logger : B {
+    void log() const { std::cout << "logged\n"; }
+};
+
+int main() {
+    Logger<Base> l;
+    l.log();
+    std::cout << l.value() << '\n';
+}`,
+  why: String.raw`Deriving from a template parameter lets one class add behaviour to any base type, which is the basis of mixin designs.` },
+
+{ n: 57, d: "hard", t: "Trait for a size member",
+  p: String.raw`Write a trait that reports whether a type has a member function named size that can be called on a const object. Print the trait's result for std::vector of int and for int, using true or false separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+template <typename T, typename = void>
+struct has_size : std::false_type {};
+
+template <typename T>
+struct has_size<T, std::void_t<decltype(std::declval<const T&>().size())>> : std::true_type {};
+
+int main() {
+    std::cout << std::boolalpha << has_size<std::vector<int>>::value << ' '
+              << has_size<int>::value << '\n';
+}`,
+  why: String.raw`A check written as an expression that may fail to compile lets the compiler answer whether a member exists, without any run-time test.` },
+
+{ n: 58, d: "hard", t: "Store any callable from int to int",
+  p: String.raw`Write a class IntFn that can hold any callable taking an int and returning an int, hiding the callable's own type. Store a lambda that adds 10 and a lambda that doubles in IntFn objects. Print each result for input 5, separated by a space.`,
+  ex: String.raw`15 10`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+class IntFn {
+    struct Concept {
+        virtual ~Concept() = default;
+        virtual int call(int x) const = 0;
+    };
+    template <typename F>
+    struct Model : Concept {
+        F f;
+        explicit Model(F g) : f(std::move(g)) {}
+        int call(int x) const override { return f(x); }
+    };
+    std::unique_ptr<Concept> p;
+public:
+    template <typename F>
+    IntFn(F f) : p(std::make_unique<Model<F>>(std::move(f))) {}
+    int operator()(int x) const { return p->call(x); }
+};
+
+int main() {
+    IntFn add10 = [](int x) { return x + 10; };
+    IntFn dbl = [](int x) { return x * 2; };
+    std::cout << add10(5) << ' ' << dbl(5) << '\n';
+}`,
+  why: String.raw`A template constructor records the callable's type inside a derived helper, while the outer class exposes one fixed type to its users.` },
+
+{ n: 59, d: "hard", t: "Lvalue or rvalue argument",
+  p: String.raw`Write a function template that accepts an argument of any type and returns whether that argument was given as an lvalue or an rvalue. Print the result for a named int variable and for the literal 4, separated by a space.`,
+  ex: String.raw`lvalue rvalue`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+template <typename T>
+const char* kind(T&&) {
+    return std::is_lvalue_reference_v<T> ? "lvalue" : "rvalue";
+}
+
+int main() {
+    int x = 1;
+    std::cout << kind(x) << ' ' << kind(4) << '\n';
+}`,
+  why: String.raw`A forwarding reference deduces the argument's value category into its type, so the function can tell named objects from temporaries.` },
+{ n: 60, d: "hard", t: "Partial specialisation for arrays",
+  p: String.raw`A class template Elem<T> has a type member named type that equals T. Partially specialize it for arrays of any element type and any length, so that its type member is the element type. Print whether Elem of int[4] has the type int, then whether Elem of double has the type double, separated by a space, as true or false.`,
+  ex: String.raw`true true`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <type_traits>
+
+template <typename T>
+struct Elem {
+    using type = T;
+};
+
+template <typename T, std::size_t N>
+struct Elem<T[N]> {
+    using type = T;
+};
+
+int main() {
+    std::cout << std::boolalpha
+              << std::is_same_v<Elem<int[4]>::type, int> << ' '
+              << std::is_same_v<Elem<double>::type, double> << '\n';
+}`,
+  why: String.raw`A partial specialization can match a pattern that includes an array bound, so one definition covers every array length.` },
+
+{ n: 61, d: "hard", t: "Concept for containers",
+  p: String.raw`Define a concept named Container that is satisfied by types that have a nested type named value_type and member functions begin and end. Print whether std::vector of int and int each satisfy the concept, as true or false, separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <concepts>
+#include <iostream>
+#include <vector>
+
+template <typename T>
+concept Container = requires(T t) {
+    typename T::value_type;
+    t.begin();
+    t.end();
+};
+
+int main() {
+    std::cout << std::boolalpha << Container<std::vector<int>> << ' ' << Container<int> << '\n';
+}`,
+  why: String.raw`A concept can require a nested type and member functions, so the set of accepted types is described by what they provide.` },
+
+{ n: 62, d: "hard", t: "Explicit instantiation of a class template",
+  p: String.raw`A class template Greeter has a member function hi that prints hi followed by a space and the size of its type argument, on its own line. Explicitly instantiate Greeter for int and for double. Then call hi on a Greeter of each, so that two lines are printed.`,
+  ex: String.raw`hi 4
+hi 8`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Greeter {
+    void hi() const;
+};
+
+template <typename T>
+void Greeter<T>::hi() const {
+    std::cout << "hi " << sizeof(T) << '\n';
+}
+
+template struct Greeter<int>;
+template struct Greeter<double>;
+
+int main() {
+    Greeter<int>{}.hi();
+    Greeter<double>{}.hi();
+}`,
+  why: String.raw`Explicit instantiation makes the compiler generate all members for a chosen type in one place, which controls where code is emitted.` },
+
+{ n: 63, d: "hard", t: "Pointer as a template argument",
+  p: String.raw`A function template read takes a pointer to int as a template argument and returns the value that the pointer points to. Define a global int equal to 42, and print read applied to the address of that global.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+
+int g = 42;
+
+template <int* P>
+int read() {
+    return *P;
+}
+
+int main() {
+    std::cout << read<&g>() << '\n';
+}`,
+  why: String.raw`A non-type template argument can be the address of an object with static storage, so the function is bound to that object at compile time.` },
+
+{ n: 64, d: "hard", t: "Forward arguments through a call",
+  p: String.raw`A function template call_with takes a callable and any number of arguments, forwards each argument unchanged to the callable, and returns the callable's result. The callable takes one argument of any type and returns the word lvalue or rvalue, depending on how the argument was passed. Print call_with applied to a named std::string and to a temporary std::string, separated by a space.`,
+  ex: String.raw`lvalue rvalue`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+template <typename F, typename... A>
+decltype(auto) call_with(F&& f, A&&... a) {
+    return std::forward<F>(f)(std::forward<A>(a)...);
+}
+
+int main() {
+    auto f = [](auto&& x) {
+        return std::is_lvalue_reference_v<decltype(x)> ? "lvalue" : "rvalue";
+    };
+    std::string s = "x";
+    std::cout << call_with(f, s) << ' ' << call_with(f, std::string("y")) << '\n';
+}`,
+  why: String.raw`Forwarding each argument with its original value category lets wrappers pass arguments along without changing how the callee sees them.` },
+
+{ n: 65, d: "hard", t: "Tag dispatch on a type trait",
+  p: String.raw`Write two overloads of a function named kind. One takes a std::true_type argument and returns pointer. The other takes a std::false_type argument and returns value. Call kind with the result of std::is_pointer for int* and with the result of std::is_pointer for int, and print the two words separated by a space.`,
+  ex: String.raw`pointer value`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+const char* kind(std::true_type) { return "pointer"; }
+const char* kind(std::false_type) { return "value"; }
+
+int main() {
+    std::cout << kind(std::is_pointer<int*>{}) << ' ' << kind(std::is_pointer<int>{}) << '\n';
+}`,
+  why: String.raw`A trait's result is itself a type, so passing it as an argument selects the overload written for that outcome.` },
+
+{ n: 66, d: "hard", t: "Template friend operator",
+  p: String.raw`A class template Vec2 holds two public members x and y of type T. Declare a template friend operator<< inside it that prints a Vec2 in the form (x, y), with a comma and a space between the values. Print Vec2 of int holding 1 and 2, followed by a newline.`,
+  ex: String.raw`(1, 2)`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Vec2 {
+    T x, y;
+    template <typename U>
+    friend std::ostream& operator<<(std::ostream& o, const Vec2<U>& v);
+};
+
+template <typename U>
+std::ostream& operator<<(std::ostream& o, const Vec2<U>& v) {
+    return o << '(' << v.x << ", " << v.y << ')';
+}
+
+int main() {
+    std::cout << Vec2<int>{1, 2} << '\n';
+}`,
+  why: String.raw`A friend declared as a template lets a free function for each instantiation of the class access it, here for printing.` },
+
+{ n: 67, d: "hard", t: "Lazy expression with a scale",
+  p: String.raw`Extend the lazy sum idea: a class template Scale holds a lazily evaluated expression and an integer factor, and multiplies element i by the factor only when it is read. Compute element 2 of twice the lazy sum of the vectors 1 2 3 and 10 20 30, storing the lazy sum in a named variable first. Print the result.`,
+  ex: String.raw`66`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+template <typename L, typename R>
+struct Sum {
+    const L& l;
+    const R& r;
+    int operator[](std::size_t i) const { return l[i] + r[i]; }
+};
+
+template <typename L, typename R>
+Sum<L, R> lazy_add(const L& l, const R& r) {
+    return {l, r};
+}
+
+template <typename E>
+struct Scale {
+    const E& e;
+    int k;
+    int operator[](std::size_t i) const { return k * e[i]; }
+};
+
+template <typename E>
+Scale<E> scale(const E& e, int k) {
+    return {e, k};
+}
+
+int main() {
+    std::vector<int> x{1, 2, 3};
+    std::vector<int> y{10, 20, 30};
+    auto sum = lazy_add(x, y);
+    auto s = scale(sum, 2);
+    std::cout << s[2] << '\n';
+}`,
+  why: String.raw`Expression wrappers can be nested, and each one defers its work until an element is read, so no intermediate container is built.` },
+
+{ n: 68, d: "hard", t: "CRTP ordering operator",
+  p: String.raw`Write a base class template Ordered<Derived> that provides operator< for Derived. It is implemented by calling the derived class's compare member, which returns a negative, zero or positive number. Derive Version from Ordered<Version>, with an int member v and a compare member that subtracts the other version's v from its own. Print whether Version(1) is less than Version(2).`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+
+template <typename D>
+struct Ordered {
+    friend bool operator<(const D& a, const D& b) { return a.compare(b) < 0; }
+};
+
+struct Version : Ordered<Version> {
+    int v;
+    explicit Version(int x) : v(x) {}
+    int compare(const Version& o) const { return v - o.v; }
+};
+
+int main() {
+    std::cout << std::boolalpha << (Version(1) < Version(2)) << '\n';
+}`,
+  why: String.raw`The base class template supplies an operator to every derived class from one comparison function, using the derived type as the template argument.` },
+{ n: 69, d: "hard", t: "Explicit specialisation of a member function",
+  p: String.raw`A class template Formatter has a static function fmt that takes a value of type T and returns it as a std::string using std::to_string. Give an explicit specialization of fmt for double that returns the letter d followed by the integer part of the value. Print Formatter of int applied to 7, then Formatter of double applied to 2.5, separated by a space.`,
+  ex: String.raw`7 d2`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+template <typename T>
+struct Formatter {
+    static std::string fmt(T v) { return std::to_string(v); }
+};
+
+template <>
+std::string Formatter<double>::fmt(double v) {
+    return "d" + std::to_string(static_cast<int>(v));
+}
+
+int main() {
+    std::cout << Formatter<int>::fmt(7) << ' ' << Formatter<double>::fmt(2.5) << '\n';
+}`,
+  why: String.raw`A specialization can replace one member function for a particular type while the rest of the class template still applies to other types.` },
+{ n: 70, d: "hard", t: "Non-deduced first parameter",
+  p: String.raw`Write a function template first whose first argument has type T, but whose type does not take part in deducing T, and whose second argument has type T. The result is the first argument. Call first with 1.9 and 3, and print the result.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+template <typename T>
+T first(std::type_identity_t<T> x, T) {
+    return x;
+}
+
+int main() {
+    std::cout << first(1.9, 3) << '\n';
+}`,
+  why: String.raw`Wrapping a parameter type in type_identity keeps it out of deduction, so only the other arguments decide what T is.` },
+
+{ n: 71, d: "hard", t: "Empty base takes no space",
+  p: String.raw`Define an empty struct Empty and a class template Holder that derives from a policy type given as its parameter and contains one value of type T. Print true if sizeof of Holder with int and Empty equals sizeof of int, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+
+struct Empty {};
+
+template <typename T, typename Policy>
+struct Holder : Policy {
+    T value;
+};
+
+int main() {
+    std::cout << std::boolalpha << (sizeof(Holder<int, Empty>) == sizeof(int)) << '\n';
+}`,
+  why: String.raw`An empty base class can take up no storage, so deriving from an empty policy costs nothing in memory.` },
+
+{ n: 72, d: "hard", t: "Operators supplied through a base template",
+  p: String.raw`Write a class template Equal<D> that provides friend operators == and != for D. Each operator calls the member function same of D, and != returns the negation of ==. Define Point deriving from Equal of Point, with an int member x, a constructor taking x, and a member same that compares x values. Print whether Point(1) equals Point(1), then whether Point(1) differs from Point(2), separated by a space.`,
+  ex: String.raw`true true`,
+  code: String.raw`#include <iostream>
+
+template <typename D>
+struct Equal {
+    friend bool operator==(const D& a, const D& b) { return a.same(b); }
+    friend bool operator!=(const D& a, const D& b) { return !(a == b); }
+};
+
+struct Point : Equal<Point> {
+    int x;
+    explicit Point(int v) : x(v) {}
+    bool same(const Point& o) const { return x == o.x; }
+};
+
+int main() {
+    std::cout << std::boolalpha << (Point(1) == Point(1)) << ' ' << (Point(1) != Point(2)) << '\n';
+}`,
+  why: String.raw`A class template can provide operators to every type that derives from it, so each derived type gets the operators from one definition.` },
+
+// ---------- Extension ----------
+{ n: 73, d: "extension", t: "Length of a string literal",
+  p: String.raw`Compute the length of the string literal hello, not counting the terminating zero, using a function that accepts a character array of any size. The length must be found at compile time. Print the length.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <std::size_t N>
+constexpr std::size_t length_of(const char (&)[N]) {
+    return N - 1;
+}
+
+int main() {
+    std::cout << length_of("hello") << '\n';
+}`,
+  why: String.raw`A reference to a fixed-size array carries its size in the type, so the length of a literal is known without scanning the characters.` },
+
+{ n: 74, d: "extension", t: "Largest of compile-time values",
+  p: String.raw`Write a function template that takes any number of int values as template arguments and returns the largest of them. The values are known at compile time. Print the largest of 3, 9 and 4.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <initializer_list>
+#include <iostream>
+
+template <int... Vs>
+constexpr int max_of() {
+    int m = 0;
+    for (int v : {Vs...})
+        if (v > m) m = v;
+    return m;
+}
+
+int main() {
+    std::cout << max_of<3, 9, 4>() << '\n';
+}`,
+  why: String.raw`A non-type parameter pack lets a function take a list of constant values, which can then be combined inside the function body.` },
+
+{ n: 75, d: "extension", t: "Count elements of any container",
+  p: String.raw`Write a function template that returns the number of elements in any container. Print the counts for a std::vector holding 1, 2, 3 and a std::forward_list holding 1, 2, 3, separated by a space.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <cstddef>
+#include <forward_list>
+#include <iostream>
+#include <iterator>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+template <typename C, typename = void>
+struct has_size_member : std::false_type {};
+
+template <typename C>
+struct has_size_member<C, std::void_t<decltype(std::declval<const C&>().size())>> : std::true_type {};
+
+template <typename C>
+std::size_t element_count(const C& c) {
+    if constexpr (has_size_member<C>::value)
+        return c.size();
+    else
+        return static_cast<std::size_t>(std::distance(c.begin(), c.end()));
+}
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    std::forward_list<int> f{1, 2, 3};
+    std::cout << element_count(v) << ' ' << element_count(f) << '\n';
+}`,
+  why: String.raw`The function uses a container's own size when it offers one and falls back to counting through its iterators otherwise, so one interface covers both.` },
+
+{ n: 76, d: "extension", t: "Lazy sum of two sequences",
+  p: String.raw`Create a lazy sum of two vectors, where element i of the sum is computed only when it is read rather than stored. Print element 1 of the sum of the vectors 1 2 3 and 10 20 30.`,
+  ex: String.raw`22`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+template <typename L, typename R>
+struct Sum {
+    const L& l;
+    const R& r;
+    int operator[](std::size_t i) const { return l[i] + r[i]; }
+};
+
+template <typename L, typename R>
+Sum<L, R> lazy_add(const L& l, const R& r) {
+    return {l, r};
+}
+
+int main() {
+    std::vector<int> x{1, 2, 3};
+    std::vector<int> y{10, 20, 30};
+    auto s = lazy_add(x, y);
+    std::cout << s[1] << '\n';
+}`,
+  why: String.raw`Returning a small object that holds references defers the arithmetic until an element is read, avoiding a temporary container for the whole result.` },
+
+{ n: 77, d: "extension", t: "Greeter with policies",
+  p: String.raw`Write a class template Greeter that takes a policy type as its parameter. Each policy has a static function name that returns a string. Greeter's function greet prints hello, a space, and the policy's name, on its own line. Define the policy English, whose name is world, and the policy Spanish, whose name is mundo. Greet with each policy, one greeting per line.`,
+  ex: String.raw`hello world
+hello mundo`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+struct English {
+    static std::string name() { return "world"; }
+};
+
+struct Spanish {
+    static std::string name() { return "mundo"; }
+};
+
+template <typename Policy>
+struct Greeter {
+    void greet() const { std::cout << "hello " << Policy::name() << '\n'; }
+};
+
+int main() {
+    Greeter<English>().greet();
+    Greeter<Spanish>().greet();
+}`,
+  why: String.raw`A policy type supplies behaviour as a template argument, so the same class can be configured in different ways without virtual calls.` },
+
+{ n: 78, d: "extension", t: "Units checked at compile time",
+  p: String.raw`Write a class template Quantity that holds a value and a unit type parameter. Adding two quantities is allowed only when their unit types match, and the result has that same unit. Define a unit type Meter. Add a quantity of 2 meters to a quantity of 3 meters, and print the value of the sum.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+struct Meter {};
+
+template <typename Unit>
+struct Quantity {
+    double value;
+};
+
+template <typename Unit>
+Quantity<Unit> operator+(Quantity<Unit> a, Quantity<Unit> b) {
+    return {a.value + b.value};
+}
+
+int main() {
+    Quantity<Meter> a{2.0}, b{3.0};
+    std::cout << (a + b).value << '\n';
+}`,
+  why: String.raw`Because both operands must share a unit type for the operator to match, mixing incompatible units is rejected by the compiler.` },
+
+{ n: 79, d: "extension", t: "Custom format for a point",
+  p: String.raw`Specialize the standard formatter for a Point struct with integer members x and y, so that formatting a Point produces its coordinates in the form (x, y). Format the point with x 3 and y 4, and print the result.`,
+  ex: String.raw`(3, 4)`,
+  code: String.raw`#include <format>
+#include <iostream>
+
+struct Point {
+    int x;
+    int y;
+};
+
+namespace std {
+template <>
+struct formatter<Point> {
+    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+    auto format(const Point& p, format_context& ctx) const {
+        return format_to(ctx.out(), "({}, {})", p.x, p.y);
+    }
+};
+}
+
+int main() {
+    std::cout << std::format("{}", Point{3, 4}) << '\n';
+}`,
+  why: String.raw`Specialising the formatting facility for a user type lets std::format print it directly, with the same interface as built-in types.` },
+
+{ n: 80, d: "extension", t: "Compile-time square table",
+  p: String.raw`Build an array of the squares of 0 through 4, with the whole array computed at compile time. Print the element at index 3.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+constexpr auto squares = [] {
+    std::array<int, 5> a{};
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] = static_cast<int>(i * i);
+    return a;
+}();
+
+int main() {
+    std::cout << squares[3] << '\n';
+}`,
+  why: String.raw`Filling a table inside a constant initialiser means the table exists in the program with no start-up work.` },
+
+{ n: 81, d: "extension", t: "Callable that runs twice",
+  p: String.raw`Write a function template that takes a callable and returns a new callable. The new callable calls the original twice and returns the sum of the two results. Use it with a function that returns 4, and print the result of calling the new callable.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <iostream>
+
+template <typename F>
+auto twice(F f) {
+    return [f](auto... args) { return f(args...) + f(args...); };
+}
+
+int main() {
+    auto g = twice([] { return 4; });
+    std::cout << g() << '\n';
+}`,
+  why: String.raw`Returning a new callable from a template wraps any function type and adds behaviour without knowing its exact type in advance.` },
+
+{ n: 82, d: "extension", t: "Digits at compile time",
+  p: String.raw`Write a function template that takes a non-negative integer as a template argument and returns its number of decimal digits, computed at compile time. Print the digit count of 90210.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+template <unsigned long long N>
+constexpr int digit_count() {
+    if constexpr (N < 10)
+        return 1;
+    else
+        return 1 + digit_count<N / 10>();
+}
+
+int main() {
+    std::cout << digit_count<90210>() << '\n';
+}`,
+  why: String.raw`Recursion across template instantiations lets the compiler unroll a computation over a constant value.` },
+{ n: 83, d: "extension", t: "Template template parameter at work",
+  p: String.raw`A function template count_keys takes a map template as a template argument. It builds a map from int to int holding the keys 1, 2 and 3, and returns the number of entries. Call count_keys with std::map and print the result.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <map>
+
+template <template <typename, typename> class Map>
+std::size_t count_keys() {
+    Map<int, int> m{{1, 1}, {2, 2}, {3, 3}};
+    return m.size();
+}
+
+int main() {
+    std::cout << count_keys<std::map>() << '\n';
+}`,
+  why: String.raw`Passing a container template as an argument lets one function build and measure a container without fixing which container it is.` },
+
+{ n: 84, d: "extension", t: "Dependent member template call",
+  p: String.raw`A struct Holder2 has a member function template get that returns a value of the requested type, built from the number 7. A function template read takes an object of any type and calls get with int, returning the result. Print read applied to a Holder2.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+
+struct Holder2 {
+    template <typename U>
+    U get() const { return U{7}; }
+};
+
+template <typename H>
+int read(const H& h) {
+    return h.template get<int>();
+}
+
+int main() {
+    std::cout << read(Holder2{}) << '\n';
+}`,
+  why: String.raw`When the object's type depends on a template parameter, a member template must be called with the template keyword so the compiler reads the angle brackets correctly.` },
+
+{ n: 85, d: "extension", t: "Explicit specialisation of a member",
+  p: String.raw`A class template Conv has a static function show that prints its argument. Give an explicit specialization of show for bool that prints the word true or false instead of 1 or 0. Print show applied to the int 1, then a space, then show applied to the bool true, on one line.`,
+  ex: String.raw`1 true`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+struct Conv {
+    static void show(T v) { std::cout << v; }
+};
+
+template <>
+void Conv<bool>::show(bool v) {
+    std::cout << (v ? "true" : "false");
+}
+
+int main() {
+    Conv<int>::show(1);
+    std::cout << ' ';
+    Conv<bool>::show(true);
+    std::cout << '\n';
+}`,
+  why: String.raw`A specialization can replace just one member function for a particular type, leaving the rest of the class as the general version.` },
+
+{ n: 86, d: "extension", t: "Type erasure with a template constructor",
+  p: String.raw`A class Any2 holds a value of any type that can be written to an output stream, and has a function print that writes the value. Print Any2 holding the int 5, then a space, then Any2 holding the string x, on one line.`,
+  ex: String.raw`5 x`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+class Any2 {
+    struct Concept {
+        virtual ~Concept() = default;
+        virtual void print() const = 0;
+    };
+    template <typename T>
+    struct Model : Concept {
+        T v;
+        explicit Model(T x) : v(std::move(x)) {}
+        void print() const override { std::cout << v; }
+    };
+    std::unique_ptr<Concept> p;
+public:
+    template <typename T>
+    Any2(T x) : p(std::make_unique<Model<T>>(std::move(x))) {}
+    void print() const { p->print(); }
+};
+
+int main() {
+    Any2(5).print();
+    std::cout << ' ';
+    Any2(std::string("x")).print();
+    std::cout << '\n';
+}`,
+  why: String.raw`A template constructor hides the concrete type behind a common interface, so one class can hold many kinds of value.` },
+{ n: 87, d: "extension", t: "Member template rebind",
+  p: String.raw`Define a class template Alloc2 with a nested member template rebind that has a type named other equal to Alloc2 of its parameter. Define an alias template rebound_char that gives the rebind result for char for any Alloc2 type. Print whether rebound_char of Alloc2 of int is Alloc2 of char.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+template <typename T>
+struct Alloc2 {
+    using value_type = T;
+    template <typename U>
+    struct rebind {
+        using other = Alloc2<U>;
+    };
+};
+
+template <typename A>
+using rebound_char = typename A::template rebind<char>::other;
+
+int main() {
+    std::cout << std::boolalpha << std::is_same_v<rebound_char<Alloc2<int>>, Alloc2<char>> << '\n';
+}`,
+  why: String.raw`Allocator-style types publish a rebind member template, so generic code can ask for the same kind of allocator for a different element type.` },
+
+{ n: 88, d: "extension", t: "Strong typedef with a tag",
+  p: String.raw`Define a class template Strong that wraps an int, with the kind of quantity distinguished by a tag type. Make addition available only between values with the same tag, returning a value with that tag. Using the tag Meters, print the sum of Strong holding 2 and Strong holding 3.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+template <typename Tag>
+struct Strong {
+    int v;
+    explicit Strong(int x) : v(x) {}
+};
+
+struct Meters {};
+
+template <typename Tag>
+Strong<Tag> operator+(Strong<Tag> a, Strong<Tag> b) {
+    return Strong<Tag>(a.v + b.v);
+}
+
+int main() {
+    std::cout << (Strong<Meters>(2) + Strong<Meters>(3)).v << '\n';
+}`,
+  why: String.raw`Tagged wrapper types stop values of different units or meanings from being mixed up, even when the underlying type is the same.` },
+
+// ---------- Applications ----------
+{ n: 89, d: "applications", t: "Smallest and largest with a comparison",
+  p: String.raw`Write a function template that takes a vector and a comparison, and returns the smallest and largest elements as a pair, ordered according to the comparison. Use it on the vector 4 9 1 7 with the standard less-than comparison, and print the smallest and largest separated by a space.`,
+  ex: String.raw`1 9`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+template <typename T, typename Cmp>
+std::pair<T, T> minmax_by(const std::vector<T>& v, Cmp cmp) {
+    T lo = v.front(), hi = v.front();
+    for (const auto& x : v) {
+        if (cmp(x, lo)) lo = x;
+        if (cmp(hi, x)) hi = x;
+    }
+    return {lo, hi};
+}
+
+int main() {
+    std::vector<int> v{4, 9, 1, 7};
+    auto [lo, hi] = minmax_by(v, std::less<>{});
+    std::cout << lo << ' ' << hi << '\n';
+}`,
+  why: String.raw`Passing the ordering in as a callable lets one routine find extremes for numbers, strings or any type with a suitable comparison.` },
+
+{ n: 90, d: "applications", t: "Result holding a value or an error",
+  p: String.raw`Write a class template Result that holds either a value of type T or an error message. Give it a function print that prints the value on its own line when a value is held, or prints error: followed by the message on its own line when an error is held. Create a Result<int> holding 42 and a Result<int> holding the error message not found, and print both.`,
+  ex: String.raw`42
+error: not found`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+#include <variant>
+
+template <typename T>
+class Result {
+    std::variant<T, std::string> data;
+    explicit Result(std::variant<T, std::string> d) : data(std::move(d)) {}
+public:
+    static Result ok(T v) {
+        return Result(std::variant<T, std::string>(std::in_place_index<0>, std::move(v)));
+    }
+    static Result err(std::string m) {
+        return Result(std::variant<T, std::string>(std::in_place_index<1>, std::move(m)));
+    }
+    void print() const {
+        if (data.index() == 0)
+            std::cout << std::get<0>(data) << '\n';
+        else
+            std::cout << "error: " << std::get<1>(data) << '\n';
+    }
+};
+
+int main() {
+    Result<int>::ok(42).print();
+    Result<int>::err("not found").print();
+}`,
+  why: String.raw`Carrying either a result or an error in one type lets functions report failure without exceptions, and the caller decides how to handle each case.` },
+
+{ n: 91, d: "applications", t: "Memoise a function",
+  p: String.raw`Write a function template that takes a function from int to int and returns a new function that remembers the results it has already computed for each argument. Wrap a function that increments a counter each time it runs and returns the square of its input. Call the wrapped function with 3, then with 3 again, then with 4. Print how many times the original function ran.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+
+int runs = 0;
+
+template <typename F>
+auto memo(F f) {
+    auto cache = std::make_shared<std::map<int, int>>();
+    return [f, cache](int x) {
+        auto it = cache->find(x);
+        if (it != cache->end()) return it->second;
+        int r = f(x);
+        (*cache)[x] = r;
+        return r;
+    };
+}
+
+int main() {
+    auto sq = memo([](int x) {
+        ++runs;
+        return x * x;
+    });
+    sq(3);
+    sq(3);
+    sq(4);
+    std::cout << runs << '\n';
+}`,
+  why: String.raw`A wrapper that stores results keyed by argument turns repeated calls into lookups, and it works for any function with that signature.` },
+
+{ n: 92, d: "applications", t: "Serialize arithmetic values",
+  p: String.raw`Write a function template that turns an arithmetic value into a string. Integers are written in plain decimal form, and floating-point values are written with exactly two digits after the decimal point. Print the string for 42 and the string for 3.14159, separated by a space.`,
+  ex: String.raw`42 3.14`,
+  code: String.raw`#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <type_traits>
+
+template <typename T>
+std::string serialize(T v) {
+    std::ostringstream out;
+    if constexpr (std::is_integral_v<T>)
+        out << v;
+    else
+        out << std::fixed << std::setprecision(2) << v;
+    return out.str();
+}
+
+int main() {
+    std::cout << serialize(42) << ' ' << serialize(3.14159) << '\n';
+}`,
+  why: String.raw`Choosing the formatting by type at compile time lets one serializer produce the right text for each kind of number.` },
+
+{ n: 93, d: "applications", t: "Parse typed fields from text",
+  p: String.raw`Write a function template that reads one comma-separated field from a stream and converts it to the requested type. Read the text 7,hello,2.5 as an int, then a string, then a double, in that order, and print the three values separated by spaces.`,
+  ex: String.raw`7 hello 2.5`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <type_traits>
+
+template <typename T>
+T read_field(std::istream& in) {
+    std::string s;
+    std::getline(in, s, ',');
+    if constexpr (std::is_same_v<T, int>)
+        return std::stoi(s);
+    else if constexpr (std::is_same_v<T, double>)
+        return std::stod(s);
+    else
+        return s;
+}
+
+int main() {
+    std::istringstream in("7,hello,2.5");
+    auto a = read_field<int>(in);
+    auto b = read_field<std::string>(in);
+    auto c = read_field<double>(in);
+    std::cout << a << ' ' << b << ' ' << c << '\n';
+}`,
+  why: String.raw`Selecting the conversion from the requested type lets one reader handle a mixed record without a separate function for each field type.` },
+
+{ n: 94, d: "applications", t: "Typed event bus",
+  p: String.raw`Build a small event bus. Listeners subscribe to one event type and receive only events of that type. Subscribe a listener for int events that prints int followed by the value, and a listener for string events that prints string followed by the text. Then publish the int 5, and publish the string hello.`,
+  ex: String.raw`int 5
+string hello`,
+  code: String.raw`#include <any>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <string>
+#include <typeindex>
+#include <utility>
+#include <vector>
+
+class Bus {
+    std::map<std::type_index, std::vector<std::any>> subs;
+public:
+    template <typename E>
+    void subscribe(std::function<void(const E&)> f) {
+        subs[std::type_index(typeid(E))].push_back(std::move(f));
+    }
+    template <typename E>
+    void publish(const E& e) {
+        for (auto& a : subs[std::type_index(typeid(E))])
+            std::any_cast<std::function<void(const E&)>>(a)(e);
+    }
+};
+
+int main() {
+    Bus bus;
+    bus.subscribe<int>([](const int& v) { std::cout << "int " << v << '\n'; });
+    bus.subscribe<std::string>([](const std::string& s) { std::cout << "string " << s << '\n'; });
+    bus.publish(5);
+    bus.publish(std::string("hello"));
+}`,
+  why: String.raw`Keying handlers by the event's type lets a single bus dispatch many kinds of event while each handler keeps its own parameter type.` },
+
+{ n: 95, d: "applications", t: "Double a vector in place",
+  p: String.raw`Write a function template that doubles every element of a vector of an arithmetic type, changing the vector itself. Double the vector 1 2 3 and print its elements separated by spaces.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+template <typename T>
+void double_all(std::vector<T>& v) {
+    for (auto& x : v) x *= 2;
+}
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    double_all(v);
+    for (std::size_t i = 0; i < v.size(); ++i)
+        std::cout << v[i] << (i + 1 < v.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Taking the container by reference lets one template update vectors of any element type without copying them.` },
+
+{ n: 96, d: "applications", t: "Fixed-length vector addition",
+  p: String.raw`Write a class template for a fixed-length vector of doubles, where adding two vectors of the same length gives a vector of that length. Add the vector 1 2 3 and the vector 4 5 6, and print the three components of the result separated by spaces.`,
+  ex: String.raw`5 7 9`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+template <std::size_t N>
+struct Vec {
+    std::array<double, N> a;
+    Vec operator+(const Vec& o) const {
+        Vec r{};
+        for (std::size_t i = 0; i < N; ++i) r.a[i] = a[i] + o.a[i];
+        return r;
+    }
+};
+
+int main() {
+    Vec<3> x{{1, 2, 3}};
+    Vec<3> y{{4, 5, 6}};
+    Vec<3> s = x + y;
+    for (std::size_t i = 0; i < 3; ++i)
+        std::cout << s.a[i] << (i + 1 < 3 ? ' ' : '\n');
+}`,
+  why: String.raw`The length is part of the type, so adding vectors of different lengths is rejected by the compiler instead of failing at run time.` },
+
+{ n: 97, d: "applications", t: "Apply a callable to a map",
+  p: String.raw`Write a function template that applies a two-argument callable to each key and value of a std::map, in key order, and collects the results into a vector. Apply a callable that returns key plus value to a map holding 1 to 10 and 2 to 20. Print the results separated by spaces.`,
+  ex: String.raw`11 22`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <map>
+#include <type_traits>
+#include <vector>
+
+template <typename K, typename V, typename F>
+auto collect(const std::map<K, V>& m, F f) {
+    std::vector<std::invoke_result_t<F, const K&, const V&>> out;
+    for (const auto& [k, v] : m) out.push_back(f(k, v));
+    return out;
+}
+
+int main() {
+    std::map<int, int> m{{1, 10}, {2, 20}};
+    auto r = collect(m, [](int k, int v) { return k + v; });
+    for (std::size_t i = 0; i < r.size(); ++i)
+        std::cout << r[i] << (i + 1 < r.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Deducing the result type from the callable means the output vector has the right element type with no extra arguments from the caller.` },
+
+{ n: 98, d: "applications", t: "Checked conversion",
+  p: String.raw`Write a function template that converts a value to a target type and returns an optional holding the converted value, or an empty optional when the conversion changes the value. Check the conversion of 300 to unsigned char, then of 200 to unsigned char. Print for each whether a value was produced, as true or false, separated by a space.`,
+  ex: String.raw`false true`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+template <typename To, typename From>
+std::optional<To> checked_cast(From v) {
+    To t = static_cast<To>(v);
+    if (static_cast<From>(t) != v) return std::nullopt;
+    return t;
+}
+
+int main() {
+    std::cout << std::boolalpha
+              << checked_cast<unsigned char>(300).has_value() << ' '
+              << checked_cast<unsigned char>(200).has_value() << '\n';
+}`,
+  why: String.raw`Converting back and comparing reveals values that do not fit the target type, so callers can handle overflow explicitly.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-templates-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 19, label: "Easy", range: "Problems 1–19", badge: "easy" },
+  { from: 20, to: 49, label: "Medium", range: "Problems 20–49", badge: "medium" },
+  { from: 50, to: 72, label: "Hard", range: "Problems 50–72", badge: "hard" },
+  { from: 73, to: 88, label: "Extension", range: "Problems 73–88", badge: null },
+  { from: 89, to: 98, label: "Applications", range: "Problems 89–98", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

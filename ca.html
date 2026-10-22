@@ -1,0 +1,3722 @@
+<title>C++ Concurrency in Action</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by chapter · 121 problems</p>
+    <h1>C++ Concurrency in Action Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">121</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="121" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Start a thread and wait for it", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Start a thread that prints worker. The main thread waits for that thread to finish, then prints after.`,
+  ex: String.raw`worker
+after`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+int main() {
+    std::thread t([] { std::cout << "worker\n"; });
+    t.join();
+    std::cout << "after\n";
+}`,
+  why: String.raw`A std::thread runs its callable concurrently. join blocks the caller until that thread has finished, so the later output is guaranteed to come after.` },
+
+{ n: 2, d: "easy", t: "Pass values into a thread", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Write a function show that takes an int and a std::string and prints n=, the int, a space, s=, and the string. Start a thread that calls show with 5 and hi, then join it.`,
+  ex: String.raw`n=5 s=hi`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <thread>
+
+void show(int n, std::string s) {
+    std::cout << "n=" << n << " s=" << s << "\n";
+}
+
+int main() {
+    std::thread t(show, 5, std::string("hi"));
+    t.join();
+}`,
+  why: String.raw`Arguments to std::thread are copied into the new thread before the function starts, so the thread works on its own copies.` },
+
+{ n: 3, d: "easy", t: "Compare thread identities", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Record the id of the main thread. Start a thread that records its own id. After joining, print same if the two ids are equal and different otherwise. Then print 1 if the thread is still joinable, or 0 if not.`,
+  ex: String.raw`different
+0`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+int main() {
+    std::thread::id main_id = std::this_thread::get_id();
+    std::thread::id worker_id;
+    std::thread t([&] { worker_id = std::this_thread::get_id(); });
+    t.join();
+    std::cout << (worker_id == main_id ? "same" : "different") << "\n";
+    std::cout << t.joinable() << "\n";
+}`,
+  why: String.raw`Each thread has its own id, and a thread that has been joined is no longer joinable.` },
+
+{ n: 4, d: "easy", t: "Hand a unique pointer to a thread", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Create a unique_ptr to the int 7. Move it into a thread whose function prints the int it receives. Join the thread, then print 1 if the original unique_ptr is now null, or 0 otherwise.`,
+  ex: String.raw`7
+1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <thread>
+#include <utility>
+
+void consume(std::unique_ptr<int> p) {
+    std::cout << *p << "\n";
+}
+
+int main() {
+    auto p = std::make_unique<int>(7);
+    std::thread t(consume, std::move(p));
+    t.join();
+    std::cout << (p == nullptr) << "\n";
+}`,
+  why: String.raw`A move-only argument can be transferred to a thread by moving it. The thread then owns the object, and the original pointer is left empty.` },
+
+{ n: 5, d: "easy", t: "Return a thread from a function", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Write start, a function that takes an int x and returns a thread printing value followed by twice x. In main, call start with 21, join the returned thread, then print done.`,
+  ex: String.raw`value 42
+done`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+std::thread start(int x) {
+    return std::thread([x] { std::cout << "value " << x * 2 << "\n"; });
+}
+
+int main() {
+    std::thread t = start(21);
+    t.join();
+    std::cout << "done\n";
+}`,
+  why: String.raw`std::thread is movable but not copyable, so ownership can be returned from a function. The caller then becomes responsible for joining it.` },
+
+{ n: 6, d: "easy", t: "Join a vector of threads and read the slots", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Create a vector of three ints set to zero. Start three threads, where thread i sets slot i to i times 10. Join all threads, then print the three slots separated by spaces and a newline.`,
+  ex: String.raw`0 10 20`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> slots(3);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back([&slots, i] { slots[i] = i * 10; });
+    for (auto& t : ts) t.join();
+    for (int v : slots) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Each thread writes to its own element, so no two threads touch the same memory. Joining every thread before reading makes the results visible to main.` },
+
+{ n: 7, d: "easy", t: "Protect a counter with a mutex", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Four threads each add 1 to a shared counter 1000 times. Protect the counter so that no increment is lost. After all threads are joined, print the counter.`,
+  ex: String.raw`4000`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    int counter = 0;
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 4; ++i)
+        ts.emplace_back([&] {
+            for (int k = 0; k < 1000; ++k) {
+                std::lock_guard<std::mutex> g(m);
+                ++counter;
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::cout << counter << "\n";
+}`,
+  why: String.raw`Without a lock, two threads can read the same value and both write back one increment, losing updates. Holding the mutex around each read-modify-write makes each increment atomic with respect to the others.` },
+
+{ n: 8, d: "easy", t: "Append to a shared vector from two threads", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Create an empty shared vector of ints. One thread appends the numbers 1 to 100, and another appends 101 to 200, with every append protected. After joining, print the size of the vector and then the sum of its elements, separated by a space.`,
+  ex: String.raw`200 20100`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    std::mutex m;
+    auto add = [&](int from, int to) {
+        for (int i = from; i <= to; ++i) {
+            std::lock_guard<std::mutex> g(m);
+            v.push_back(i);
+        }
+    };
+    std::thread a(add, 1, 100);
+    std::thread b(add, 101, 200);
+    a.join();
+    b.join();
+    std::cout << v.size() << " " << std::accumulate(v.begin(), v.end(), 0LL) << "\n";
+}`,
+  why: String.raw`A vector is not safe to modify from two threads at once, so every push_back takes the same mutex. The result contains every value exactly once.` },
+
+{ n: 9, d: "easy", t: "Try a lock while another thread holds it", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`The main thread locks a mutex. A second thread calls try_lock on it and records the result. After joining that thread, print held followed by 1 if the lock was acquired, or 0 otherwise. Then the main thread unlocks, calls try_lock itself, prints free followed by its result, and unlocks again.`,
+  ex: String.raw`held 0
+free 1`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    m.lock();
+    bool got = true;
+    std::thread t([&] {
+        got = m.try_lock();
+        if (got) m.unlock();
+    });
+    t.join();
+    std::cout << "held " << got << "\n";
+    m.unlock();
+    bool again = m.try_lock();
+    std::cout << "free " << again << "\n";
+    if (again) m.unlock();
+}`,
+  why: String.raw`try_lock returns immediately instead of waiting. It fails while another thread holds the mutex and succeeds once the mutex is released.` },
+
+{ n: 10, d: "easy", t: "Wait for a flag", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A worker thread waits until a shared flag becomes true, then prints worked. The main thread sets the flag under the mutex, notifies the waiting thread, and joins the worker.`,
+  ex: String.raw`worked`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    bool ready = false;
+    std::thread t([&] {
+        std::unique_lock<std::mutex> lk(m);
+        cv.wait(lk, [&] { return ready; });
+        std::cout << "worked\n";
+    });
+    {
+        std::lock_guard<std::mutex> g(m);
+        ready = true;
+    }
+    cv.notify_one();
+    t.join();
+}`,
+  why: String.raw`The predicate form of wait re-checks the flag each time it wakes, so the waiting thread proceeds only once the condition holds, even if the wakeup came early.` },
+
+{ n: 11, d: "easy", t: "Compute a value asynchronously", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Start a task that returns six times seven, running on its own thread. Print the value obtained from the result.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <future>
+#include <iostream>
+
+int main() {
+    auto f = std::async(std::launch::async, [] { return 6 * 7; });
+    std::cout << f.get() << "\n";
+}`,
+  why: String.raw`std::async runs the function on a new thread and returns a future. get waits for the result and returns it, so the caller never touches the thread directly.` },
+
+{ n: 12, d: "easy", t: "Pass a value through a promise", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Create a promise of a string and take its future. A thread sets the promise to hello. The main thread gets the value from the future and prints it, then joins the thread.`,
+  ex: String.raw`hello`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <string>
+#include <thread>
+
+int main() {
+    std::promise<std::string> p;
+    std::future<std::string> f = p.get_future();
+    std::thread t([&p] { p.set_value("hello"); });
+    std::cout << f.get() << "\n";
+    t.join();
+}`,
+  why: String.raw`A promise is the writing end and a future is the reading end of one shared result. set_value makes the value available to get, which waits until it arrives.` },
+
+{ n: 13, d: "easy", t: "Thread-safe counter class", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a class Counter with an increment method and a get method, where each method takes a lock on its own mutex. Two threads each call increment 100 times. After joining, print the value from get.`,
+  ex: String.raw`200`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+class Counter {
+    std::mutex m_;
+    long long v_ = 0;
+public:
+    void increment() {
+        std::lock_guard<std::mutex> g(m_);
+        ++v_;
+    }
+    long long get() {
+        std::lock_guard<std::mutex> g(m_);
+        return v_;
+    }
+};
+
+int main() {
+    Counter c;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 2; ++i)
+        ts.emplace_back([&c] {
+            for (int k = 0; k < 100; ++k) c.increment();
+        });
+    for (auto& t : ts) t.join();
+    std::cout << c.get() << "\n";
+}`,
+  why: String.raw`Keeping the mutex inside the class means every caller goes through the same lock. Callers cannot forget to lock, because the class does it for them.` },
+
+{ n: 14, d: "easy", t: "Queue that returns nothing when empty", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a thread-safe queue of ints with push and try_pop. try_pop returns an optional int, which is empty when the queue has no elements. Push 5 and 6, then call try_pop three times, printing each result. Print empty for an empty result.`,
+  ex: String.raw`5
+6
+empty`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <optional>
+#include <queue>
+#include <string>
+
+class SafeQueue {
+    std::mutex m_;
+    std::queue<int> q_;
+public:
+    void push(int v) {
+        std::lock_guard<std::mutex> g(m_);
+        q_.push(v);
+    }
+    std::optional<int> try_pop() {
+        std::lock_guard<std::mutex> g(m_);
+        if (q_.empty()) return std::nullopt;
+        int v = q_.front();
+        q_.pop();
+        return v;
+    }
+};
+
+int main() {
+    SafeQueue q;
+    q.push(5);
+    q.push(6);
+    for (int i = 0; i < 3; ++i) {
+        auto v = q.try_pop();
+        std::cout << (v ? std::to_string(*v) : std::string("empty")) << "\n";
+    }
+}`,
+  why: String.raw`Returning an optional tells the caller about an empty queue without blocking or throwing. The lock is held only while the queue itself is touched.` },
+
+{ n: 15, d: "easy", t: "Keep a shared list sorted on insert", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a sorted-list class whose insert method takes a lock, inserts a value at the correct position so the list stays in ascending order, and releases the lock. Insert 3, 1 and 2, then print the values separated by spaces.`,
+  ex: String.raw`1 2 3 `,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <mutex>
+
+class SortedList {
+    std::mutex m_;
+    std::list<int> items_;
+public:
+    void insert(int v) {
+        std::lock_guard<std::mutex> g(m_);
+        auto it = items_.begin();
+        while (it != items_.end() && *it < v) ++it;
+        items_.insert(it, v);
+    }
+    void print() {
+        std::lock_guard<std::mutex> g(m_);
+        for (int x : items_) std::cout << x << " ";
+        std::cout << "\n";
+    }
+};
+
+int main() {
+    SortedList s;
+    s.insert(3);
+    s.insert(1);
+    s.insert(2);
+    s.print();
+}`,
+  why: String.raw`The lock covers the whole search and insert, so no other thread can change the list between finding the position and inserting there.` },
+
+{ n: 16, d: "easy", t: "Sum slices of a vector in parallel", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Fill a vector with the numbers 1 to 100. Split it into four equal slices of 25 and sum each slice on its own thread into a separate result. After joining, print the total of the four results.`,
+  ex: String.raw`5050`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<long long> v(100);
+    std::iota(v.begin(), v.end(), 1LL);
+    std::vector<long long> parts(4, 0);
+    std::vector<std::thread> ts;
+    for (std::size_t i = 0; i < 4; ++i)
+        ts.emplace_back([&, i] {
+            for (std::size_t k = i * 25; k < (i + 1) * 25; ++k) parts[i] += v[k];
+        });
+    for (auto& t : ts) t.join();
+    std::cout << std::accumulate(parts.begin(), parts.end(), 0LL) << "\n";
+}`,
+  why: String.raw`Each thread works on a disjoint slice and writes its own result, so the only shared step is the final combination done after joining.` },
+
+{ n: 17, d: "easy", t: "Count even numbers with two async tasks", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Given the vector 1 to 10, start two asynchronous tasks. One counts the even numbers in the first five elements, and the other counts them in the last five. Print the sum of the two counts.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <vector>
+
+int count_even(const std::vector<int>& v, std::size_t lo, std::size_t hi) {
+    int c = 0;
+    for (std::size_t i = lo; i < hi; ++i)
+        if (v[i] % 2 == 0) ++c;
+    return c;
+}
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    auto a = std::async(std::launch::async, count_even, std::cref(v), std::size_t{0}, std::size_t{5});
+    auto b = std::async(std::launch::async, count_even, std::cref(v), std::size_t{5}, std::size_t{10});
+    std::cout << a.get() + b.get() << "\n";
+}`,
+  why: String.raw`Each task reads the shared vector without changing it, and get collects each partial result. Passing the range explicitly keeps each task independent.` },
+
+{ n: 18, d: "easy", t: "Stop a thread that waits for work", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Start a jthread whose function waits on a stop token, returning as soon as a stop is requested, and then prints stopped. The main thread requests the stop, and the jthread is joined when it goes out of scope.`,
+  ex: String.raw`stopped`,
+  code: String.raw`#include <iostream>
+#include <stop_token>
+#include <thread>
+
+int main() {
+    std::jthread t([](std::stop_token st) {
+        while (!st.stop_requested()) std::this_thread::yield();
+        std::cout << "stopped\n";
+    });
+    t.request_stop();
+}`,
+  why: String.raw`A stop token lets the owner ask a thread to finish. The thread checks it at points it chooses, and jthread joins automatically when it is destroyed.` },
+
+{ n: 19, d: "easy", t: "Wait on a condition that can be interrupted", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`A jthread waits on a condition_variable_any with the predicate that is always false, passing its stop token. When the wait returns, it prints ready if the wait succeeded or stopped otherwise. The main thread then requests the stop.`,
+  ex: String.raw`stopped`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <stop_token>
+#include <thread>
+
+int main() {
+    std::jthread t([](std::stop_token st) {
+        std::mutex m;
+        std::condition_variable_any cv;
+        std::unique_lock<std::mutex> lk(m);
+        bool ok = cv.wait(lk, st, [] { return false; });
+        std::cout << (ok ? "ready" : "stopped") << "\n";
+    });
+    t.request_stop();
+}`,
+  why: String.raw`A wait that accepts a stop token returns when a stop is requested, even though its condition never becomes true. The return value shows whether the condition was met.` },
+
+{ n: 20, d: "easy", t: "Catch an error thrown by a packaged task", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Package a task that throws a runtime_error with the message bad task. Run it on a thread, and catch the error when getting the result from its future, printing caught followed by the message. Join the thread afterwards.`,
+  ex: String.raw`caught bad task`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
+
+int main() {
+    std::packaged_task<int()> task([]() -> int { throw std::runtime_error("bad task"); });
+    std::future<int> f = task.get_future();
+    std::thread t(std::move(task));
+    try {
+        f.get();
+    } catch (const std::runtime_error& e) {
+        std::cout << "caught " << e.what() << "\n";
+    }
+    t.join();
+}`,
+  why: String.raw`An exception thrown inside a packaged task is stored with its future, and rethrown when get is called, so errors cross from the worker to the caller.` },
+
+{ n: 21, d: "easy", t: "Check an invariant after parallel updates", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Four threads each add 1 to a shared total 1000 times, holding a mutex each time. After all threads are joined, print PASS if the total is 4000, or FAIL otherwise.`,
+  ex: String.raw`PASS`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    long long total = 0;
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 4; ++i)
+        ts.emplace_back([&] {
+            for (int k = 0; k < 1000; ++k) {
+                std::lock_guard<std::mutex> g(m);
+                total += 1;
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::cout << (total == 4000 ? "PASS" : "FAIL") << "\n";
+}`,
+  why: String.raw`A test that checks a known total after the threads finish turns a race into a visible wrong answer. Writing the check against the expected count makes the failure reproducible.` },
+
+{ n: 22, d: "easy", t: "Force a thread to wait for another", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Use a promise to make a thread wait. The thread prints A once the promise is set. The main thread prints B first, then sets the promise, then joins the thread.`,
+  ex: String.raw`B
+A`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::promise<void> go;
+    std::future<void> f = go.get_future();
+    std::thread a([&] {
+        f.wait();
+        std::cout << "A\n";
+    });
+    std::cout << "B\n";
+    go.set_value();
+    a.join();
+}`,
+  why: String.raw`A promise used as a starting signal forces an order on otherwise concurrent output. Tests use this to make a particular interleaving happen every time.` },
+
+{ n: 23, d: "easy", t: "Try a timed lock that is held", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`The main thread locks a timed mutex. A second thread tries to lock it with a timeout of zero milliseconds and records whether it succeeded. After joining that thread, print acquired or timeout depending on the result, then unlock the mutex.`,
+  ex: String.raw`timeout`,
+  code: String.raw`#include <chrono>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::timed_mutex m;
+    m.lock();
+    bool got = true;
+    std::thread t([&] {
+        got = m.try_lock_for(std::chrono::milliseconds(0));
+        if (got) m.unlock();
+    });
+    t.join();
+    std::cout << (got ? "acquired" : "timeout") << "\n";
+    m.unlock();
+}`,
+  why: String.raw`A timed lock gives up after its timeout instead of waiting forever. This is the basic tool for detecting a lock that is never released.` },
+
+// ---------- Medium ----------
+{ n: 24, d: "medium", t: "Sum growing ranges on separate threads", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Create a vector of five ints. Thread i (for i from 0 to 4) stores in slot i the sum of the integers from 1 to (i+1) times 10. Join all threads, then print each slot on its own line.`,
+  ex: String.raw`55
+210
+465
+820
+1275`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> results(5);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 5; ++i)
+        ts.emplace_back([&results, i] {
+            int s = 0;
+            for (int k = 1; k <= (i + 1) * 10; ++k) s += k;
+            results[i] = s;
+        });
+    for (auto& t : ts) t.join();
+    for (int r : results) std::cout << r << "\n";
+}`,
+  why: String.raw`Each thread writes only its own slot, so no locking is needed. Joining before reading makes every result visible to main.` },
+
+{ n: 25, d: "medium", t: "Catch errors inside the thread that threw them", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Start three threads, numbered 0 to 2. Thread 1 throws a runtime_error with the message job 1 failed. Every other thread stores the text job i ok, where i is its number. Each thread must catch its own exception and store the message text in its slot. After joining, print the three slots, one per line.`,
+  ex: String.raw`job 0 ok
+job 1 failed
+job 2 ok`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::string> log(3);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back([&log, i] {
+            try {
+                if (i == 1) throw std::runtime_error("job 1 failed");
+                log[i] = "job " + std::to_string(i) + " ok";
+            } catch (const std::exception& e) {
+                log[i] = e.what();
+            }
+        });
+    for (auto& t : ts) t.join();
+    for (auto& s : log) std::cout << s << "\n";
+}`,
+  why: String.raw`An exception does not cross a thread boundary. If the thread function does not catch it, the program terminates. Catching it inside the thread and storing the message gives the main thread a result to report.` },
+
+{ n: 26, d: "medium", t: "Start a thread with a move-only functor", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Define a struct Printer that holds a unique_ptr to an int, with a const operator() that prints value followed by the int. Create a Printer holding 99, move it into a std::thread, and join.`,
+  ex: String.raw`value 99`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <thread>
+#include <utility>
+
+struct Printer {
+    std::unique_ptr<int> value;
+    void operator()() const { std::cout << "value " << *value << "\n"; }
+};
+
+int main() {
+    Printer p{std::make_unique<int>(99)};
+    std::thread t(std::move(p));
+    t.join();
+}`,
+  why: String.raw`A thread can run any callable it is given. Because the Printer is move-only, the thread takes ownership of its contents when the object is moved into it.` },
+
+{ n: 27, d: "medium", t: "Guard that joins its thread on scope exit", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Write a class Guard that holds a reference to a std::thread. When a Guard is destroyed, it joins the thread if the thread is still joinable. Copying a Guard must not compile. In function work, start a thread that prints worker done, then throw a runtime_error with the message oops, before any explicit join is written. main catches the exception and prints caught followed by the message.`,
+  ex: String.raw`worker done
+caught oops`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <thread>
+
+class Guard {
+    std::thread& t_;
+public:
+    explicit Guard(std::thread& t) : t_(t) {}
+    ~Guard() { if (t_.joinable()) t_.join(); }
+    Guard(const Guard&) = delete;
+    Guard& operator=(const Guard&) = delete;
+};
+
+void work() {
+    std::thread t([] { std::cout << "worker done\n"; });
+    Guard g(t);
+    throw std::runtime_error("oops");
+}
+
+int main() {
+    try {
+        work();
+    } catch (const std::runtime_error& e) {
+        std::cout << "caught " << e.what() << "\n";
+    }
+}`,
+  why: String.raw`When the exception leaves work, local objects are destroyed first. The Guard joins the thread during that unwinding, so the worker's output appears before the catch block runs.` },
+
+{ n: 28, d: "medium", t: "Move thread ownership into a vector", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Create a vector of threads and add one thread that sets a to 1 by reference. Create a separate thread that sets b to 2 by reference, and move it into the vector. Print moved followed by 1 if the separate thread object is no longer joinable, or 0 otherwise. Join all threads in the vector, then print a plus b.`,
+  ex: String.raw`moved 1
+3`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <utility>
+#include <vector>
+
+int main() {
+    int a = 0, b = 0;
+    std::vector<std::thread> pool;
+    pool.emplace_back([&a] { a = 1; });
+    std::thread extra([&b] { b = 2; });
+    pool.push_back(std::move(extra));
+    std::cout << "moved " << !extra.joinable() << "\n";
+    for (auto& t : pool) t.join();
+    std::cout << a + b << "\n";
+}`,
+  why: String.raw`A std::thread is movable but not copyable. After the move, the original object no longer owns a thread, so it is not joinable and must not be joined.` },
+
+{ n: 29, d: "medium", t: "Copy versus reference when passing to a thread", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Write add_five(int target) which adds 5 to its parameter. Start a thread calling add_five with a variable total holding 10, join it, and print total. Then write add_into(int& target) that adds 5 to its argument. Start a thread with std::ref(total) calling add_into, join it, and print total again.`,
+  ex: String.raw`10
+15`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <thread>
+
+void add_five(int target) { target += 5; }
+void add_into(int& target) { target += 5; }
+
+int main() {
+    int total = 10;
+    std::thread a(add_five, total);
+    a.join();
+    std::cout << total << "\n";
+    std::thread b(add_into, std::ref(total));
+    b.join();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`std::thread copies its arguments. Without std::ref, the function changes only the copy, so the caller's variable is unchanged. std::ref passes a reference that the thread can modify.` },
+
+{ n: 30, d: "medium", t: "Hand a string to a thread by moving it", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Create a unique_ptr to a string holding moved text. Start a thread whose lambda captures the pointer by moving it, and prints the string it points to. Join the thread. Then print 1 if the original pointer is now null, or 0 otherwise.`,
+  ex: String.raw`moved text
+1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+#include <utility>
+
+int main() {
+    auto msg = std::make_unique<std::string>("moved text");
+    std::thread t([m = std::move(msg)] { std::cout << *m << "\n"; });
+    t.join();
+    std::cout << (msg == nullptr) << "\n";
+}`,
+  why: String.raw`An init-capture can take ownership of an object by moving it into the lambda. The lambda then carries that object into the thread, and the original pointer is left null.` },
+
+{ n: 31, d: "medium", t: "Readers share a lock, a writer excludes them", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`A Config class stores one int. Its set method takes exclusive access, and its get method takes shared access. Set the value to 42, then start four threads, each reading the value into its own slot of a vector. After joining, print the sum of the four slots.`,
+  ex: String.raw`168`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <shared_mutex>
+#include <thread>
+#include <vector>
+
+class Config {
+    mutable std::shared_mutex m_;
+    int value_ = 0;
+public:
+    void set(int v) { std::unique_lock lk(m_); value_ = v; }
+    int get() const { std::shared_lock lk(m_); return value_; }
+};
+
+int main() {
+    Config c;
+    c.set(42);
+    std::vector<int> seen(4);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 4; ++i)
+        ts.emplace_back([&c, &seen, i] { seen[i] = c.get(); });
+    for (auto& t : ts) t.join();
+    int sum = 0;
+    for (int v : seen) sum += v;
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`A shared mutex lets several readers hold the lock at the same time, while a writer waits for them all to leave. Readers never see a partially written value.` },
+
+{ n: 32, d: "medium", t: "Transfer between accounts from two directions", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Two accounts start with balance 1000 each. Thread 1 moves 1 unit from a to b, 500 times. Thread 2 moves 2 units from b to a, 500 times. Each transfer must lock both accounts together without risk of deadlock. After joining, print the balance of a, a space, and the balance of b.`,
+  ex: String.raw`1500 500`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+struct Account {
+    std::mutex m;
+    int balance;
+};
+
+void transfer(Account& from, Account& to, int amount) {
+    std::scoped_lock lk(from.m, to.m);
+    from.balance -= amount;
+    to.balance += amount;
+}
+
+int main() {
+    Account a{{}, 1000}, b{{}, 1000};
+    std::thread t1([&] { for (int i = 0; i < 500; ++i) transfer(a, b, 1); });
+    std::thread t2([&] { for (int i = 0; i < 500; ++i) transfer(b, a, 2); });
+    t1.join();
+    t2.join();
+    std::cout << a.balance << " " << b.balance << "\n";
+}`,
+  why: String.raw`Locking two mutexes one after another in opposite orders can deadlock. Locking both in one call avoids that. The totals are fixed: a loses 500 and gains 1000, b gains 500 and loses 1000.` },
+
+{ n: 33, d: "medium", t: "Initialise once across eight threads", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`A global flag and a global int start at zero. A function ensure_init must set the int to 7 and increment a counter exactly once, no matter how many threads call it. Start eight threads that each call ensure_init, join them, and print the counter, a space, and the int.`,
+  ex: String.raw`1 7`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+std::once_flag flag;
+int init_count = 0;
+int resource = 0;
+
+void ensure_init() {
+    std::call_once(flag, [] { ++init_count; resource = 7; });
+}
+
+int main() {
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 8; ++i) ts.emplace_back(ensure_init);
+    for (auto& t : ts) t.join();
+    std::cout << init_count << " " << resource << "\n";
+}`,
+  why: String.raw`call_once runs its callable exactly once, and every other caller waits until that run has finished. This makes lazy initialisation safe with many threads.` },
+
+{ n: 34, d: "medium", t: "Reject locks taken out of order", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Write class HierarchicalMutex with a constructor taking a level and lock and unlock methods. A thread may lock a mutex only if its level is lower than the level of the last mutex it locked. If not, lock throws logic_error. Unlock restores the previous level. Create high at level 10000 and low at level 5000. Lock low, then try to lock high inside a try block. If it throws, print rejected. Unlock low. Then lock high, lock low, unlock low, unlock high, and print ordered ok.`,
+  ex: String.raw`rejected
+ordered ok`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+
+class HierarchicalMutex {
+    unsigned level_;
+    unsigned previous_ = 0;
+    static thread_local unsigned this_thread_level_;
+public:
+    explicit HierarchicalMutex(unsigned level) : level_(level) {}
+    void lock() {
+        if (this_thread_level_ <= level_) throw std::logic_error("lock order violated");
+        previous_ = this_thread_level_;
+        this_thread_level_ = level_;
+    }
+    void unlock() { this_thread_level_ = previous_; }
+};
+
+thread_local unsigned HierarchicalMutex::this_thread_level_ = 1000000;
+
+int main() {
+    HierarchicalMutex high(10000), low(5000);
+    low.lock();
+    try {
+        high.lock();
+        high.unlock();
+    } catch (const std::logic_error&) {
+        std::cout << "rejected\n";
+    }
+    low.unlock();
+    high.lock();
+    low.lock();
+    low.unlock();
+    high.unlock();
+    std::cout << "ordered ok\n";
+}`,
+  why: String.raw`Assigning every mutex a level and checking that levels only decrease while nested makes a cycle of lock orders impossible. The check runs before the lock is taken, so a violation is caught even in a single thread.` },
+
+{ n: 35, d: "medium", t: "Producer and consumer with a sentinel", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A producer thread pushes the integers 1 to 10 into a shared queue, then pushes -1 as an end marker. A consumer thread pops values and adds them to a sum until it sees the end marker. Waiting on an empty queue must block rather than spin. After joining, print the sum.`,
+  ex: String.raw`55`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+int main() {
+    std::queue<int> q;
+    std::mutex m;
+    std::condition_variable cv;
+    long long sum = 0;
+    std::thread consumer([&] {
+        while (true) {
+            std::unique_lock lk(m);
+            cv.wait(lk, [&] { return !q.empty(); });
+            int v = q.front();
+            q.pop();
+            lk.unlock();
+            if (v < 0) break;
+            sum += v;
+        }
+    });
+    for (int i = 1; i <= 10; ++i) {
+        { std::lock_guard g(m); q.push(i); }
+        cv.notify_one();
+    }
+    { std::lock_guard g(m); q.push(-1); }
+    cv.notify_one();
+    consumer.join();
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`A condition variable lets the consumer sleep until the queue is non-empty. The predicate is checked after each wakeup, so spurious wakeups are harmless.` },
+
+{ n: 36, d: "medium", t: "Time out a wait and then succeed", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A background thread sleeps 100 milliseconds, then sets a shared flag under a mutex and notifies a condition variable. The main thread holds the lock and waits with a 10 millisecond timeout on the flag, printing ready or timeout. It then waits again with a 5 second timeout and prints ready or timeout for the second wait. Join the background thread at the end.`,
+  ex: String.raw`timeout
+ready`,
+  code: String.raw`#include <chrono>
+#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    bool ready = false;
+    std::thread setter([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        { std::lock_guard g(m); ready = true; }
+        cv.notify_one();
+    });
+    std::unique_lock lk(m);
+    bool first = cv.wait_for(lk, std::chrono::milliseconds(10), [&] { return ready; });
+    std::cout << (first ? "ready" : "timeout") << "\n";
+    bool second = cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; });
+    lk.unlock();
+    setter.join();
+    std::cout << (second ? "ready" : "timeout") << "\n";
+}`,
+  why: String.raw`wait_for returns after its timeout even if nothing happened, and reports whether the predicate became true. The lock is released while waiting, which lets the other thread take it.` },
+
+{ n: 37, d: "medium", t: "Several threads read one shared result", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Create a promise of int and a shared future from its future. Start three threads, each receiving a copy of the shared future. Thread i stores its received value plus i into slot i of a vector. Then set the promise to 100. Join the threads and print each slot on its own line.`,
+  ex: String.raw`100
+101
+102`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::promise<int> p;
+    std::shared_future<int> sf = p.get_future().share();
+    std::vector<int> got(3);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back([sf, &got, i] { got[i] = sf.get() + i; });
+    p.set_value(100);
+    for (auto& t : ts) t.join();
+    for (int v : got) std::cout << v << "\n";
+}`,
+  why: String.raw`A plain future can be read only once. A shared future can be copied, and every copy returns the same value after the promise is set.` },
+
+{ n: 38, d: "medium", t: "Chain three asynchronous stages", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Write parse(x) returning x plus 1, transform(x) returning x times 3, and store(x) returning x minus 2. Start parse on 4 with async. Start a second async task that takes the result of the first and passes it to transform. Start a third async task that takes the result of the second and passes it to store. Print the final result.`,
+  ex: String.raw`13`,
+  code: String.raw`#include <future>
+#include <iostream>
+
+int parse(int x) { return x + 1; }
+int transform(int x) { return x * 3; }
+int store(int x) { return x - 2; }
+
+int main() {
+    auto stage1 = std::async(std::launch::async, parse, 4);
+    auto stage2 = std::async(std::launch::async, [&] { return transform(stage1.get()); });
+    auto stage3 = std::async(std::launch::async, [&] { return store(stage2.get()); });
+    std::cout << stage3.get() << "\n";
+}`,
+  why: String.raw`Each future's get waits for the previous stage, so the chain runs in order even though every stage runs on its own thread.` },
+
+{ n: 39, d: "medium", t: "Blocking pop on a shared stack", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a thread-safe stack of ints with push and a blocking pop. Pop waits while the stack is empty and returns the top value once one is pushed. A consumer thread calls pop once and prints the value. The main thread pushes 42 and then joins the consumer.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <stack>
+#include <thread>
+
+class BlockingStack {
+    std::mutex m_;
+    std::condition_variable cv_;
+    std::stack<int> s_;
+public:
+    void push(int v) {
+        { std::lock_guard g(m_); s_.push(v); }
+        cv_.notify_one();
+    }
+    int pop() {
+        std::unique_lock lk(m_);
+        cv_.wait(lk, [&] { return !s_.empty(); });
+        int v = s_.top();
+        s_.pop();
+        return v;
+    }
+};
+
+int main() {
+    BlockingStack st;
+    std::thread consumer([&] { std::cout << st.pop() << "\n"; });
+    st.push(42);
+    consumer.join();
+}`,
+  why: String.raw`Blocking operations let a consumer start before any data exists. The condition variable wakes it once an item is pushed, instead of making it poll the stack.` },
+
+{ n: 40, d: "medium", t: "Per-shard locks for a counter table", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a class ShardedCounter with four shards. Each shard has its own mutex and a std::map from int to int. The method add(key) takes the mutex of shard key modulo 4 and increments the count for that key. The method total sums every count in every shard, locking each shard while it reads it. Two threads each call add with keys 0 to 7, cycling through them, 800 times each. Print the total after joining.`,
+  ex: String.raw`1600`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+class ShardedCounter {
+    static constexpr int kShards = 4;
+    struct Shard {
+        std::mutex m;
+        std::map<int, int> counts;
+    };
+    std::array<Shard, kShards> shards_;
+public:
+    void add(int key) {
+        Shard& s = shards_[key % kShards];
+        std::lock_guard g(s.m);
+        ++s.counts[key];
+    }
+    int total() {
+        int t = 0;
+        for (auto& s : shards_) {
+            std::lock_guard g(s.m);
+            for (auto& [k, v] : s.counts) t += v;
+        }
+        return t;
+    }
+};
+
+int main() {
+    ShardedCounter c;
+    std::vector<std::thread> ts;
+    for (int th = 0; th < 2; ++th)
+        ts.emplace_back([&c] {
+            for (int k = 0; k < 800; ++k) c.add(k % 8);
+        });
+    for (auto& t : ts) t.join();
+    std::cout << c.total() << "\n";
+}`,
+  why: String.raw`Splitting one lock into several means threads working on different shards do not wait for each other. Each key always maps to the same shard, so counts stay correct.` },
+
+{ n: 41, d: "medium", t: "Append to a list with per-node locks", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a singly linked list of ints with a sentinel head node. Each node holds its own mutex. Provide append(v), which adds a node at the end, and count(), which returns the number of value nodes. Both must be safe to call from several threads, and a traversal must hold at most two node locks at any time. Three threads each append 100 values, then the main thread prints count().`,
+  ex: String.raw`300`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+struct Node {
+    int value;
+    Node* next = nullptr;
+    std::mutex m;
+    explicit Node(int v) : value(v) {}
+};
+
+class Chain {
+    Node head_{-1};
+public:
+    ~Chain() {
+        Node* n = head_.next;
+        while (n) { Node* nx = n->next; delete n; n = nx; }
+    }
+    void append(int v) {
+        Node* cur = &head_;
+        cur->m.lock();
+        while (cur->next) {
+            Node* nxt = cur->next;
+            nxt->m.lock();
+            cur->m.unlock();
+            cur = nxt;
+        }
+        cur->next = new Node(v);
+        cur->m.unlock();
+    }
+    int count() {
+        int c = 0;
+        Node* cur = &head_;
+        cur->m.lock();
+        while (cur->next) {
+            Node* nxt = cur->next;
+            nxt->m.lock();
+            cur->m.unlock();
+            cur = nxt;
+            ++c;
+        }
+        cur->m.unlock();
+        return c;
+    }
+};
+
+int main() {
+    Chain ch;
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 3; ++t)
+        ts.emplace_back([&ch, t] {
+            for (int i = 0; i < 100; ++i) ch.append(t * 100 + i);
+        });
+    for (auto& t : ts) t.join();
+    std::cout << ch.count() << "\n";
+}`,
+  why: String.raw`Locking each node only while stepping past it lets different threads work on different parts of the list. Holding the lock on the next node before releasing the current one stops another thread from slipping in between.` },
+
+{ n: 42, d: "medium", t: "Bounded buffer with two condition variables", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a bounded buffer with capacity 2 and two methods, put(v) and take(). put waits while the buffer is full. take waits while it is empty. Use separate condition variables for the two waits. A producer thread puts the squares of 1 to 6, in order. The main thread takes six values and prints each on its own line, then joins the producer.`,
+  ex: String.raw`1
+4
+9
+16
+25
+36`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+class Bounded {
+    std::mutex m_;
+    std::condition_variable not_full_, not_empty_;
+    std::queue<int> q_;
+    const std::size_t cap_;
+public:
+    explicit Bounded(std::size_t cap) : cap_(cap) {}
+    void put(int v) {
+        std::unique_lock lk(m_);
+        not_full_.wait(lk, [&] { return q_.size() < cap_; });
+        q_.push(v);
+        not_empty_.notify_one();
+    }
+    int take() {
+        std::unique_lock lk(m_);
+        not_empty_.wait(lk, [&] { return !q_.empty(); });
+        int v = q_.front();
+        q_.pop();
+        not_full_.notify_one();
+        return v;
+    }
+};
+
+int main() {
+    Bounded b(2);
+    std::thread producer([&] { for (int i = 1; i <= 6; ++i) b.put(i * i); });
+    for (int i = 0; i < 6; ++i) std::cout << b.take() << "\n";
+    producer.join();
+}`,
+  why: String.raw`Two condition variables let a producer wake only consumers and a consumer wake only producers. With one shared variable, every notification would wake the wrong kind of waiter.` },
+
+{ n: 43, d: "medium", t: "Parallel maximum over uneven chunks", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Given the vector 4, 17, 9, 23, 8, 15, 42, 1, 16, 30, 7, 11, split it into three chunks of four consecutive elements. Find the maximum of each chunk on its own thread, storing each maximum in a slot. After joining, print the largest of the three slot values.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> data{4, 17, 9, 23, 8, 15, 42, 1, 16, 30, 7, 11};
+    const std::size_t parts = 3;
+    std::vector<int> best(parts, 0);
+    std::vector<std::thread> ts;
+    std::size_t chunk = (data.size() + parts - 1) / parts;
+    for (std::size_t p = 0; p < parts; ++p)
+        ts.emplace_back([&, p] {
+            std::size_t lo = p * chunk, hi = std::min(data.size(), lo + chunk);
+            for (std::size_t i = lo; i < hi; ++i) best[p] = std::max(best[p], data[i]);
+        });
+    for (auto& t : ts) t.join();
+    std::cout << *std::max_element(best.begin(), best.end()) << "\n";
+}`,
+  why: String.raw`Each chunk is reduced independently, and only the small list of partial results is combined at the end. This is the usual shape of a parallel reduction.` },
+
+{ n: 44, d: "medium", t: "Report the first exception from workers", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Given the vector 1, 2, 3, 0, 5, 6, two worker threads each check half of it: worker 0 checks indices 0 to 2, and worker 1 checks indices 3 to 5. A worker that finds a zero throws a domain_error whose message is zero at followed by the index. Each worker must catch its exception and store it with std::exception_ptr. After joining, the main thread rethrows each stored exception and prints error followed by the message, for each one found.`,
+  ex: String.raw`error: zero at 3`,
+  code: String.raw`#include <exception>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> data{1, 2, 3, 0, 5, 6};
+    std::vector<std::exception_ptr> errors(2);
+    std::vector<std::thread> ts;
+    for (std::size_t p = 0; p < 2; ++p)
+        ts.emplace_back([&, p] {
+            try {
+                for (std::size_t i = p * 3; i < p * 3 + 3; ++i)
+                    if (data[i] == 0) throw std::domain_error("zero at " + std::to_string(i));
+            } catch (...) {
+                errors[p] = std::current_exception();
+            }
+        });
+    for (auto& t : ts) t.join();
+    for (auto& e : errors) {
+        if (!e) continue;
+        try {
+            std::rethrow_exception(e);
+        } catch (const std::domain_error& ex) {
+            std::cout << "error: " << ex.what() << "\n";
+        }
+    }
+}`,
+  why: String.raw`Exceptions cannot leave a thread function without ending the program. Capturing them with current_exception stores them safely, and rethrow_exception brings them back on the thread that needs them.` },
+
+{ n: 45, d: "medium", t: "Merge sort with a limit on thread creation", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Sort the vector 9, 3, 7, 1, 8, 2, 6, 4, 5, 0 with a recursive merge sort on the half-open range. At each level, sort the left half on a new thread while the current thread sorts the right half, but only while the depth is above zero. Below depth zero, recurse without threads. Merge with an in-place merge. Print the sorted values, each followed by a space, then a newline.`,
+  ex: String.raw`0 1 2 3 4 5 6 7 8 9 `,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+void msort(std::vector<int>& v, int lo, int hi, int depth) {
+    if (hi - lo < 2) return;
+    int mid = lo + (hi - lo) / 2;
+    if (depth > 0) {
+        std::thread left([&] { msort(v, lo, mid, depth - 1); });
+        msort(v, mid, hi, depth - 1);
+        left.join();
+    } else {
+        msort(v, lo, mid, 0);
+        msort(v, mid, hi, 0);
+    }
+    std::inplace_merge(v.begin() + lo, v.begin() + mid, v.begin() + hi);
+}
+
+int main() {
+    std::vector<int> v{9, 3, 7, 1, 8, 2, 6, 4, 5, 0};
+    msort(v, 0, static_cast<int>(v.size()), 2);
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Spawning a thread for every split would create far more threads than cores. Limiting the depth keeps the parallelism useful, and the two halves never touch the same elements.` },
+
+{ n: 46, d: "medium", t: "Split items evenly with leftover distribution", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Fill a vector with the integers 1 to 10. Split it among three workers so that each gets a contiguous block. The first (10 mod 3) workers get one extra item. Each worker sums its own block into a slot on its own thread. After joining, print the three slots, each followed by a space, then a newline.`,
+  ex: String.raw`10 18 27 `,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> items(10);
+    std::iota(items.begin(), items.end(), 1);
+    const std::size_t workers = 3;
+    std::vector<long long> sums(workers, 0);
+    std::vector<std::thread> ts;
+    std::size_t base = items.size() / workers, extra = items.size() % workers;
+    std::size_t start = 0;
+    for (std::size_t w = 0; w < workers; ++w) {
+        std::size_t len = base + (w < extra ? 1 : 0);
+        ts.emplace_back([&, w, start, len] {
+            for (std::size_t i = start; i < start + len; ++i) sums[w] += items[i];
+        });
+        start += len;
+    }
+    for (auto& t : ts) t.join();
+    for (auto s : sums) std::cout << s << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Computing each worker's range from its index keeps the blocks disjoint and covering the whole vector. Handling the remainder explicitly prevents a worker from being left out or double-counted.` },
+
+{ n: 47, d: "medium", t: "Fixed pool of workers returning futures", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Build a fixed pool of three worker threads that run submitted tasks. submit takes a callable and returns a future for its result. Shut the pool down when it goes out of scope, after finishing queued work. Submit a lambda returning i times i for each i from 1 to 10, then sum all results and print the total.`,
+  ex: String.raw`385`,
+  code: String.raw`#include <condition_variable>
+#include <functional>
+#include <future>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+
+class Pool {
+    std::vector<std::thread> workers_;
+    std::queue<std::function<void()>> tasks_;
+    std::mutex m_;
+    std::condition_variable cv_;
+    bool stop_ = false;
+public:
+    explicit Pool(int n) {
+        for (int i = 0; i < n; ++i)
+            workers_.emplace_back([this] {
+                while (true) {
+                    std::function<void()> task;
+                    {
+                        std::unique_lock lk(m_);
+                        cv_.wait(lk, [this] { return stop_ || !tasks_.empty(); });
+                        if (stop_ && tasks_.empty()) return;
+                        task = std::move(tasks_.front());
+                        tasks_.pop();
+                    }
+                    task();
+                }
+            });
+    }
+    template <class F>
+    auto submit(F f) -> std::future<decltype(f())> {
+        auto task = std::make_shared<std::packaged_task<decltype(f())()>>(std::move(f));
+        auto fut = task->get_future();
+        { std::lock_guard g(m_); tasks_.push([task] { (*task)(); }); }
+        cv_.notify_one();
+        return fut;
+    }
+    ~Pool() {
+        { std::lock_guard g(m_); stop_ = true; }
+        cv_.notify_all();
+        for (auto& t : workers_) t.join();
+    }
+};
+
+int main() {
+    Pool pool(3);
+    std::vector<std::future<int>> results;
+    for (int i = 1; i <= 10; ++i)
+        results.push_back(pool.submit([i] { return i * i; }));
+    int sum = 0;
+    for (auto& f : results) sum += f.get();
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`Reusing a few threads avoids the cost of creating one per task. Packaging each task with a future lets the caller collect results in any order without knowing which worker ran them.` },
+
+{ n: 48, d: "medium", t: "Drain every job before shutdown", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Two worker threads take jobs from a shared queue. The main thread pushes 20 jobs, then marks the queue closed and wakes the workers. A worker exits only when the queue is closed and empty. Count the jobs processed by all workers together, and print the count after joining.`,
+  ex: String.raw`20`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::queue<int> jobs;
+    std::mutex m;
+    std::condition_variable cv;
+    bool closed = false;
+    int processed = 0;
+    std::vector<std::thread> workers;
+    for (int w = 0; w < 2; ++w)
+        workers.emplace_back([&] {
+            while (true) {
+                std::unique_lock lk(m);
+                cv.wait(lk, [&] { return closed || !jobs.empty(); });
+                if (jobs.empty()) return;
+                jobs.pop();
+                ++processed;
+            }
+        });
+    for (int j = 0; j < 20; ++j) {
+        { std::lock_guard g(m); jobs.push(j); }
+        cv.notify_one();
+    }
+    { std::lock_guard g(m); closed = true; }
+    cv.notify_all();
+    for (auto& t : workers) t.join();
+    std::cout << processed << "\n";
+}`,
+  why: String.raw`A clean shutdown must not drop work that was already queued. Checking for an empty queue, and not just the closed flag, is what keeps the workers from leaving early.` },
+
+{ n: 49, d: "medium", t: "Cancel a loop that is running", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`A jthread runs a loop that increments a shared int, sleeping one millisecond per pass, and stops when its stop token is signalled. The main thread sleeps 20 milliseconds, requests the stop, and joins the thread. Print stopped after work if the counter is greater than zero, or no work otherwise.`,
+  ex: String.raw`stopped after work`,
+  code: String.raw`#include <chrono>
+#include <iostream>
+#include <stop_token>
+#include <thread>
+
+int main() {
+    int ticks = 0;
+    std::jthread worker([&ticks](std::stop_token st) {
+        while (!st.stop_requested()) {
+            ++ticks;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    worker.request_stop();
+    worker.join();
+    std::cout << (ticks > 0 ? "stopped after work" : "no work") << "\n";
+}`,
+  why: String.raw`Stopping is cooperative: the loop checks the token between iterations and returns on its own. Joining afterwards makes the final counter value safe to read.` },
+
+{ n: 50, d: "medium", t: "Per-thread counters with thread_local", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Declare a thread_local int named calls, starting at zero in every thread. Start three threads. Thread i increments calls (i+1) times 5 times in total, then stores its own value of calls into slot i of a vector. Join the threads. Print the three slots, each followed by a space. Then print main= followed by the value of calls in the main thread.`,
+  ex: String.raw`5 10 15 main=0`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+thread_local int calls = 0;
+
+void work(int times, std::vector<int>& out, int slot) {
+    for (int i = 0; i < times; ++i) ++calls;
+    out[slot] = calls;
+}
+
+int main() {
+    std::vector<int> out(3, -1);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back(work, (i + 1) * 5, std::ref(out), i);
+    for (auto& t : ts) t.join();
+    for (int v : out) std::cout << v << " ";
+    std::cout << "main=" << calls << "\n";
+}`,
+  why: String.raw`thread_local gives each thread its own copy of a variable. Changes in one thread are invisible to the others, so per-thread counters need no lock.` },
+
+{ n: 51, d: "medium", t: "Barrier check that phases do not overlap", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Three threads each record their id into a vector during phase one, under a mutex. They then meet at a barrier for three participants. In phase two each thread checks that the phase one vector already has three entries, and if not sets bad to true. Each thread then appends its id to a second vector. After joining, print PASS if bad is still false, or FAIL otherwise, then a space, then the size of the second vector.`,
+  ex: String.raw`PASS 3`,
+  code: String.raw`#include <barrier>
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::barrier sync(3);
+    std::mutex m;
+    std::vector<int> phase1, phase2;
+    bool bad = false;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back([&, i] {
+            { std::lock_guard g(m); phase1.push_back(i); }
+            sync.arrive_and_wait();
+            {
+                std::lock_guard g(m);
+                if (phase1.size() != 3) bad = true;
+                phase2.push_back(i);
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::cout << (bad ? "FAIL" : "PASS") << " " << phase2.size() << "\n";
+}`,
+  why: String.raw`A barrier turns a timing assumption into an explicit ordering. Testing an invariant at that point shows whether every earlier step really finished first.` },
+
+{ n: 52, d: "medium", t: "Stress test a shared histogram", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Four buckets start at zero. Eight threads run. Thread t adds 1 to bucket t modulo 4, 500 times, with every update protected by one mutex. After joining, print the four buckets, each followed by a space, then a newline.`,
+  ex: String.raw`1000 1000 1000 1000 `,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    int buckets[4] = {0, 0, 0, 0};
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 8; ++t)
+        ts.emplace_back([&, t] {
+            for (int k = 0; k < 500; ++k) {
+                std::lock_guard g(m);
+                buckets[t % 4] += 1;
+            }
+        });
+    for (auto& t : ts) t.join();
+    for (int b : buckets) std::cout << b << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A stress test runs many concurrent updates and checks the exact final state. Every update is accounted for, so any lost write would show up as a wrong count.` },
+
+{ n: 53, d: "medium", t: "Confirm a lock is released after an exception", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`A global mutex m is locked by a function risky, which uses a lock_guard and then throws runtime_error. A thread calls risky inside a try block and catches the error. After joining the thread, the main thread tries to lock m without blocking, and prints unlocked if it succeeded, or still locked otherwise. If it succeeded, unlock again.`,
+  ex: String.raw`unlocked`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <stdexcept>
+#include <thread>
+
+std::mutex m;
+
+void risky() {
+    std::lock_guard g(m);
+    throw std::runtime_error("fail inside lock");
+}
+
+int main() {
+    std::thread t([] {
+        try {
+            risky();
+        } catch (const std::runtime_error&) {
+        }
+    });
+    t.join();
+    bool got = m.try_lock();
+    std::cout << (got ? "unlocked" : "still locked") << "\n";
+    if (got) m.unlock();
+}`,
+  why: String.raw`A lock_guard unlocks in its destructor, which runs during stack unwinding. Testing that the lock is free afterwards catches code that locks manually and forgets to unlock on the error path.` },
+
+{ n: 54, d: "medium", t: "Detect a hang with a timed wait", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Start an async task that returns 7 immediately. Create a promise of void and take its future, but do not set it yet. Wait on the async task's future for up to 2 seconds and print quick ready if it finished, or quick timeout otherwise. Then wait on the promise's future for 50 milliseconds and print hung timeout if it did not finish, or hung ready otherwise. Finally set the promise.`,
+  ex: String.raw`quick ready
+hung timeout`,
+  code: String.raw`#include <chrono>
+#include <future>
+#include <iostream>
+
+int main() {
+    std::promise<void> never;
+    std::future<void> hung = never.get_future();
+    std::future<int> quick = std::async(std::launch::async, [] { return 7; });
+    auto s1 = quick.wait_for(std::chrono::seconds(2));
+    std::cout << (s1 == std::future_status::ready ? "quick ready" : "quick timeout") << "\n";
+    auto s2 = hung.wait_for(std::chrono::milliseconds(50));
+    std::cout << (s2 == std::future_status::timeout ? "hung timeout" : "hung ready") << "\n";
+    never.set_value();
+}`,
+  why: String.raw`wait_for lets a test fail instead of hanging forever. A finished task reports ready, while a task that never completes reports timeout within the given time.` },
+
+// ---------- Hard ----------
+{ n: 55, d: "hard", t: "Join threads when an exception escapes", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Write a struct Joiner that holds a reference to a vector of std::thread and joins every joinable thread in its destructor. Write run_all(fail_at) that creates a Joiner, then starts a thread for each i from 0 to 4 unless i equals fail_at. Each started thread sets slot i of a global int array done to 1. If i equals fail_at, run_all throws a runtime_error with the message stopped at followed by fail_at, before starting that thread. main calls run_all(3) inside a try block, prints caught followed by the message, then prints the number of set slots.`,
+  ex: String.raw`caught stopped at 3
+3`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
+
+int done[5] = {0, 0, 0, 0, 0};
+
+struct Joiner {
+    std::vector<std::thread>& v;
+    ~Joiner() {
+        for (auto& t : v)
+            if (t.joinable()) t.join();
+    }
+};
+
+void run_all(int fail_at) {
+    std::vector<std::thread> ts;
+    Joiner joiner{ts};
+    for (int i = 0; i < 5; ++i) {
+        if (i == fail_at) throw std::runtime_error("stopped at " + std::to_string(fail_at));
+        ts.emplace_back([i] { done[i] = 1; });
+    }
+}
+
+int main() {
+    try {
+        run_all(3);
+    } catch (const std::runtime_error& e) {
+        std::cout << "caught " << e.what() << "\n";
+    }
+    int n = 0;
+    for (int v : done) n += v;
+    std::cout << n << "\n";
+}`,
+  why: String.raw`If the function exits by exception while threads are running, those threads must still be joined before their vector is destroyed. A destructor on a local object does that during unwinding, because destroying a joinable std::thread calls terminate.` },
+
+{ n: 56, d: "hard", t: "Ticket counter fills slots in order", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`A mutex and an int next start at zero. Three threads each take two tickets: under the mutex, a thread reads next and increments it. For each ticket it receives, it stores the ticket times itself into slots[ticket] of a vector of six ints initialised to -1. After joining, print the six slots in order, each followed by a space, then a newline.`,
+  ex: String.raw`0 1 4 9 16 25 `,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::mutex m;
+    int next = 0;
+    std::vector<int> slots(6, -1);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 3; ++t)
+        ts.emplace_back([&] {
+            for (int k = 0; k < 2; ++k) {
+                int ticket;
+                { std::lock_guard g(m); ticket = next++; }
+                slots[ticket] = ticket * ticket;
+            }
+        });
+    for (auto& t : ts) t.join();
+    for (int v : slots) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Handing out tickets under a lock gives every thread a unique index without any two sharing one. Output sorted by ticket is then independent of which thread got which ticket.` },
+
+{ n: 57, d: "hard", t: "Split prime checking across four threads", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Write is_prime(n) using trial division. Using four threads, thread t checks the numbers t, t+4, t+8, and so on, below 100, and adds each prime it finds to slot t of a vector. Join all threads, then print the total of the four slots.`,
+  ex: String.raw`1060`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+bool is_prime(int n) {
+    if (n < 2) return false;
+    for (int d = 2; d * d <= n; ++d)
+        if (n % d == 0) return false;
+    return true;
+}
+
+int main() {
+    const int T = 4;
+    std::vector<long long> part(T, 0);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < T; ++t)
+        ts.emplace_back([&, t] {
+            for (int n = t; n < 100; n += T)
+                if (is_prime(n)) part[t] += n;
+        });
+    for (auto& th : ts) th.join();
+    long long total = 0;
+    for (auto p : part) total += p;
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Interleaving the numbers gives each thread a similar amount of work. Each thread writes only its own slot, so the final sum needs no lock.` },
+
+{ n: 58, d: "hard", t: "Row sums of a matrix on separate threads", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Build a 3 by 4 matrix stored as vectors of ints, where the entry in row r and column c is r times 4 plus c plus 1. Start one thread per row, each computing the sum of its row into its own slot. Join the threads and print each row sum on its own line.`,
+  ex: String.raw`10
+26
+42`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    const int R = 3, C = 4;
+    std::vector<std::vector<int>> m(R, std::vector<int>(C));
+    for (int r = 0; r < R; ++r)
+        for (int c = 0; c < C; ++c)
+            m[r][c] = r * C + c + 1;
+    std::vector<int> sums(R, 0);
+    std::vector<std::thread> ts;
+    for (int r = 0; r < R; ++r)
+        ts.emplace_back([&, r] {
+            for (int v : m[r]) sums[r] += v;
+        });
+    for (auto& t : ts) t.join();
+    for (int s : sums) std::cout << s << "\n";
+}`,
+  why: String.raw`Rows are independent, so each thread reads only its row and writes only its own slot. The join makes all sums visible before printing.` },
+
+{ n: 59, d: "hard", t: "Move a worker that joins on destruction", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Write class Worker that starts a std::thread from a std::function<void()> in its constructor. Its destructor joins the thread if joinable. Its move constructor and move assignment transfer the thread; move assignment joins the target's current thread first. In main, create a Worker that adds 1 to runs, move it into a second Worker inside an inner block, let both go out of scope, then print runs.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <thread>
+#include <utility>
+
+class Worker {
+    std::thread t_;
+public:
+    explicit Worker(std::function<void()> f) : t_(std::move(f)) {}
+    Worker(Worker&&) noexcept = default;
+    Worker& operator=(Worker&& o) noexcept {
+        if (t_.joinable()) t_.join();
+        t_ = std::move(o.t_);
+        return *this;
+    }
+    ~Worker() {
+        if (t_.joinable()) t_.join();
+    }
+};
+
+int main() {
+    int runs = 0;
+    {
+        Worker a([&runs] { runs += 1; });
+        Worker b = std::move(a);
+    }
+    std::cout << runs << "\n";
+}`,
+  why: String.raw`A thread handle is owned by exactly one object at a time. After the move, the source is empty and joins nothing, so the thread is joined exactly once, by its final owner.` },
+
+{ n: 60, d: "hard", t: "Pass a unique pointer and a promise to a thread", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Write summarize(unique_ptr to vector of ints, promise of int). It sets the promise to the sum of the vector. In main, create a vector holding 10, 20 and 30, put it in a unique_ptr, create a promise and take its future, start a thread that calls summarize with both moved in, print the value obtained from the future, then join the thread.`,
+  ex: String.raw`60`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <memory>
+#include <numeric>
+#include <thread>
+#include <utility>
+#include <vector>
+
+void summarize(std::unique_ptr<std::vector<int>> data, std::promise<int> result) {
+    result.set_value(std::accumulate(data->begin(), data->end(), 0));
+}
+
+int main() {
+    auto data = std::make_unique<std::vector<int>>(std::vector<int>{10, 20, 30});
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::thread t(summarize, std::move(data), std::move(p));
+    std::cout << f.get() << "\n";
+    t.join();
+}`,
+  why: String.raw`Move-only objects can be handed to a thread. The promise carries the result back, so the caller waits on the future rather than sharing any variable with the worker.` },
+
+{ n: 61, d: "hard", t: "Deferred task runs on the caller", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Create a counter calls set to zero. Start an async task with the deferred launch policy that increments calls and returns 5. Print before followed by calls. Then print value followed by the result of get on the future. Finally print after followed by calls.`,
+  ex: String.raw`before 0
+value 5
+after 1`,
+  code: String.raw`#include <future>
+#include <iostream>
+
+int main() {
+    int calls = 0;
+    auto f = std::async(std::launch::deferred, [&calls] {
+        ++calls;
+        return 5;
+    });
+    std::cout << "before " << calls << "\n";
+    std::cout << "value " << f.get() << "\n";
+    std::cout << "after " << calls << "\n";
+}`,
+  why: String.raw`A deferred task does not start until get or wait is called, and then it runs on the calling thread. Nothing runs concurrently, so the counter is safe to read directly.` },
+
+{ n: 62, d: "hard", t: "Keep a bank total fixed under concurrent transfers", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Four accounts each start with balance 1000. Each account has its own mutex. Four threads run; thread t first moves (k mod 7) plus 1 units from account t to account (t+1) mod 4, for k from 0 to 299, then moves (k mod 5) plus 1 units back from account (t+1) mod 4 to account t, for k from 0 to 299. Each transfer locks both accounts together. After joining, print PASS if the total of all balances is 4000, or FAIL otherwise, then a space and the total.`,
+  ex: String.raw`PASS 4000`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+struct Acc {
+    std::mutex m;
+    long long bal = 1000;
+};
+
+int main() {
+    std::vector<Acc> accs(4);
+    auto move = [&](int from, int to, long long amt) {
+        std::scoped_lock lk(accs[from].m, accs[to].m);
+        accs[from].bal -= amt;
+        accs[to].bal += amt;
+    };
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&, t] {
+            for (int k = 0; k < 300; ++k) move(t, (t + 1) % 4, (k % 7) + 1);
+            for (int k = 0; k < 300; ++k) move((t + 1) % 4, t, (k % 5) + 1);
+        });
+    for (auto& t : ts) t.join();
+    long long total = 0;
+    for (auto& a : accs) total += a.bal;
+    std::cout << (total == 4000 ? "PASS" : "FAIL") << " " << total << "\n";
+}`,
+  why: String.raw`Every transfer subtracts and adds the same amount under both locks, so the total is preserved no matter how the threads interleave. Checking the total at the end is a cheap invariant test.` },
+
+{ n: 63, d: "hard", t: "Dining philosophers with paired forks", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Five philosophers sit in a circle with five forks, each fork a mutex. Philosopher i needs fork i and fork (i+1) modulo 5 to eat, and must take both at once. Each philosopher eats 100 times, and each meal increments a shared counter protected by its own mutex. After joining, print meals followed by the counter.`,
+  ex: String.raw`meals 500`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    const int N = 5;
+    std::vector<std::mutex> forks(N);
+    int meals = 0;
+    std::mutex count_m;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < N; ++i)
+        ts.emplace_back([&, i] {
+            for (int k = 0; k < 100; ++k) {
+                std::scoped_lock lk(forks[i], forks[(i + 1) % N]);
+                std::lock_guard g(count_m);
+                ++meals;
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::cout << "meals " << meals << "\n";
+}`,
+  why: String.raw`Taking one fork at a time lets every philosopher hold one fork and wait forever for the other. Acquiring both in a single call removes that circular wait.` },
+
+{ n: 64, d: "hard", t: "Recursive lock across nested calls", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Write class Stats with a recursive_mutex, an int sum starting at zero, and methods add(v), add_all(list of ints), and value(). add locks the mutex and adds v. add_all locks the mutex and calls add for each element. value locks and returns sum. In main, start a thread that calls add_all with 1, 2 and 3, call add with 0 on the main thread, join, and print value followed by the result.`,
+  ex: String.raw`value 6`,
+  code: String.raw`#include <initializer_list>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+class Stats {
+    std::recursive_mutex m_;
+    int sum_ = 0;
+public:
+    void add(int v) {
+        std::lock_guard g(m_);
+        sum_ += v;
+    }
+    void add_all(std::initializer_list<int> vs) {
+        std::lock_guard g(m_);
+        for (int v : vs) add(v);
+    }
+    int value() {
+        std::lock_guard g(m_);
+        return sum_;
+    }
+};
+
+int main() {
+    Stats s;
+    std::thread t([&] { s.add_all({1, 2, 3}); });
+    s.add(0);
+    t.join();
+    std::cout << "value " << s.value() << "\n";
+}`,
+  why: String.raw`A plain mutex locked twice by the same thread would deadlock. A recursive mutex lets the owning thread lock again, which suits methods that call one another.` },
+
+{ n: 65, d: "hard", t: "Nested asynchronous errors rethrown", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Write inner(x) that throws invalid_argument with the message inner failed when x is negative, and otherwise returns x times 2. Start an outer async task that starts inner on -1 as its own async task, and gets its result. If that throws invalid_argument, the outer task throws runtime_error with the message outer caught: followed by the inner message. main gets the outer result and prints it, and catches runtime_error to print its message.`,
+  ex: String.raw`outer caught: inner failed`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+
+int inner(int x) {
+    if (x < 0) throw std::invalid_argument("inner failed");
+    return x * 2;
+}
+
+int main() {
+    auto f = std::async(std::launch::async, [] {
+        auto g = std::async(std::launch::async, inner, -1);
+        try {
+            return g.get();
+        } catch (const std::invalid_argument& e) {
+            throw std::runtime_error(std::string("outer caught: ") + e.what());
+        }
+    });
+    try {
+        std::cout << f.get() << "\n";
+    } catch (const std::runtime_error& e) {
+        std::cout << e.what() << "\n";
+    }
+}`,
+  why: String.raw`An exception stored in a future is rethrown wherever get is called. An outer task can catch an inner failure, translate it, and rethrow it, so the caller sees the error at the right level.` },
+
+{ n: 66, d: "hard", t: "Consumer with a deadline on every wait", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Three producer threads, numbered 0 to 2, each push three values into a shared queue: p times 10 plus k, for k from 0 to 2. Each push holds the mutex and then notifies the condition variable. The main thread consumes until it has taken nine values. Each wait uses a deadline five seconds from now. If a wait times out, print timeout followed by the count so far, otherwise print consumed followed by nine after all producers are joined.`,
+  ex: String.raw`consumed 9`,
+  code: String.raw`#include <chrono>
+#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    std::queue<int> q;
+    std::vector<std::thread> prod;
+    for (int p = 0; p < 3; ++p)
+        prod.emplace_back([&, p] {
+            for (int k = 0; k < 3; ++k) {
+                { std::lock_guard g(m); q.push(p * 10 + k); }
+                cv.notify_one();
+            }
+        });
+    int consumed = 0;
+    bool timed_out = false;
+    while (consumed < 9) {
+        std::unique_lock lk(m);
+        bool ok = cv.wait_until(lk, std::chrono::steady_clock::now() + std::chrono::seconds(5),
+                                [&] { return !q.empty(); });
+        if (!ok) { timed_out = true; break; }
+        while (!q.empty()) {
+            q.pop();
+            ++consumed;
+        }
+    }
+    for (auto& t : prod) t.join();
+    if (timed_out) std::cout << "timeout " << consumed << "\n";
+    else std::cout << "consumed " << consumed << "\n";
+}`,
+  why: String.raw`A deadline turns a possible hang into a visible failure. wait_until returns false only if the deadline passes with the predicate still false, so a healthy run never reports a timeout.` },
+
+{ n: 67, d: "hard", t: "Pass an exception through a promise", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A worker thread throws out_of_range with the message index 9 inside a try block, and in its catch block stores the exception in a promise of int using set_exception with std::current_exception. The main thread calls get on the future. If it throws out_of_range, print got followed by the message. Join the worker afterwards.`,
+  ex: String.raw`got index 9`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
+
+int main() {
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::thread t([&p] {
+        try {
+            throw std::out_of_range("index 9");
+        } catch (...) {
+            p.set_exception(std::current_exception());
+        }
+    });
+    try {
+        int v = f.get();
+        std::cout << "no error " << v << "\n";
+    } catch (const std::out_of_range& e) {
+        std::cout << "got " << e.what() << "\n";
+    }
+    t.join();
+}`,
+  why: String.raw`set_exception transports an error across threads the same way set_value transports a result. The consumer sees it only when it asks for the value.` },
+
+{ n: 68, d: "hard", t: "Closing a channel wakes every receiver", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a Channel class with send(v), close(), and recv(), which returns an optional int. recv waits until a value is available or the channel is closed. It returns nothing once the channel is closed and empty. A consumer thread loops calling recv and adds every value to a sum until it gets nothing. The main thread sends 1 to 20, closes the channel, joins the consumer, then prints sum followed by 210, and on the next line the word closed.`,
+  ex: String.raw`sum 210
+closed`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <optional>
+#include <queue>
+#include <thread>
+
+class Channel {
+    std::mutex m_;
+    std::condition_variable cv_;
+    std::queue<int> q_;
+    bool closed_ = false;
+public:
+    void send(int v) {
+        { std::lock_guard g(m_); q_.push(v); }
+        cv_.notify_one();
+    }
+    void close() {
+        { std::lock_guard g(m_); closed_ = true; }
+        cv_.notify_all();
+    }
+    std::optional<int> recv() {
+        std::unique_lock lk(m_);
+        cv_.wait(lk, [&] { return closed_ || !q_.empty(); });
+        if (q_.empty()) return std::nullopt;
+        int v = q_.front();
+        q_.pop();
+        return v;
+    }
+};
+
+int main() {
+    Channel ch;
+    long long sum = 0;
+    std::thread consumer([&] {
+        while (auto v = ch.recv()) sum += *v;
+    });
+    for (int i = 1; i <= 20; ++i) ch.send(i);
+    ch.close();
+    consumer.join();
+    std::cout << "sum " << sum << "\n";
+    std::cout << "closed\n";
+}`,
+  why: String.raw`Closing is a state change that must wake every waiting receiver, not just one. Receivers distinguish a closed channel from an empty one by checking both conditions after waking.` },
+
+{ n: 69, d: "hard", t: "Two values that must always agree", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`A Pair class holds two ints, x and y, guarded by one mutex. set(v) stores x as v and y as negative v under the lock. get returns both values together as a std::pair under the lock. A writer thread sets v from 1 to 200. Two reader threads each call get 200 times, and count a violation whenever x plus y is not zero. After joining all threads, print violations followed by the number, a space, then reads followed by 400.`,
+  ex: String.raw`violations 0 reads 400`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
+
+class Pair {
+    std::mutex m_;
+    int x_ = 0, y_ = 0;
+public:
+    void set(int v) {
+        std::lock_guard g(m_);
+        x_ = v;
+        y_ = -v;
+    }
+    std::pair<int, int> get() {
+        std::lock_guard g(m_);
+        return {x_, y_};
+    }
+};
+
+int main() {
+    Pair p;
+    std::thread writer([&] {
+        for (int v = 1; v <= 200; ++v) p.set(v);
+    });
+    std::vector<int> bad(2, 0);
+    std::vector<std::thread> readers;
+    for (int r = 0; r < 2; ++r)
+        readers.emplace_back([&, r] {
+            for (int k = 0; k < 200; ++k) {
+                auto [x, y] = p.get();
+                if (x + y != 0) ++bad[r];
+            }
+        });
+    writer.join();
+    for (auto& t : readers) t.join();
+    std::cout << "violations " << bad[0] + bad[1] << " reads 400\n";
+}`,
+  why: String.raw`Readers see both fields together only because the writer updates them under the same lock. Without the lock, a reader could catch the pair half-updated and break the invariant.` },
+
+{ n: 70, d: "hard", t: "Memoised squares computed once per key", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write a Memo class with get(k), which returns k times k. It caches results in a std::map, and increments a computed counter only when a key is computed for the first time. get and a computed() method both lock the same mutex. Four threads each call get for keys 1 to 5 in order. After joining, print computed followed by the count, then value followed by get(5).`,
+  ex: String.raw`computed 5 value 25`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+class Memo {
+    std::mutex m_;
+    std::map<int, int> cache_;
+    int computed_ = 0;
+public:
+    int get(int k) {
+        std::lock_guard g(m_);
+        auto it = cache_.find(k);
+        if (it != cache_.end()) return it->second;
+        ++computed_;
+        int v = k * k;
+        cache_.emplace(k, v);
+        return v;
+    }
+    int computed() {
+        std::lock_guard g(m_);
+        return computed_;
+    }
+};
+
+int main() {
+    Memo memo;
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&] {
+            for (int k = 1; k <= 5; ++k) memo.get(k);
+        });
+    for (auto& t : ts) t.join();
+    std::cout << "computed " << memo.computed() << " value " << memo.get(5) << "\n";
+}`,
+  why: String.raw`Holding the lock across the lookup and the insert means each key is computed only once, even when several threads ask for it at the same time.` },
+
+{ n: 71, d: "hard", t: "Two-phase parallel prefix sums", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Start with the integers 1 to 12 in a vector. Split them into three blocks of four. Phase one: each thread sums its block into a block total. Between phases, compute for each block the sum of all earlier block totals. Phase two: each thread rewrites its block with running prefix sums, starting from its offset. Print all twelve values, each followed by a space, then a newline.`,
+  ex: String.raw`1 3 6 10 15 21 28 36 45 55 66 78 `,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> a(12);
+    std::iota(a.begin(), a.end(), 1);
+    const int B = 3, L = 4;
+    std::vector<int> block(B, 0), offset(B, 0);
+    auto run = [&](auto fn) {
+        std::vector<std::thread> ts;
+        for (int b = 0; b < B; ++b) ts.emplace_back(fn, b);
+        for (auto& t : ts) t.join();
+    };
+    run([&](int b) {
+        for (int i = b * L; i < (b + 1) * L; ++i) block[b] += a[i];
+    });
+    for (int b = 1; b < B; ++b) offset[b] = offset[b - 1] + block[b - 1];
+    run([&](int b) {
+        int acc = offset[b];
+        for (int i = b * L; i < (b + 1) * L; ++i) {
+            acc += a[i];
+            a[i] = acc;
+        }
+    });
+    for (int v : a) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A parallel prefix sum needs a sequential step between two parallel phases. Each block's starting value depends only on the totals before it, so both parallel phases avoid any shared writes.` },
+
+{ n: 72, d: "hard", t: "Histogram with per-thread buckets merged at the end", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Fill a vector with 1 to 12. Three threads each handle four consecutive elements, and each keeps its own histogram of three buckets, indexed by value modulo 3, with no locks. After joining, merge the three local histograms into one total. Print the buckets as bucket:count pairs separated by spaces, on one line, for buckets 0, 1 and 2.`,
+  ex: String.raw`0:4 1:4 2:4`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> data(12);
+    std::iota(data.begin(), data.end(), 1);
+    const int W = 3;
+    std::vector<std::vector<int>> local(W, std::vector<int>(3, 0));
+    std::vector<std::thread> ts;
+    for (int w = 0; w < W; ++w)
+        ts.emplace_back([&, w] {
+            for (int i = w * 4; i < w * 4 + 4; ++i) local[w][data[i] % 3] += 1;
+        });
+    for (auto& t : ts) t.join();
+    std::vector<int> total(3, 0);
+    for (auto& h : local)
+        for (int b = 0; b < 3; ++b) total[b] += h[b];
+    for (int b = 0; b < 3; ++b)
+        std::cout << b << ":" << total[b] << (b < 2 ? " " : "\n");
+}`,
+  why: String.raw`Each thread writes only its private histogram, so no synchronisation is needed while counting. Merging is a cheap step done once, after the join.` },
+
+{ n: 73, d: "hard", t: "Row-parallel matrix multiplication", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Multiply the 2 by 2 matrix A with rows (1, 2) and (3, 4) by the matrix B with rows (5, 6) and (7, 8). Start one thread per row of the result C, where each thread computes its whole row. Join the threads, then print row 0 as two numbers separated by a space, then row 1 the same way, each on its own line.`,
+  ex: String.raw`19 22
+43 50`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    int A[2][2] = {{1, 2}, {3, 4}};
+    int B[2][2] = {{5, 6}, {7, 8}};
+    int C[2][2] = {{0, 0}, {0, 0}};
+    std::vector<std::thread> ts;
+    for (int r = 0; r < 2; ++r)
+        ts.emplace_back([&, r] {
+            for (int c = 0; c < 2; ++c)
+                for (int k = 0; k < 2; ++k)
+                    C[r][c] += A[r][k] * B[k][c];
+        });
+    for (auto& t : ts) t.join();
+    std::cout << C[0][0] << " " << C[0][1] << "\n" << C[1][0] << " " << C[1][1] << "\n";
+}`,
+  why: String.raw`Each row of the result depends only on one row of A and all of B. Giving each thread a whole row gives it exclusive ownership of the cells it writes.` },
+
+{ n: 74, d: "hard", t: "Discard queued work on immediate shutdown", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Write a Pool class with one worker thread that runs std::function tasks from a queue. submit adds a task. shutdown_now sets a stop flag, clears the queue, and wakes the worker. The worker exits when the stop flag is set. In main, submit a first task that sets a started promise, waits on a shared future called open, then increments executed. Wait for started. Submit four tasks that each increment executed. Call shutdown_now, then set the gate promise that open depends on. Leave the pool's scope, and print executed.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <condition_variable>
+#include <functional>
+#include <future>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+class Pool {
+    std::mutex m_;
+    std::condition_variable cv_;
+    std::queue<std::function<void()>> q_;
+    bool stop_ = false;
+    std::thread w_;
+    void run() {
+        while (true) {
+            std::function<void()> f;
+            {
+                std::unique_lock lk(m_);
+                cv_.wait(lk, [&] { return stop_ || !q_.empty(); });
+                if (stop_) return;
+                f = std::move(q_.front());
+                q_.pop();
+            }
+            f();
+        }
+    }
+public:
+    Pool() : w_([this] { run(); }) {}
+    ~Pool() {
+        if (w_.joinable()) w_.join();
+    }
+    void submit(std::function<void()> f) {
+        { std::lock_guard g(m_); q_.push(std::move(f)); }
+        cv_.notify_one();
+    }
+    void shutdown_now() {
+        { std::lock_guard g(m_); stop_ = true; while (!q_.empty()) q_.pop(); }
+        cv_.notify_all();
+    }
+};
+
+int main() {
+    std::promise<void> started, gate;
+    std::shared_future<void> open = gate.get_future().share();
+    std::future<void> began = started.get_future();
+    int executed = 0;
+    {
+        Pool p;
+        p.submit([&] {
+            started.set_value();
+            open.wait();
+            ++executed;
+        });
+        began.wait();
+        for (int i = 0; i < 4; ++i) p.submit([&] { ++executed; });
+        p.shutdown_now();
+        gate.set_value();
+    }
+    std::cout << executed << "\n";
+}`,
+  why: String.raw`Shutdown that drops the queue differs from shutdown that drains it. Making the worker busy first means the queued tasks are still waiting when they are cleared, so the count is exact.` },
+
+{ n: 75, d: "hard", t: "Exceptions from a batch of packaged tasks", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Create three packaged tasks of type int(). Task i returns i times 100, except task 1, which throws runtime_error with the message task 1. Keep a future for each task. Move each task into its own thread and join them all. Then for i from 0 to 2, get the future and print value followed by the result, or error followed by the message if it throws.`,
+  ex: String.raw`value 0
+error task 1
+value 200`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::packaged_task<int()>> tasks;
+    std::vector<std::future<int>> futs;
+    for (int i = 0; i < 3; ++i) {
+        tasks.emplace_back([i]() -> int {
+            if (i == 1) throw std::runtime_error("task 1");
+            return i * 100;
+        });
+        futs.push_back(tasks.back().get_future());
+    }
+    std::vector<std::thread> ts;
+    for (auto& t : tasks) ts.emplace_back(std::move(t));
+    for (auto& t : ts) t.join();
+    for (int i = 0; i < 3; ++i) {
+        try {
+            int v = futs[i].get();
+            std::cout << "value " << v << "\n";
+        } catch (const std::runtime_error& e) {
+            std::cout << "error " << e.what() << "\n";
+        }
+    }
+}`,
+  why: String.raw`A packaged task catches an exception thrown by its callable and stores it with the future. Each task fails or succeeds on its own, and the caller learns which one happened without losing the others' results.` },
+
+{ n: 76, d: "hard", t: "Cancel several waiting threads with one token", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Create a stop_source, a mutex, a condition_variable_any, and an int exited set to zero. Start three jthreads inside an inner block. Each thread takes a stop token from the stop_source, locks the mutex, waits on the condition variable with that token and a predicate that is always false, and then increments exited. After starting them, request stop on the stop_source. Leave the block so the jthreads are joined, then print exited followed by its value.`,
+  ex: String.raw`exited 3`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <stop_token>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::stop_source src;
+    std::mutex m;
+    std::condition_variable_any cv;
+    int exited = 0;
+    {
+        std::vector<std::jthread> ts;
+        for (int i = 0; i < 3; ++i)
+            ts.emplace_back([&, tok = src.get_token()] {
+                std::unique_lock lk(m);
+                cv.wait(lk, tok, [] { return false; });
+                ++exited;
+            });
+        src.request_stop();
+    }
+    std::cout << "exited " << exited << "\n";
+}`,
+  why: String.raw`A stop_source hands out tokens that all observe the same request. One request wakes every thread waiting on any of its tokens, so one call shuts down a whole group.` },
+
+{ n: 77, d: "hard", t: "Check that each thread's events are ordered", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Three threads each append a start event and then an end event to a shared log of pairs (thread id, event character), where the start is s and the end is e. Each append takes the mutex. After joining, check for each thread that its start appears in the log before its end. Print valid if every thread passes, or invalid otherwise, then a space and the log size.`,
+  ex: String.raw`valid 6`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::mutex m;
+    std::vector<std::pair<int, char>> log;
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 3; ++t)
+        ts.emplace_back([&, t] {
+            { std::lock_guard g(m); log.push_back({t, 's'}); }
+            { std::lock_guard g(m); log.push_back({t, 'e'}); }
+        });
+    for (auto& th : ts) th.join();
+    bool ok = true;
+    for (int t = 0; t < 3; ++t) {
+        int si = -1, ei = -1;
+        for (int i = 0; i < static_cast<int>(log.size()); ++i) {
+            if (log[i].first != t) continue;
+            if (log[i].second == 's') si = i;
+            else ei = i;
+        }
+        if (!(si >= 0 && si < ei)) ok = false;
+    }
+    std::cout << (ok ? "valid" : "invalid") << " " << log.size() << "\n";
+}`,
+  why: String.raw`An interleaving-independent check looks at the order each thread's own events appear in, not at a single expected sequence. It accepts every valid schedule and still catches a thread whose events were recorded out of order.` },
+
+{ n: 78, d: "hard", t: "Force an interleaving with two futures", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Create three promises, a1, b1 and a2, and take a future from each, named fa1, fb1 and fa2. Thread A prints A1, sets a1, waits on fb1, prints A2, and sets a2. Thread B waits on fa1, prints B1, sets b1, waits on fa2, and prints B2. Start both threads and join them. The output order must be the same every run.`,
+  ex: String.raw`A1
+B1
+A2
+B2`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::promise<void> a1, b1, a2;
+    std::future<void> fa1 = a1.get_future();
+    std::future<void> fb1 = b1.get_future();
+    std::future<void> fa2 = a2.get_future();
+    std::thread A([&] {
+        std::cout << "A1\n";
+        a1.set_value();
+        fb1.wait();
+        std::cout << "A2\n";
+        a2.set_value();
+    });
+    std::thread B([&] {
+        fa1.wait();
+        std::cout << "B1\n";
+        b1.set_value();
+        fa2.wait();
+        std::cout << "B2\n";
+    });
+    A.join();
+    B.join();
+}`,
+  why: String.raw`Each wait is a one-way signal, so the two threads can be made to alternate. Tests that need a particular interleaving use signals like this to make it happen every run.` },
+
+{ n: 79, d: "hard", t: "Lock the whole check-and-act sequence", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`A balance starts at 100. Two threads each try to withdraw 60. A withdrawal checks that the balance is at least 60, and if so subtracts 60 and counts one success. The check and the subtraction must happen under the same mutex. After joining both threads, print successes followed by the count, then balance followed by the final balance.`,
+  ex: String.raw`successes 1 balance 40`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    int balance = 100;
+    int successes = 0;
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 2; ++i)
+        ts.emplace_back([&] {
+            std::lock_guard g(m);
+            if (balance >= 60) {
+                balance -= 60;
+                ++successes;
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::cout << "successes " << successes << " balance " << balance << "\n";
+}`,
+  why: String.raw`A check made under one lock and an action under another leaves a gap where the other thread can slip in. Keeping both under one lock makes the pair behave as one step, so the second withdrawal sees the reduced balance.` },
+
+// ---------- Extension ----------
+{ n: 80, d: "extension", t: "Limit concurrency with a counting semaphore", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Six threads each acquire a counting semaphore with capacity 2, record how many threads are inside the guarded section (under a mutex), sleep 5 milliseconds, then leave and release. Track the highest number inside at once. After joining, print peak within limit: yes if the peak was at most 2, otherwise no.`,
+  ex: String.raw`peak within limit: yes`,
+  code: String.raw`#include <chrono>
+#include <iostream>
+#include <mutex>
+#include <semaphore>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::counting_semaphore<2> sem(2);
+    std::mutex m;
+    int active = 0, peak = 0;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 6; ++i)
+        ts.emplace_back([&] {
+            sem.acquire();
+            {
+                std::lock_guard g(m);
+                ++active;
+                if (active > peak) peak = active;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            {
+                std::lock_guard g(m);
+                --active;
+            }
+            sem.release();
+        });
+    for (auto& t : ts) t.join();
+    std::cout << "peak within limit: " << (peak <= 2 ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`A semaphore caps how many threads may be in a region at once. Counting entries and exits under a separate mutex gives an exact peak, which the test checks against the limit.` },
+
+{ n: 81, d: "extension", t: "Chain threads so each waits for its predecessor", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Create four promises of void, each with a shared future obtained by calling share on its future. Thread i waits on the shared future of promise i minus 1 when i is greater than 0. It then appends i to a vector under a mutex, and sets promise i. Start the four threads in the order 3, 2, 1, 0. After joining, print the vector, each element followed by a space, then a newline.`,
+  ex: String.raw`0 1 2 3 `,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::promise<void>> done(4);
+    std::vector<std::shared_future<void>> waits;
+    for (auto& p : done) waits.push_back(p.get_future().share());
+    std::mutex m;
+    std::vector<int> order;
+    std::vector<std::thread> ts;
+    for (int i = 3; i >= 0; --i)
+        ts.emplace_back([&, i] {
+            if (i > 0) waits[i - 1].wait();
+            { std::lock_guard g(m); order.push_back(i); }
+            done[i].set_value();
+        });
+    for (auto& t : ts) t.join();
+    for (int v : order) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Starting the threads in reverse does not change the output. Each thread's wait on its predecessor's promise fixes the order, regardless of which thread the scheduler runs first.` },
+
+{ n: 82, d: "extension", t: "Run a function once and retry after it fails", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`A global once_flag and an int attempts start at zero. A function init increments attempts, then throws runtime_error with the message first try fails when attempts equals 1. In main, call call_once with init inside a try block, and if it throws, print error followed by the message. Call call_once with init two more times. Then print attempts followed by its value.`,
+  ex: String.raw`error: first try fails
+attempts 2`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <stdexcept>
+
+std::once_flag flag;
+int attempts = 0;
+
+void init() {
+    ++attempts;
+    if (attempts == 1) throw std::runtime_error("first try fails");
+}
+
+int main() {
+    try {
+        std::call_once(flag, init);
+    } catch (const std::runtime_error& e) {
+        std::cout << "error: " << e.what() << "\n";
+    }
+    std::call_once(flag, init);
+    std::call_once(flag, init);
+    std::cout << "attempts " << attempts << "\n";
+}`,
+  why: String.raw`If the callable exits by exception, call_once leaves the flag unset, so a later call runs it again. Only a successful run counts as initialisation.` },
+
+{ n: 83, d: "extension", t: "Call a member function on a thread", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Define struct Counter with an int v starting at zero and a member function bump(n) that adds n to v. Start a thread that calls bump on a Counter object with argument 5, and join it. Then start a second thread that calls bump on the same object through std::ref with argument 7, and join it. Print v.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <thread>
+
+struct Counter {
+    int v = 0;
+    void bump(int n) { v += n; }
+};
+
+int main() {
+    Counter c;
+    std::thread t(&Counter::bump, &c, 5);
+    t.join();
+    std::thread u(&Counter::bump, std::ref(c), 7);
+    u.join();
+    std::cout << c.v << "\n";
+}`,
+  why: String.raw`A thread can start a member function given the object as the first argument. The object can be passed by pointer or wrapped in a reference_wrapper, and both forms work because the thread uses std::invoke.` },
+
+{ n: 84, d: "extension", t: "Join a thread from a different thread", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Declare an int x set to zero. The main thread starts thread a, which sets x to 1. It then starts thread b, which captures a by reference and joins a. The main thread joins b and prints x followed by its value.`,
+  ex: String.raw`x 1`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+int main() {
+    int x = 0;
+    std::thread a([&x] { x = 1; });
+    std::thread b([&a] { a.join(); });
+    b.join();
+    std::cout << "x " << x << "\n";
+}`,
+  why: String.raw`A joinable thread may be joined by any thread that can reach its handle, not only by the thread that created it. Here b waits for a, and main waits for b, so x is final before it is printed.` },
+
+{ n: 85, d: "extension", t: "Create a singleton exactly once under a lock", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Write class Config with a private default constructor and a static instance() function. instance locks a static mutex on every call and, if the static pointer is null, creates a Config and increments a static counter named created. It returns the object. Start eight threads that each call instance. After joining, print created followed by the counter value.`,
+  ex: String.raw`created 1`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+class Config {
+    Config() = default;
+    static int& created() {
+        static int c = 0;
+        return c;
+    }
+public:
+    static Config& instance() {
+        static std::mutex m;
+        static Config* inst = nullptr;
+        std::lock_guard g(m);
+        if (!inst) {
+            inst = new Config();
+            ++created();
+        }
+        return *inst;
+    }
+    static int count() { return created(); }
+};
+
+int main() {
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 8; ++i) ts.emplace_back([] { Config::instance(); });
+    for (auto& t : ts) t.join();
+    std::cout << "created " << Config::count() << "\n";
+}`,
+  why: String.raw`The lock must be held for every check of the pointer, not just the first one. Without it, two threads could both see null and both create an object.` },
+
+{ n: 86, d: "extension", t: "Count inserts that really added a value", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Write class Registry holding a std::set of ints and a mutex. insert_if_absent(v) locks the mutex and returns whether v was newly added. Four threads each call insert_if_absent for the values 0 to 9, and each thread counts how many calls returned true in its own slot of a vector. After joining, print inserted followed by the total of those slots.`,
+  ex: String.raw`inserted 10`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <set>
+#include <thread>
+#include <vector>
+
+class Registry {
+    std::mutex m_;
+    std::set<int> s_;
+public:
+    bool insert_if_absent(int v) {
+        std::lock_guard g(m_);
+        return s_.insert(v).second;
+    }
+};
+
+int main() {
+    Registry r;
+    std::vector<int> wins(4, 0);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&, t] {
+            for (int v = 0; v < 10; ++v)
+                if (r.insert_if_absent(v)) ++wins[t];
+        });
+    for (auto& th : ts) th.join();
+    int inserted = 0;
+    for (int w : wins) inserted += w;
+    std::cout << "inserted " << inserted << "\n";
+}`,
+  why: String.raw`The set's own answer under the lock is the only reliable record of who inserted a value. Checking contains first and then inserting would let two threads both think they were first.` },
+
+{ n: 87, d: "extension", t: "Two locks with try and back off", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Two accounts x and y start at 1000 each, guarded by mutexes mx and my. Write try_both(a, b), which try_locks a and then b, releasing a if b fails, and returns whether both are held. Thread 1 runs 200 times: take both locks using try_both(mx, my) with a yield between failed attempts, move 1 from x to y, and unlock both. Thread 2 does the same with the roles reversed, moving 1 from y to x, using try_both(my, mx). Count completed transfers under a separate mutex. After joining, print done followed by the count, then total followed by x plus y.`,
+  ex: String.raw`done 400 total 2000`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int x = 1000, y = 1000;
+
+bool try_both(std::mutex& a, std::mutex& b) {
+    if (!a.try_lock()) return false;
+    if (!b.try_lock()) {
+        a.unlock();
+        return false;
+    }
+    return true;
+}
+
+int main() {
+    std::mutex mx, my, count_m;
+    int done = 0;
+    auto work = [&](std::mutex& a, std::mutex& b, int& from, int& to) {
+        for (int k = 0; k < 200; ++k) {
+            while (!try_both(a, b)) std::this_thread::yield();
+            from -= 1;
+            to += 1;
+            a.unlock();
+            b.unlock();
+            std::lock_guard g(count_m);
+            ++done;
+        }
+    };
+    std::thread t1(work, std::ref(mx), std::ref(my), std::ref(x), std::ref(y));
+    std::thread t2(work, std::ref(my), std::ref(mx), std::ref(y), std::ref(x));
+    t1.join();
+    t2.join();
+    std::cout << "done " << done << " total " << x + y << "\n";
+}`,
+  why: String.raw`Two threads that take the same locks in opposite orders can deadlock when each holds one. Trying both locks and backing off when the second is busy removes the wait that causes the cycle.` },
+
+{ n: 88, d: "extension", t: "Gather squares from several async tasks", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Write square(i) returning i times i. Start four asynchronous tasks computing square of 0, 1, 2 and 3, storing their futures in a vector. Collect the results by calling get on each future in order, add them, and print the total.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <vector>
+
+int square(int i) { return i * i; }
+
+int main() {
+    std::vector<std::future<int>> fs;
+    for (int i = 0; i < 4; ++i)
+        fs.push_back(std::async(std::launch::async, square, i));
+    int total = 0;
+    for (auto& f : fs) total += f.get();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Futures let the caller start many tasks first and collect results later. Calling get in order blocks only until each result is ready, so the tasks overlap.` },
+
+{ n: 89, d: "extension", t: "Wait that starts after the notification", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A mutex, a condition variable and a bool ready start at false. Before any thread starts, the main thread sets ready to true under the mutex and notifies the condition variable once. Then a thread starts that locks the mutex, waits with a predicate that checks ready, and prints worker passed. Join the thread.`,
+  ex: String.raw`worker passed`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    bool ready = false;
+    {
+        std::lock_guard g(m);
+        ready = true;
+    }
+    cv.notify_one();
+    std::thread t([&] {
+        std::unique_lock lk(m);
+        cv.wait(lk, [&] { return ready; });
+        std::cout << "worker passed\n";
+    });
+    t.join();
+}`,
+  why: String.raw`A notification sent before anyone waits is lost. Checking the flag as the predicate means the waiter never needs the notification, since it sees the condition already true and does not sleep.` },
+
+{ n: 90, d: "extension", t: "Deliver one exception to several readers", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Create a promise of int and a shared future from its future. Start two threads, each getting the shared future inside a try block. Each thread that catches a runtime_error increments a counter under a mutex. The main thread sets the promise's exception to a runtime_error with the message boom, then joins the threads and prints both caught followed by the counter.`,
+  ex: String.raw`both caught 2`,
+  code: String.raw`#include <exception>
+#include <future>
+#include <iostream>
+#include <mutex>
+#include <stdexcept>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::promise<int> p;
+    std::shared_future<int> sf = p.get_future().share();
+    std::mutex m;
+    int caught = 0;
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 2; ++i)
+        ts.emplace_back([sf, &m, &caught] {
+            try {
+                sf.get();
+            } catch (const std::runtime_error&) {
+                std::lock_guard g(m);
+                ++caught;
+            }
+        });
+    p.set_exception(std::make_exception_ptr(std::runtime_error("boom")));
+    for (auto& t : ts) t.join();
+    std::cout << "both caught " << caught << "\n";
+}`,
+  why: String.raw`A shared future hands the same stored exception to every reader, just as it hands out the same value. Each reader rethrows it independently in its own thread.` },
+
+{ n: 91, d: "extension", t: "Thread-safe LRU cache with capacity two", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write class LRU with capacity set by its constructor. It holds key-value pairs in a list ordered from most to least recently used, with a map from key to list position. put(k, v) updates or inserts the key, moves it to the front, and removes the least recently used entry when the size is over capacity. get(k) returns the value and moves the key to the front, or returns -1 if the key is absent. Every method locks one mutex. A writer thread puts keys 1, 2 and 3 with values 10, 20 and 30 in order. After joining, the main thread prints get(1), get(2) and get(3) separated by spaces.`,
+  ex: String.raw`-1 20 30`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <map>
+#include <mutex>
+#include <thread>
+#include <utility>
+
+class LRU {
+    std::mutex m_;
+    std::size_t cap_;
+    std::list<std::pair<int, int>> items_;
+    std::map<int, std::list<std::pair<int, int>>::iterator> idx_;
+public:
+    explicit LRU(std::size_t cap) : cap_(cap) {}
+    void put(int k, int v) {
+        std::lock_guard g(m_);
+        auto it = idx_.find(k);
+        if (it != idx_.end()) items_.erase(it->second);
+        items_.push_front({k, v});
+        idx_[k] = items_.begin();
+        if (items_.size() > cap_) {
+            idx_.erase(items_.back().first);
+            items_.pop_back();
+        }
+    }
+    int get(int k) {
+        std::lock_guard g(m_);
+        auto it = idx_.find(k);
+        if (it == idx_.end()) return -1;
+        items_.splice(items_.begin(), items_, it->second);
+        return it->second->second;
+    }
+};
+
+int main() {
+    LRU cache(2);
+    std::thread writer([&] {
+        cache.put(1, 10);
+        cache.put(2, 20);
+        cache.put(3, 30);
+    });
+    writer.join();
+    std::cout << cache.get(1) << " " << cache.get(2) << " " << cache.get(3) << "\n";
+}`,
+  why: String.raw`A list keeps recency order and a map gives constant-time lookup to a list node. Splicing a node to the front keeps its iterator valid, so the map never needs updating on a read.` },
+
+{ n: 92, d: "extension", t: "Queue of move-only tasks", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`A producer thread pushes three unique_ptr to int holding 1, 2 and 3 into a shared queue, notifying a condition variable after each push. The main thread pops exactly three of them, waiting on the condition variable when the queue is empty, and adds their values. Print the sum after joining the producer.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    std::queue<std::unique_ptr<int>> q;
+    std::thread producer([&] {
+        for (int i = 1; i <= 3; ++i) {
+            { std::lock_guard g(m); q.push(std::make_unique<int>(i)); }
+            cv.notify_one();
+        }
+    });
+    int sum = 0;
+    for (int got = 0; got < 3; ++got) {
+        std::unique_ptr<int> p;
+        {
+            std::unique_lock lk(m);
+            cv.wait(lk, [&] { return !q.empty(); });
+            p = std::move(q.front());
+            q.pop();
+        }
+        sum += *p;
+    }
+    producer.join();
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`A queue of move-only elements transfers ownership of each item to whichever thread pops it. Moving the front element out under the lock, and using it after releasing, keeps the critical section short.` },
+
+{ n: 93, d: "extension", t: "Read a shared map after a writer finishes", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`A std::map from int to int is guarded by a shared_mutex. A writer thread takes exclusive access and inserts i times i for i from 1 to 5. After joining it, three reader threads each take shared access and add up all values in the map into their own slot of a vector. After joining the readers, print each slot followed by a space, then a newline.`,
+  ex: String.raw`55 55 55 `,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <mutex>
+#include <shared_mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::shared_mutex sm;
+    std::map<int, int> table;
+    std::thread writer([&] {
+        std::unique_lock lk(sm);
+        for (int i = 1; i <= 5; ++i) table[i] = i * i;
+    });
+    writer.join();
+    std::vector<int> sums(3, 0);
+    std::vector<std::thread> readers;
+    for (int r = 0; r < 3; ++r)
+        readers.emplace_back([&, r] {
+            std::shared_lock lk(sm);
+            for (auto& [k, v] : table) sums[r] += v;
+        });
+    for (auto& t : readers) t.join();
+    for (int s : sums) std::cout << s << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Readers can hold a shared lock together, and the writer's exclusive lock makes its updates visible to them once it is released. Reads that never change the map can therefore run in parallel safely.` },
+
+{ n: 94, d: "extension", t: "Parallel quicksort with a depth limit", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Sort the vector 5, 2, 9, 1, 7, 3, 8, 6, 4, 0 with quicksort using the last element as the pivot and a Lomuto partition. After each partition, sort the left part on a new thread while the current thread sorts the right part, but only while depth is above zero. Below that, recurse without threads. Print the sorted values, each followed by a space, then a newline.`,
+  ex: String.raw`0 1 2 3 4 5 6 7 8 9 `,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <utility>
+#include <vector>
+
+void qsort_par(std::vector<int>& v, int lo, int hi, int depth) {
+    if (hi - lo < 2) return;
+    int pivot = v[hi - 1];
+    int i = lo;
+    for (int j = lo; j < hi - 1; ++j)
+        if (v[j] < pivot) std::swap(v[i++], v[j]);
+    std::swap(v[i], v[hi - 1]);
+    if (depth > 0) {
+        std::thread left([&v, lo, i, depth] { qsort_par(v, lo, i, depth - 1); });
+        qsort_par(v, i + 1, hi, depth - 1);
+        left.join();
+    } else {
+        qsort_par(v, lo, i, 0);
+        qsort_par(v, i + 1, hi, 0);
+    }
+}
+
+int main() {
+    std::vector<int> v{5, 2, 9, 1, 7, 3, 8, 6, 4, 0};
+    qsort_par(v, 0, static_cast<int>(v.size()), 2);
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`After partitioning, the two sides are disjoint ranges, so two threads can sort them without touching the same elements. The depth limit keeps the number of threads bounded.` },
+
+{ n: 95, d: "extension", t: "Concatenate slices in order", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Given the strings a, b, c, d, e and f in a vector, split them into three pairs. Each thread builds a string by appending its pair into its own slot of a vector of three strings. After joining, concatenate the three slots in slot order and print the result.`,
+  ex: String.raw`abcdef`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::string> parts{"a", "b", "c", "d", "e", "f"};
+    std::vector<std::string> out(3);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 3; ++t)
+        ts.emplace_back([&, t] {
+            for (int i = t * 2; i < t * 2 + 2; ++i) out[t] += parts[i];
+        });
+    for (auto& th : ts) th.join();
+    std::cout << out[0] + out[1] + out[2] << "\n";
+}`,
+  why: String.raw`Parallel work can build pieces in any order, but combining them in slot order keeps the result deterministic. The combination is done once, after the join.` },
+
+{ n: 96, d: "extension", t: "Find the first match across two halves", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`The vector is 3, 8, 12, 5, 20, 7. Two threads search their halves, indices 0 to 2 and indices 3 to 5, for the first element greater than 10. Each thread stores the index it found in its slot, or -1 if none. After joining, the main thread prints first index followed by the smallest non-negative slot value, or -1 if there is none.`,
+  ex: String.raw`first index 2`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> v{3, 8, 12, 5, 20, 7};
+    const int W = 2, L = 3;
+    std::vector<int> found(W, -1);
+    std::vector<std::thread> ts;
+    for (int w = 0; w < W; ++w)
+        ts.emplace_back([&, w] {
+            for (int i = w * L; i < w * L + L; ++i)
+                if (v[i] > 10) {
+                    found[w] = i;
+                    break;
+                }
+        });
+    for (auto& t : ts) t.join();
+    int first = -1;
+    for (int f : found)
+        if (f >= 0 && (first < 0 || f < first)) first = f;
+    std::cout << "first index " << first << "\n";
+}`,
+  why: String.raw`Each half reports its own earliest match, so the overall answer is the minimum of the reports. A search that stops at the first hit inside each half avoids unnecessary work.` },
+
+{ n: 97, d: "extension", t: "Reuse a joined jthread object", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Start a jthread that prints first, then join it. Assign a new jthread to the same variable, which prints second. Let the variable go out of scope.`,
+  ex: String.raw`first
+second`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+int main() {
+    std::jthread t([] { std::cout << "first\n"; });
+    t.join();
+    t = std::jthread([] { std::cout << "second\n"; });
+}`,
+  why: String.raw`A jthread that has been joined is no longer joinable, so it can be assigned a new thread safely. The new thread is then joined automatically when the variable is destroyed.` },
+
+{ n: 98, d: "extension", t: "Callback that runs when a stop is requested", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Create a stop_source and a bool called set to false. Register a stop_callback on a token from the source that sets called to true. Request a stop on the same thread, then print called as 0 or 1.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <stop_token>
+
+int main() {
+    std::stop_source src;
+    bool called = false;
+    std::stop_callback cb(src.get_token(), [&] { called = true; });
+    src.request_stop();
+    std::cout << called << "\n";
+}`,
+  why: String.raw`A stop callback runs at the moment a stop is requested, on the thread making the request if it is registered already. Work tied to a token can therefore be cancelled without polling.` },
+
+{ n: 99, d: "extension", t: "Default stop tokens never stop", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`Print two lines. First, for a default-constructed stop_token, print possible followed by stop_possible() as 0 or 1, a space, requested followed by stop_requested() as 0 or 1. Second, take a token from a new stop_source and print the same two fields, without requesting a stop.`,
+  ex: String.raw`possible 0 requested 0
+possible 1 requested 0`,
+  code: String.raw`#include <iostream>
+#include <stop_token>
+
+int main() {
+    std::stop_token none;
+    std::cout << "possible " << none.stop_possible() << " requested " << none.stop_requested() << "\n";
+    std::stop_source s;
+    std::stop_token t = s.get_token();
+    std::cout << "possible " << t.stop_possible() << " requested " << t.stop_requested() << "\n";
+}`,
+  why: String.raw`A default token is not connected to any stop source, so it can never report a request. Code that accepts a token can therefore be given a dummy one when no cancellation is needed.` },
+
+{ n: 100, d: "extension", t: "Check for lost wake-ups across many rounds", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Repeat 50 rounds. In each round, make a fresh mutex, condition variable and bool ready set to false. Start a waiter thread that waits for ready to be true with a predicate, then increments passed. In the main thread, set ready to true under the mutex, notify, and join the waiter. After all rounds, print passed followed by its value.`,
+  ex: String.raw`passed 50`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    int passed = 0;
+    for (int round = 0; round < 50; ++round) {
+        std::mutex m;
+        std::condition_variable cv;
+        bool ready = false;
+        std::thread waiter([&] {
+            std::unique_lock lk(m);
+            cv.wait(lk, [&] { return ready; });
+            ++passed;
+        });
+        {
+            std::lock_guard g(m);
+            ready = true;
+        }
+        cv.notify_all();
+        waiter.join();
+    }
+    std::cout << "passed " << passed << "\n";
+}`,
+  why: String.raw`A lost wake-up happens when the notification arrives before the waiter sleeps. Repeating the handoff many times exposes a missing predicate or a missing lock, which a single run might pass by luck.` },
+
+{ n: 101, d: "extension", t: "Compare parallel and sequential results", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Define f(i) as i times i modulo 7. Compute the sum of f(i) for i from 1 to 1000 sequentially. Then compute the same sum with four threads, where thread t handles i = t+1, t+5, t+9, and so on up to 1000, storing partial sums in a vector. Print match if the parallel total equals the sequential one, or mismatch otherwise.`,
+  ex: String.raw`match`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+long long f(int i) { return (i * i) % 7; }
+
+int main() {
+    const int N = 1000;
+    long long seq = 0;
+    for (int i = 1; i <= N; ++i) seq += f(i);
+    std::vector<long long> part(4, 0);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&, t] {
+            for (int i = 1 + t; i <= N; i += 4) part[t] += f(i);
+        });
+    for (auto& th : ts) th.join();
+    long long par = std::accumulate(part.begin(), part.end(), 0LL);
+    std::cout << (seq == par ? "match" : "mismatch") << "\n";
+}`,
+  why: String.raw`A slow, simple sequential version is a trustworthy reference for a fast parallel one. Comparing the two on the same input catches partitioning mistakes such as skipped or doubled elements.` },
+
+{ n: 102, d: "extension", t: "Repeat a race and check the total each round", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`A shared int counter and a mutex start at zero. For each of ten rounds, two threads each increment the counter once under the mutex. After joining both, add one to ok if the counter equals twice the round number. Print rounds ok followed by ok.`,
+  ex: String.raw`rounds ok 10`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    int counter = 0;
+    std::mutex m;
+    int ok = 0;
+    for (int round = 1; round <= 10; ++round) {
+        std::thread a([&] { std::lock_guard g(m); ++counter; });
+        std::thread b([&] { std::lock_guard g(m); ++counter; });
+        a.join();
+        b.join();
+        if (counter == 2 * round) ++ok;
+    }
+    std::cout << "rounds ok " << ok << "\n";
+}`,
+  why: String.raw`Running the same small race many times, and checking the state after every round, shows whether a fault appears only in some rounds. Each round is a separate check, so one bad round is not hidden by the others.` },
+
+{ n: 103, d: "applications", t: "Wait for three workers to report in", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Three threads, numbered 0 to 2, each store their number squared into slot i of a vector, then signal a shared latch of count 3. The main thread waits on the latch, then prints sum followed by the total of the three slots.`,
+  ex: String.raw`sum 5`,
+  code: String.raw`#include <iostream>
+#include <latch>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::latch ready(3);
+    std::vector<int> slots(3, 0);
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i)
+        ts.emplace_back([&slots, &ready, i] {
+            slots[i] = i * i;
+            ready.count_down();
+        });
+    ready.wait();
+    int sum = 0;
+    for (int v : slots) sum += v;
+    std::cout << "sum " << sum << "\n";
+    for (auto& t : ts) t.join();
+}`,
+  why: String.raw`A latch counts arrivals down to zero, and wait returns only after all of them. Because every slot was written before its count_down, the main thread sees all the values.` },
+
+// ---------- Applications ----------
+{ n: 104, d: "applications", t: "Count words across text chunks in parallel", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Two lines of text are held in a vector: "the cat" and "and the hat". Give each line to its own thread, which counts the whitespace-separated words in it into its slot. After joining, print words followed by the total count.`,
+  ex: String.raw`words 5`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int count_words(const std::string& line) {
+    std::istringstream in(line);
+    int n = 0;
+    std::string w;
+    while (in >> w) ++n;
+    return n;
+}
+
+int main() {
+    std::vector<std::string> lines{"the cat", "and the hat"};
+    std::vector<int> counts(lines.size(), 0);
+    std::vector<std::thread> ts;
+    for (std::size_t i = 0; i < lines.size(); ++i)
+        ts.emplace_back([&, i] { counts[i] = count_words(lines[i]); });
+    for (auto& t : ts) t.join();
+    int total = 0;
+    for (int c : counts) total += c;
+    std::cout << "words " << total << "\n";
+}`,
+  why: String.raw`Splitting input into independent chunks lets each thread scan only its own text. Only the per-chunk totals are combined at the end.` },
+
+{ n: 105, d: "applications", t: "Count error lines across log files", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Three log files are held as vectors of strings: the first has INFO a, ERROR b and ERROR c; the second has ERROR d; the third has INFO e, WARN f and ERROR g. Start one thread per file, each counting lines containing the text ERROR into its own slot. After joining, print errors followed by the total.`,
+  ex: String.raw`errors 4`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<std::string>> files{
+        {"INFO a", "ERROR b", "ERROR c"},
+        {"ERROR d"},
+        {"INFO e", "WARN f", "ERROR g"}};
+    std::vector<int> errors(files.size(), 0);
+    std::vector<std::thread> ts;
+    for (std::size_t f = 0; f < files.size(); ++f)
+        ts.emplace_back([&, f] {
+            for (const auto& line : files[f])
+                if (line.find("ERROR") != std::string::npos) ++errors[f];
+        });
+    for (auto& t : ts) t.join();
+    int total = 0;
+    for (int e : errors) total += e;
+    std::cout << "errors " << total << "\n";
+}`,
+  why: String.raw`Each file is independent, so one thread per file scans it without coordination. Writing to separate slots avoids any shared counter.` },
+
+{ n: 106, d: "applications", t: "Render items in order after parallel formatting", idiom: "Ch. 1 · Hello, World of Concurrency",
+  p: String.raw`Four threads, numbered 0 to 3, each build the string item k=s where k is the thread number and s is the square of k, written into slot k of a vector of strings. Threads may finish in any order. After joining, print the four strings, one per line, in slot order.`,
+  ex: String.raw`item 0=0
+item 1=1
+item 2=4
+item 3=9`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::string> lines(4);
+    std::vector<std::thread> ts;
+    for (int k = 0; k < 4; ++k)
+        ts.emplace_back([&lines, k] {
+            lines[k] = "item " + std::to_string(k) + "=" + std::to_string(k * k);
+        });
+    for (auto& t : ts) t.join();
+    for (const auto& s : lines) std::cout << s << "\n";
+}`,
+  why: String.raw`Writing each result into its own index makes the output order independent of thread completion order. The vector gives the order, not the timing.` },
+
+{ n: 107, d: "applications", t: "Handle sessions on separate threads", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Three sessions are created with payloads 10, 20 and 30, each held by a unique_ptr. For each session, move its pointer into a thread whose lambda stores twice the payload into slot i of a responses vector. Join the threads, then print total followed by the sum of responses.`,
+  ex: String.raw`total 120`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <thread>
+#include <vector>
+
+struct Session {
+    int payload;
+};
+
+int main() {
+    std::vector<int> responses(3, 0);
+    std::vector<std::thread> handlers;
+    for (int i = 0; i < 3; ++i) {
+        auto s = std::make_unique<Session>(Session{(i + 1) * 10});
+        handlers.emplace_back([s = std::move(s), &responses, i] {
+            responses[i] = s->payload * 2;
+        });
+    }
+    for (auto& t : handlers) t.join();
+    int total = 0;
+    for (int r : responses) total += r;
+    std::cout << "total " << total << "\n";
+}`,
+  why: String.raw`Each handler owns its session exclusively after the move, so no locking is needed to read it. The response slots are written by one thread each.` },
+
+{ n: 108, d: "applications", t: "Run one job per worker and collect the totals", idiom: "Ch. 2 · Managing Threads",
+  p: String.raw`Three std::function objects are created in a loop. The i-th one, for i from 0 to 2, writes i plus 1 into slot i of a results vector. Each function is moved into its own std::thread. Join all threads, then print total followed by the sum of the slots.`,
+  ex: String.raw`total 6`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <thread>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<int> results(3, 0);
+    std::vector<std::thread> workers;
+    for (int i = 0; i < 3; ++i) {
+        std::function<void()> job = [&results, i] { results[i] = i + 1; };
+        workers.emplace_back(std::move(job));
+    }
+    for (auto& w : workers) w.join();
+    int total = 0;
+    for (int r : results) total += r;
+    std::cout << "total " << total << "\n";
+}`,
+  why: String.raw`A callable stored in a std::function can be moved into a thread like any other callable. Each job gets its own worker, and results are read only after joining.` },
+
+{ n: 109, d: "applications", t: "Inventory that never oversells", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`Write class Inventory that starts with 10 units in stock. reserve(n) under a mutex takes n units if at least n are left and returns true, otherwise returns false. It also tracks total reserved units. Four threads each call reserve(1) five times. After joining, print reserved followed by the reserved total, then left followed by the units left in stock.`,
+  ex: String.raw`reserved 10 left 0`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+class Inventory {
+    std::mutex m_;
+    int stock_;
+    int reserved_ = 0;
+public:
+    explicit Inventory(int stock) : stock_(stock) {}
+    bool reserve(int n) {
+        std::lock_guard g(m_);
+        if (stock_ < n) return false;
+        stock_ -= n;
+        reserved_ += n;
+        return true;
+    }
+    int reserved() {
+        std::lock_guard g(m_);
+        return reserved_;
+    }
+    int left() {
+        std::lock_guard g(m_);
+        return stock_;
+    }
+};
+
+int main() {
+    Inventory inv(10);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&] {
+            for (int k = 0; k < 5; ++k) inv.reserve(1);
+        });
+    for (auto& t : ts) t.join();
+    std::cout << "reserved " << inv.reserved() << " left " << inv.left() << "\n";
+}`,
+  why: String.raw`The check of stock and the decrement must happen under one lock. Otherwise two threads could both see enough stock for the last unit and both take it.` },
+
+{ n: 110, d: "applications", t: "Take a consistent snapshot of an event log", idiom: "Ch. 3 · Sharing Data Between Threads",
+  p: String.raw`A shared vector of Event structs, each with a source and a sequence number, is guarded by a mutex. Three threads, numbered 0 to 2, each append four events with their source and sequence numbers 0 to 3. After joining, copy the whole log under the mutex into a snapshot. Print events followed by the snapshot size, then per-source followed by the count of events from source 0, 1 and 2, separated by spaces.`,
+  ex: String.raw`events 12 per-source 4 4 4`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+struct Event {
+    int source;
+    int seq;
+};
+
+int main() {
+    std::mutex m;
+    std::vector<Event> log;
+    std::vector<std::thread> ts;
+    for (int s = 0; s < 3; ++s)
+        ts.emplace_back([&, s] {
+            for (int k = 0; k < 4; ++k) {
+                std::lock_guard g(m);
+                log.push_back({s, k});
+            }
+        });
+    for (auto& t : ts) t.join();
+    std::vector<Event> snap;
+    {
+        std::lock_guard g(m);
+        snap = log;
+    }
+    int per[3] = {0, 0, 0};
+    for (const auto& e : snap) ++per[e.source];
+    std::cout << "events " << snap.size() << " per-source " << per[0] << " " << per[1] << " " << per[2] << "\n";
+}`,
+  why: String.raw`Copying under the lock gives a snapshot that no writer can change while it is being read. Analysis then runs on the copy without holding the lock.` },
+
+{ n: 111, d: "applications", t: "Fetch three resources in parallel with timeouts", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`Write fetch(name), which returns the text data: followed by name. Start an asynchronous fetch for users, orders and prices, keeping their futures in order. For each future in that order, wait up to one second. If it is ready, print its value on a line and count it. After the loop, print fetched followed by the count.`,
+  ex: String.raw`data:users
+data:orders
+data:prices
+fetched 3`,
+  code: String.raw`#include <chrono>
+#include <future>
+#include <iostream>
+#include <string>
+#include <vector>
+
+std::string fetch(const std::string& name) {
+    return "data:" + name;
+}
+
+int main() {
+    std::vector<std::string> names{"users", "orders", "prices"};
+    std::vector<std::future<std::string>> fs;
+    for (const auto& n : names) fs.push_back(std::async(std::launch::async, fetch, n));
+    int fetched = 0;
+    for (auto& f : fs) {
+        if (f.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
+            std::cout << f.get() << "\n";
+            ++fetched;
+        }
+    }
+    std::cout << "fetched " << fetched << "\n";
+}`,
+  why: String.raw`Starting every request before waiting on any of them lets the requests overlap. A per-request timeout means one slow call cannot hold up the report forever.` },
+
+{ n: 112, d: "applications", t: "Batch items and flush each full batch", idiom: "Ch. 4 · Synchronizing Concurrent Operations",
+  p: String.raw`A consumer thread forms batches of up to three items from a shared queue. It waits until at least three items are queued or the queue is closed. It then removes up to three items and prints batch followed by the number removed, and repeats until the queue is closed and empty. The main thread pushes the numbers 0 to 4, closes the queue, and joins the consumer.`,
+  ex: String.raw`batch 3
+batch 2`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    std::queue<int> q;
+    bool closed = false;
+    std::thread flusher([&] {
+        while (true) {
+            std::unique_lock lk(m);
+            cv.wait(lk, [&] { return q.size() >= 3 || closed; });
+            if (q.empty()) break;
+            int n = 0;
+            while (!q.empty() && n < 3) {
+                q.pop();
+                ++n;
+            }
+            lk.unlock();
+            std::cout << "batch " << n << "\n";
+        }
+    });
+    for (int i = 0; i < 5; ++i) {
+        { std::lock_guard g(m); q.push(i); }
+        cv.notify_all();
+    }
+    { std::lock_guard g(m); closed = true; }
+    cv.notify_all();
+    flusher.join();
+}`,
+  why: String.raw`The consumer waits on a combined condition, so it wakes for a full batch or for the closing signal. Checking for an empty queue after the wait means the final partial batch is still flushed.` },
+
+{ n: 113, d: "applications", t: "Track job status across threads", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`Write class Registry with a mutex and a std::map from string to bool, where true means done. add(job) sets a job to false. finish(job) sets it to true. counts() returns a pair of done and pending totals under the lock. Add jobs a, b, c and d. Three threads each finish one of a, b and c. After joining, print done followed by the done count, then pending followed by the pending count.`,
+  ex: String.raw`done 3 pending 1`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
+
+class Registry {
+    std::mutex m_;
+    std::map<std::string, bool> done_;
+public:
+    void add(const std::string& job) {
+        std::lock_guard g(m_);
+        done_[job] = false;
+    }
+    void finish(const std::string& job) {
+        std::lock_guard g(m_);
+        done_[job] = true;
+    }
+    std::pair<int, int> counts() {
+        std::lock_guard g(m_);
+        int d = 0, p = 0;
+        for (auto& [k, v] : done_) (v ? d : p)++;
+        return {d, p};
+    }
+};
+
+int main() {
+    Registry r;
+    for (auto name : {"a", "b", "c", "d"}) r.add(name);
+    std::vector<std::thread> ts;
+    for (auto name : {"a", "b", "c"})
+        ts.emplace_back([&r, name] { r.finish(name); });
+    for (auto& t : ts) t.join();
+    auto [d, p] = r.counts();
+    std::cout << "done " << d << " pending " << p << "\n";
+}`,
+  why: String.raw`Status changes are made under the same lock as reads, so a count is never taken in the middle of an update. Each job's state is a single entry, so the totals always add up.` },
+
+{ n: 114, d: "applications", t: "Bounded pipeline with a single slot", idiom: "Ch. 6 · Designing Lock-Based Concurrent Data Structures",
+  p: String.raw`A queue has room for one item. A producer thread pushes the numbers 1 to 4 in order, waiting while the queue is full. The main thread takes four items, waiting while the queue is empty, and adds them to sum. Print sum followed by the total after joining the producer.`,
+  ex: String.raw`sum 10`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+int main() {
+    const std::size_t cap = 1;
+    std::mutex m;
+    std::condition_variable not_full, not_empty;
+    std::queue<int> q;
+    std::thread producer([&] {
+        for (int i = 1; i <= 4; ++i) {
+            std::unique_lock lk(m);
+            not_full.wait(lk, [&] { return q.size() < cap; });
+            q.push(i);
+            not_empty.notify_one();
+        }
+    });
+    int sum = 0;
+    for (int k = 0; k < 4; ++k) {
+        std::unique_lock lk(m);
+        not_empty.wait(lk, [&] { return !q.empty(); });
+        sum += q.front();
+        q.pop();
+        not_full.notify_one();
+    }
+    producer.join();
+    std::cout << "sum " << sum << "\n";
+}`,
+  why: String.raw`With capacity one, every item forces the producer and consumer to hand off. This makes the synchronisation visible, and it still needs both waits to be correct.` },
+
+{ n: 115, d: "applications", t: "Sum columns of rows parsed in parallel", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Three comma-separated rows are held as strings: "1,2,3", "4,5,6" and "7,8,9". One thread per row parses its row into a vector of ints stored in slot r. After joining, sum each column across the rows and print the three column sums separated by spaces, then a newline.`,
+  ex: String.raw`12 15 18 `,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::string> rows{"1,2,3", "4,5,6", "7,8,9"};
+    std::vector<std::vector<int>> parsed(rows.size());
+    std::vector<std::thread> ts;
+    for (std::size_t r = 0; r < rows.size(); ++r)
+        ts.emplace_back([&, r] {
+            std::istringstream in(rows[r]);
+            std::string cell;
+            while (std::getline(in, cell, ',')) parsed[r].push_back(std::stoi(cell));
+        });
+    for (auto& t : ts) t.join();
+    std::vector<int> sums(3, 0);
+    for (const auto& row : parsed)
+        for (std::size_t c = 0; c < row.size(); ++c) sums[c] += row[c];
+    for (int s : sums) std::cout << s << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Parsing is independent per row, so it parallelises cleanly. Reducing by column happens after all rows are done, which keeps each thread's work separate.` },
+
+{ n: 116, d: "applications", t: "Smooth a signal with a parallel three-point average", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Input signal: the integers 1 to 8 in a vector. Output y[i] is the integer average of input values i-1, i and i+1, where indices below zero or above the last position are clamped to the nearest end. Two threads compute y: the first handles indices 0 to 3, and the second handles indices 4 to 7. Print the eight outputs, each followed by a space, then a newline.`,
+  ex: String.raw`1 2 3 4 5 6 7 7 `,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> x{1, 2, 3, 4, 5, 6, 7, 8};
+    const int n = static_cast<int>(x.size());
+    std::vector<int> y(n, 0);
+    auto at = [&](int i) { return x[i < 0 ? 0 : (i >= n ? n - 1 : i)]; };
+    std::vector<std::thread> ts;
+    for (int half = 0; half < 2; ++half)
+        ts.emplace_back([&, half] {
+            for (int i = half * (n / 2); i < (half + 1) * (n / 2); ++i)
+                y[i] = (at(i - 1) + at(i) + at(i + 1)) / 3;
+        });
+    for (auto& t : ts) t.join();
+    for (int v : y) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Each output depends only on the read-only input, so both halves can be computed at once with no shared writes. Clamping at the ends keeps the boundary values defined.` },
+
+{ n: 117, d: "applications", t: "Word counts merged from per-chunk maps", idiom: "Ch. 8 · Designing Concurrent Code",
+  p: String.raw`Three text chunks are "a b a", "b c" and "a c c". One thread per chunk builds a local std::map from word to count. After joining, merge the three maps into one total map, then print each word and its count on its own line, in alphabetical order.`,
+  ex: String.raw`a 3
+b 2
+c 3`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<std::string> chunks{"a b a", "b c", "a c c"};
+    std::vector<std::map<std::string, int>> local(chunks.size());
+    std::vector<std::thread> ts;
+    for (std::size_t i = 0; i < chunks.size(); ++i)
+        ts.emplace_back([&, i] {
+            std::istringstream in(chunks[i]);
+            std::string w;
+            while (in >> w) ++local[i][w];
+        });
+    for (auto& t : ts) t.join();
+    std::map<std::string, int> total;
+    for (const auto& m : local)
+        for (const auto& [w, c] : m) total[w] += c;
+    for (const auto& [w, c] : total) std::cout << w << " " << c << "\n";
+}`,
+  why: String.raw`Each thread counts into its own map, so there are no shared writes during counting. The merge is a single pass over small maps after the join.` },
+
+{ n: 118, d: "applications", t: "Cleanup thread that stops on request", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`A jthread named cleanup loops, sleeping one millisecond per pass, until its stop token is requested. When the loop ends it prints cleanup stopped. The main thread sleeps 10 milliseconds, then requests the stop. The jthread is joined when main ends.`,
+  ex: String.raw`cleanup stopped`,
+  code: String.raw`#include <chrono>
+#include <iostream>
+#include <stop_token>
+#include <thread>
+
+int main() {
+    std::jthread cleanup([](std::stop_token st) {
+        while (!st.stop_requested()) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::cout << "cleanup stopped\n";
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    cleanup.request_stop();
+}`,
+  why: String.raw`A background worker that polls its stop token exits cleanly when asked, and the owner waits for it through the jthread destructor. The stop is cooperative, so the worker decides when it is safe to leave.` },
+
+{ n: 119, d: "applications", t: "Worker that finishes its jobs unless stopped", idiom: "Ch. 9 · Advanced Thread Management",
+  p: String.raw`A jthread worker runs five job steps, each adding one to an int named done. Before each step it checks its stop token and stops early if a stop was requested. The main thread joins the worker, then prints done followed by its value.`,
+  ex: String.raw`done 5`,
+  code: String.raw`#include <iostream>
+#include <stop_token>
+#include <thread>
+
+int main() {
+    int done = 0;
+    std::jthread worker([&done](std::stop_token st) {
+        for (int job = 0; job < 5 && !st.stop_requested(); ++job) ++done;
+    });
+    worker.join();
+    std::cout << "done " << done << "\n";
+}`,
+  why: String.raw`Checking the token between steps lets a worker stop at a safe point rather than in the middle of a job. Without a request, the worker runs to completion.` },
+
+{ n: 120, d: "applications", t: "Repeat a locked counter test and check each run", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Run three test rounds. In each round, a fresh counter and mutex are used. Four threads each increment the counter 100 times under the mutex. After joining, the round passes if the counter equals 400. After all rounds, print rounds passing followed by the number that passed, then of 3.`,
+  ex: String.raw`rounds passing 3 of 3`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    int rounds_ok = 0;
+    for (int r = 0; r < 3; ++r) {
+        int counter = 0;
+        std::mutex m;
+        std::vector<std::thread> ts;
+        for (int t = 0; t < 4; ++t)
+            ts.emplace_back([&] {
+                for (int k = 0; k < 100; ++k) {
+                    std::lock_guard g(m);
+                    ++counter;
+                }
+            });
+        for (auto& t : ts) t.join();
+        if (counter == 400) ++rounds_ok;
+    }
+    std::cout << "rounds passing " << rounds_ok << " of 3\n";
+}`,
+  why: String.raw`A test that runs a concurrent workload several times, with fresh state each time, catches intermittent failures that one run might miss. Counting passes separately shows exactly which rounds were correct.` },
+
+{ n: 121, d: "applications", t: "Check a parallel total against a known answer", idiom: "Ch. 10 · Testing and Debugging Multithreaded Applications",
+  p: String.raw`Fill a vector with the integers 1 to 100. Compute the sum of its first half and its second half on two threads, each into its own slot. Print agree followed by the total if the two slots add up to the sum from a single-threaded accumulate over the whole vector, or disagree followed by the same total otherwise.`,
+  ex: String.raw`agree 5050`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<long long> v(100);
+    std::iota(v.begin(), v.end(), 1LL);
+    long long seq = std::accumulate(v.begin(), v.end(), 0LL);
+    long long parts[2] = {0, 0};
+    std::vector<std::thread> ts;
+    for (int h = 0; h < 2; ++h)
+        ts.emplace_back([&, h] {
+            for (int i = h * 50; i < h * 50 + 50; ++i) parts[h] += v[i];
+        });
+    for (auto& t : ts) t.join();
+    std::cout << (seq == parts[0] + parts[1] ? "agree " : "disagree ") << seq << "\n";
+}`,
+  why: String.raw`A sequential computation is the reference for a parallel one. If the two disagree, the split into halves, or the way results are combined, is wrong.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-cia-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 23, label: "Easy", range: "Problems 1–23", badge: "easy" },
+  { from: 24, to: 54, label: "Medium", range: "Problems 24–54", badge: "medium" },
+  { from: 55, to: 79, label: "Hard", range: "Problems 55–79", badge: "hard" },
+  { from: 80, to: 102, label: "Extension", range: "Problems 80–102", badge: null },
+  { from: 103, to: 121, label: "Applications", range: "Problems 103–121", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

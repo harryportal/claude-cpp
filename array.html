@@ -1,0 +1,1154 @@
+<title>STL Array Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Array Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Size and emptiness at compile time",
+  p: String.raw`Create an array of five ints and print its size, then print whether it is empty as true or false.`,
+  ex: String.raw`5 false`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 5> a{};
+    std::cout << a.size() << ' ' << std::boolalpha << a.empty() << '\n';
+}`,
+  why: String.raw`The size is part of the type, so size() is a compile-time constant. An array of length zero is the only empty one.` },
+
+{ n: 2, d: "easy", t: "Partial initialization fills with zeros",
+  p: String.raw`Create an array of four ints initialised with 1 and 2 only. Print the values at index 2 and index 3 separated by a space.`,
+  ex: String.raw`0 0`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 4> a{1, 2};
+    std::cout << a[2] << ' ' << a[3] << '\n';
+}`,
+  why: String.raw`Elements that have no initialiser in an aggregate initialisation are value-initialised, which means zero for ints.` },
+
+{ n: 3, d: "easy", t: "at() checks the bounds",
+  p: String.raw`Create an array of three ints holding 1, 2 and 3. Print the element at index 5 using at. If it is out of range, print out of range.`,
+  ex: String.raw`out of range`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <stdexcept>
+
+int main() {
+    std::array<int, 3> a{1, 2, 3};
+    try {
+        std::cout << a.at(5);
+    } catch (const std::out_of_range&) {
+        std::cout << "out of range";
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`at throws std::out_of_range for an invalid index. operator[] does not check, so the same access would read past the end of the array.` },
+
+{ n: 4, d: "easy", t: "Fill and swap",
+  p: String.raw`Create two arrays of three ints. Fill the first with 7. Set the second to 1, 2 and 3. Swap the two arrays, then print the first element of each, separated by a space.`,
+  ex: String.raw`1 7`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 3> a{}, b{1, 2, 3};
+    a.fill(7);
+    a.swap(b);
+    std::cout << a[0] << ' ' << b[0] << '\n';
+}`,
+  why: String.raw`Swapping exchanges the contents of two arrays of the same type. fill sets every element to one value.` },
+
+{ n: 5, d: "easy", t: "Sum with a range-based loop",
+  p: String.raw`Sum the elements of the array 4, 5 and 6 using a range-based for loop. Print the total.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 3> a{4, 5, 6};
+    int total = 0;
+    for (int x : a) total += x;
+    std::cout << total << '\n';
+}`,
+  why: String.raw`begin and end are provided for arrays, so range-based for visits each element in order without needing an index.` },
+
+{ n: 6, d: "easy", t: "Lexicographic comparison",
+  p: String.raw`Compare the arrays {1, 2, 3} and {1, 3, 0} with the less-than operator. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 3> a{1, 2, 3}, b{1, 3, 0};
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`Arrays compare element by element, like std::lexicographical_compare. The first difference decides, so 2 is less than 3 at index 1.` },
+
+{ n: 7, d: "easy", t: "front and back",
+  p: String.raw`Create an array of three strings x, y and z. Print the first and the last string joined together with no separator.`,
+  ex: String.raw`xz`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::array<std::string, 3> a{"x", "y", "z"};
+    std::cout << a.front() + a.back() << '\n';
+}`,
+  why: String.raw`front and back return references to the first and last elements without an index calculation.` },
+
+{ n: 8, d: "easy", t: "data() gives a raw pointer",
+  p: String.raw`Create an array of three ints holding 10, 20 and 30. Print the value at index 0 plus the value at index 2, read through the pointer returned by data().`,
+  ex: String.raw`40`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 3> a{10, 20, 30};
+    const int* p = a.data();
+    std::cout << p[0] + p[2] << '\n';
+}`,
+  why: String.raw`data returns a pointer to the first element, and the elements are contiguous. This is how an array can be passed to C APIs that expect a plain pointer.` },
+
+{ n: 9, d: "easy", t: "Structured bindings unpack an array",
+  p: String.raw`Create an array of three ints holding 1, 2 and 3. Unpack it into three named variables x, y and z, and print x times 100 plus y times 10 plus z.`,
+  ex: String.raw`123`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 3> a{1, 2, 3};
+    const auto [x, y, z] = a;
+    std::cout << x * 100 + y * 10 + z << '\n';
+}`,
+  why: String.raw`std::array supports structured bindings, so the element count must match the number of names.` },
+
+{ n: 10, d: "easy", t: "constexpr arrays",
+  p: String.raw`Declare a compile-time array of four ints holding the squares 0, 1, 4 and 9. Assert at compile time that its last element is 9, then print that element.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    constexpr std::array<int, 4> squares{0, 1, 4, 9};
+    static_assert(squares.back() == 9);
+    std::cout << squares.back() << '\n';
+}`,
+  why: String.raw`Because std::array is a literal type with constexpr accessors, it can be fully evaluated during compilation.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Binary search on a sorted array",
+  p: String.raw`Create the sorted array 1, 3, 5, 7, 9, 11. Print true if 7 is in it, then true or false for 8, separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 6> a{1, 3, 5, 7, 9, 11};
+    std::cout << std::boolalpha << std::binary_search(a.begin(), a.end(), 7) << ' '
+              << std::binary_search(a.begin(), a.end(), 8) << '\n';
+}`,
+  why: String.raw`binary_search requires sorted input and runs in logarithmic time. It only reports presence, so use lower_bound when you need the position.` },
+
+{ n: 12, d: "medium", t: "Rotate left",
+  p: String.raw`Create the array 1, 2, 3, 4, 5. Rotate it left by two positions so that 3 becomes first. Print the elements separated by spaces.`,
+  ex: String.raw`3 4 5 1 2`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 5> a{1, 2, 3, 4, 5};
+    std::rotate(a.begin(), a.begin() + 2, a.end());
+    for (std::size_t i = 0; i < a.size(); ++i) std::cout << a[i] << (i + 1 < a.size() ? ' ' : '\n');
+}`,
+  why: String.raw`rotate takes the new first element as its middle argument. Everything before that position moves to the end in the same relative order.` },
+
+{ n: 13, d: "medium", t: "Count with a predicate",
+  p: String.raw`Count the elements greater than 4 in the array 3, 8, 1, 9, 4, 6. Print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 6> a{3, 8, 1, 9, 4, 6};
+    std::cout << std::count_if(a.begin(), a.end(), [](int x) { return x > 4; }) << '\n';
+}`,
+  why: String.raw`count_if applies the predicate to every element and counts the matches. The array is only read, so it takes const iterators.` },
+
+{ n: 14, d: "medium", t: "A 2D grid of characters",
+  p: String.raw`Create a 2 by 3 grid of characters, all set to dot. Change the character in row 1, column 2 to hash. Print row 0, a slash, then row 1, with no spaces.`,
+  ex: String.raw`.../..#`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<std::array<char, 3>, 2> grid{};
+    for (auto& row : grid) row.fill('.');
+    grid[1][2] = '#';
+    for (char c : grid[0]) std::cout << c;
+    std::cout << '/';
+    for (char c : grid[1]) std::cout << c;
+    std::cout << '\n';
+}`,
+  why: String.raw`A nested array stores its rows inline, so grid[r][c] indexes a 2 by 3 block with no extra allocation. fill applies to one row at a time here.` },
+
+{ n: 15, d: "medium", t: "Prefix sums into a second array",
+  p: String.raw`Start with the array 1, 2, 3, 4, 5. Build a second array of the same size holding the running sums. Print the element at index 2 of the second array, then its last element, separated by a space.`,
+  ex: String.raw`6 15`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::array<int, 5> in{1, 2, 3, 4, 5};
+    std::array<int, 5> out{};
+    std::partial_sum(in.begin(), in.end(), out.begin());
+    std::cout << out[2] << ' ' << out.back() << '\n';
+}`,
+  why: String.raw`partial_sum writes each running total to the output range. Because the output has a fixed size known at compile time, no reallocation is needed.` },
+
+{ n: 16, d: "medium", t: "2 by 2 matrix product",
+  p: String.raw`Multiply the matrix {{1, 2}, {3, 4}} by {{0, 1}, {1, 0}} using two nested arrays of ints. Print the four entries of the result in row-major order, separated by spaces.`,
+  ex: String.raw`2 1 4 3`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+using Mat2 = std::array<std::array<int, 2>, 2>;
+
+Mat2 multiply(const Mat2& a, const Mat2& b) {
+    Mat2 c{};
+    for (std::size_t i = 0; i < 2; ++i)
+        for (std::size_t j = 0; j < 2; ++j)
+            for (std::size_t k = 0; k < 2; ++k)
+                c[i][j] += a[i][k] * b[k][j];
+    return c;
+}
+
+int main() {
+    const Mat2 c = multiply({{{1, 2}, {3, 4}}}, {{{0, 1}, {1, 0}}});
+    for (const auto& row : c)
+        for (int x : row) std::cout << x << ' ';
+    std::cout << '\n';
+}`,
+  why: String.raw`The result of a product is built entry by entry from the rows of the left matrix and the columns of the right one. Returning the array by value copies a small fixed block.` },
+
+{ n: 17, d: "medium", t: "Sort strings in place",
+  p: String.raw`Create an array of four strings: pear, apple, fig and apple. Sort it alphabetically and print the words separated by spaces.`,
+  ex: String.raw`apple apple fig pear`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::array<std::string, 4> words{"pear", "apple", "fig", "apple"};
+    std::sort(words.begin(), words.end());
+    for (std::size_t i = 0; i < words.size(); ++i) std::cout << words[i] << (i + 1 < words.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Sorting moves the string objects inside the array, so no separate container is needed. Duplicates stay in place and sort next to each other.` },
+
+{ n: 18, d: "medium", t: "Index of the first match",
+  p: String.raw`Search the array 4, 9, 2, 9 for the value 9. Print the index of the first match.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 4> a{4, 9, 2, 9};
+    const auto it = std::find(a.begin(), a.end(), 9);
+    std::cout << std::distance(a.begin(), it) << '\n';
+}`,
+  why: String.raw`find returns an iterator to the first match, and distance turns it into an index. Converting iterators to indices is the usual way to report a position.` },
+
+{ n: 19, d: "medium", t: "Minimum and maximum together",
+  p: String.raw`Find the minimum and maximum of the array 5, -2, 9, 0 in one pass. Print them separated by a space.`,
+  ex: String.raw`-2 9`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 4> a{5, -2, 9, 0};
+    const auto [lo, hi] = std::minmax_element(a.begin(), a.end());
+    std::cout << *lo << ' ' << *hi << '\n';
+}`,
+  why: String.raw`minmax_element scans the range once and returns iterators to both extremes. Dereferencing them gives the values.` },
+
+{ n: 20, d: "medium", t: "Sieve of Eratosthenes",
+  p: String.raw`Use an array of 11 booleans to find the primes up to 10. Print them separated by spaces.`,
+  ex: String.raw`2 3 5 7`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<bool, 11> composite{};
+    for (int i = 2; i * i <= 10; ++i)
+        if (!composite[i])
+            for (int j = i * i; j <= 10; j += i) composite[j] = true;
+    bool first = true;
+    for (int i = 2; i <= 10; ++i)
+        if (!composite[i]) {
+            std::cout << (first ? "" : " ") << i;
+            first = false;
+        }
+    std::cout << '\n';
+}`,
+  why: String.raw`Marking multiples of each prime leaves only primes unmarked. A fixed-size array of flags is a natural fit because the bound is known in advance.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Fixed-capacity ring buffer",
+  p: String.raw`Implement a ring buffer of capacity 3 on top of an array of ints. Push the values 1 to 5 in order, overwriting the oldest value when full. Print the three values held, oldest first, separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+template <typename T, std::size_t N>
+class RingBuffer {
+    std::array<T, N> data_{};
+    std::size_t head_ = 0, count_ = 0;
+public:
+    void push(const T& v) {
+        data_[(head_ + count_) % N] = v;
+        if (count_ < N) ++count_;
+        else head_ = (head_ + 1) % N;
+    }
+    void print() const {
+        for (std::size_t i = 0; i < count_; ++i)
+            std::cout << data_[(head_ + i) % N] << (i + 1 < count_ ? ' ' : '\n');
+    }
+};
+
+int main() {
+    RingBuffer<int, 3> rb;
+    for (int v = 1; v <= 5; ++v) rb.push(v);
+    rb.print();
+}`,
+  why: String.raw`The array never changes size. Indices wrap with modulo, and the head moves forward only once the buffer is full, which keeps the oldest element at the front.` },
+
+{ n: 22, d: "hard", t: "Sum over any size with a template",
+  p: String.raw`Write a function template that takes a std::array of any length of ints by const reference and returns their sum. Call it on the array 1, 2, 3, 4 and print the result.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+template <std::size_t N>
+int sum(const std::array<int, N>& a) {
+    int total = 0;
+    for (int x : a) total += x;
+    return total;
+}
+
+int main() {
+    std::cout << sum(std::array<int, 4>{1, 2, 3, 4}) << '\n';
+}`,
+  why: String.raw`The size N is a template parameter, so the same function works for every length without a runtime size argument. The compiler generates one version per length.` },
+
+{ n: 23, d: "hard", t: "Fibonacci table computed at compile time",
+  p: String.raw`Write a constexpr function that returns an array of the first 10 Fibonacci numbers, starting with 0 and 1. Print the last element.`,
+  ex: String.raw`34`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+constexpr std::array<int, 10> fib_table() {
+    std::array<int, 10> t{0, 1};
+    for (std::size_t i = 2; i < t.size(); ++i) t[i] = t[i - 1] + t[i - 2];
+    return t;
+}
+
+constexpr auto table = fib_table();
+static_assert(table[9] == 34);
+
+int main() {
+    std::cout << table[9] << '\n';
+}`,
+  why: String.raw`Since std::array is a literal type, a constexpr function can build it and the compiler evaluates the whole table at compile time. The static_assert proves it.` },
+
+{ n: 24, d: "hard", t: "Dot product of fixed-size vectors",
+  p: String.raw`Define a struct Vec3 holding an array of three doubles. Compute the dot product of {1, 2, 3} and {4, 5, 6} and print it with no decimals.`,
+  ex: String.raw`32`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+struct Vec3 {
+    std::array<double, 3> v;
+};
+
+double dot(const Vec3& a, const Vec3& b) {
+    double s = 0;
+    for (std::size_t i = 0; i < 3; ++i) s += a.v[i] * b.v[i];
+    return s;
+}
+
+int main() {
+    const Vec3 a{{1, 2, 3}}, b{{4, 5, 6}};
+    std::cout << static_cast<long long>(dot(a, b)) << '\n';
+}`,
+  why: String.raw`Wrapping the array in a struct gives it a meaningful name while keeping the fixed size and no heap allocation. Passing a struct by const reference avoids a copy.` },
+
+{ n: 25, d: "hard", t: "Stable partition of an array",
+  p: String.raw`Partition the array 1, 2, 3, 4, 5 so that even numbers come first, keeping the order within each group. Print the result separated by spaces.`,
+  ex: String.raw`2 4 1 3 5`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 5> a{1, 2, 3, 4, 5};
+    std::stable_partition(a.begin(), a.end(), [](int x) { return x % 2 == 0; });
+    for (std::size_t i = 0; i < a.size(); ++i) std::cout << a[i] << (i + 1 < a.size() ? ' ' : '\n');
+}`,
+  why: String.raw`stable_partition keeps the relative order of elements within each group, unlike partition. Since the array never resizes, it can operate in place.` },
+
+{ n: 26, d: "hard", t: "Transpose a 2 by 3 matrix",
+  p: String.raw`Transpose the matrix {{1, 2, 3}, {4, 5, 6}}. Print each row of the result, with its values separated by spaces and rows separated by a slash.`,
+  ex: String.raw`1 4/2 5/3 6`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<std::array<int, 3>, 2> m{{{1, 2, 3}, {4, 5, 6}}};
+    std::array<std::array<int, 2>, 3> t{};
+    for (std::size_t r = 0; r < 2; ++r)
+        for (std::size_t c = 0; c < 3; ++c) t[c][r] = m[r][c];
+    for (std::size_t c = 0; c < 3; ++c) {
+        std::cout << t[c][0] << ' ' << t[c][1];
+        if (c + 1 < 3) std::cout << '/';
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The result has the dimensions swapped, so its type is an array of 3 rows of 2. Each entry is copied from the transposed position.` },
+
+{ n: 27, d: "hard", t: "Pair elements with views::zip",
+  p: String.raw`Given the arrays 1, 2, 3 and 10, 20, 30, use C++23 ranges to produce the sums of the pairs in order. Print the sums separated by spaces.`,
+  ex: String.raw`11 22 33`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <ranges>
+
+int main() {
+    const std::array<int, 3> a{1, 2, 3}, b{10, 20, 30};
+    bool first = true;
+    for (const auto [x, y] : std::views::zip(a, b)) {
+        std::cout << (first ? "" : " ") << x + y;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`views::zip walks two ranges in lockstep without copying them. Structured bindings unpack each pair of references.` },
+
+{ n: 28, d: "hard", t: "Index of the first value not less than 5",
+  p: String.raw`Using the sorted array 1, 3, 5, 7, 9, print the index of the first element that is not less than 5.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 5> a{1, 3, 5, 7, 9};
+    const auto it = std::lower_bound(a.begin(), a.end(), 5);
+    std::cout << std::distance(a.begin(), it) << '\n';
+}`,
+  why: String.raw`lower_bound returns the first position where the value could be inserted without breaking the order. On sorted data this is the first element not less than the target.` },
+
+{ n: 29, d: "hard", t: "Size of the array in memory",
+  p: String.raw`Print sizeof of a std::array of four int32_t values. Print the value of the same expression for a plain C array of four int32_t values, separated by a space.`,
+  ex: String.raw`16 16`,
+  code: String.raw`#include <array>
+#include <cstdint>
+#include <iostream>
+
+int main() {
+    std::cout << sizeof(std::array<std::int32_t, 4>) << ' '
+              << sizeof(std::int32_t[4]) << '\n';
+}`,
+  why: String.raw`std::array is a thin wrapper around its elements, so it adds no size. This makes it as cheap as a built-in array in memory.` },
+
+{ n: 30, d: "hard", t: "Copies are by value",
+  p: String.raw`Create the array 1, 2, 3. Pass it by value to a function that adds 1 to every element of its copy and returns the sum of the copy. Print the first element of the original, then the returned sum, separated by a space.`,
+  ex: String.raw`1 9`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int bump(std::array<int, 3> copy) {
+    int total = 0;
+    for (int& x : copy) {
+        ++x;
+        total += x;
+    }
+    return total;
+}
+
+int main() {
+    std::array<int, 3> a{1, 2, 3};
+    const int total = bump(a);
+    std::cout << a[0] << ' ' << total << '\n';
+}`,
+  why: String.raw`Passing an array by value copies all its elements, so changes to the parameter never reach the caller. Pass by reference when the callee should modify the original.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Build an array from a C array",
+  p: String.raw`Start with the C array {3, 1, 2}. Convert it into a std::array without naming its length, then print the size and the first element, separated by a space.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const int raw[] = {3, 1, 2};
+    const auto a = std::to_array(raw);
+    std::cout << a.size() << ' ' << a[0] << '\n';
+}`,
+  why: String.raw`to_array deduces both the element type and the length from the C array, so the size never has to be written twice.` },
+
+{ n: 32, d: "easy", t: "Fewer initialisers than the size",
+  p: String.raw`Create an array of five ints initialised with 1 and 2 only. Print the sum of all its elements.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::array<int, 5> a{1, 2};
+    std::cout << std::accumulate(a.begin(), a.end(), 0) << '\n';
+}`,
+  why: String.raw`The missing elements are value-initialised to zero, so they add nothing to the sum.` },
+
+{ n: 33, d: "easy", t: "Deduce the type from the initialiser",
+  p: String.raw`Create an array from the doubles 1.5 and 2.5 without writing the element type or the size. Print the sum as an integer.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array a{1.5, 2.5};
+    std::cout << static_cast<int>(a[0] + a[1]) << '\n';
+}`,
+  why: String.raw`Class template argument deduction takes the element type and the size from the braced list, so the array is std::array<double, 2>.` },
+
+{ n: 34, d: "medium", t: "Apply a function to the elements",
+  p: String.raw`Create the array 2, 3, 4. Call a function with its three elements as separate arguments, and have that function return their product. Print the product.`,
+  ex: String.raw`24`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <tuple>
+
+int main() {
+    const std::array<int, 3> a{2, 3, 4};
+    const int product = std::apply([](int x, int y, int z) { return x * y * z; }, a);
+    std::cout << product << '\n';
+}`,
+  why: String.raw`std::apply works with any tuple-like type, and std::array is one. Its elements are unpacked into the arguments of the callable.` },
+
+{ n: 35, d: "medium", t: "Index with std::get",
+  p: String.raw`Create the array 5, 6, 7. Print the element at index 1 using std::get with the index as a template argument.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 3> a{5, 6, 7};
+    std::cout << std::get<1>(a) << '\n';
+}`,
+  why: String.raw`std::get takes its index as a template argument, so an out-of-range index is a compile error rather than a runtime failure.` },
+
+{ n: 36, d: "medium", t: "Iterators survive element writes",
+  p: String.raw`Create the array 1, 2, 3 and take an iterator to its second element. Then set the element at index 1 to 99 through the array. Print the value the iterator points to now.`,
+  ex: String.raw`99`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 3> a{1, 2, 3};
+    auto it = a.begin() + 1;
+    a[1] = 99;
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`An array never reallocates, so its iterators stay valid as long as the array exists. Writing an element changes the value the iterator reads.` },
+
+{ n: 37, d: "medium", t: "Membership in a constexpr array",
+  p: String.raw`Define a constexpr array of the ints 1, 2 and 3. Print whether 4 is one of its elements, as true or false, using a standard algorithm.`,
+  ex: String.raw`false`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+constexpr std::array<int, 3> digits{1, 2, 3};
+
+int main() {
+    std::cout << std::boolalpha << (std::ranges::find(digits, 4) != digits.end()) << '\n';
+}`,
+  why: String.raw`Because the array has a constant size and a constexpr definition, a search over it can run at compile time as well as at run time.` },
+
+{ n: 38, d: "hard", t: "Concatenate array elements",
+  p: String.raw`Create the array of strings ab and cd. Combine all of its elements into one string, in order, starting from an empty string, and print the result.`,
+  ex: String.raw`abcd`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+#include <string>
+
+int main() {
+    const std::array<std::string, 2> parts{"ab", "cd"};
+    const std::string joined = std::accumulate(parts.begin(), parts.end(), std::string{});
+    std::cout << joined << '\n';
+}`,
+  why: String.raw`Accumulating with string concatenation visits the elements from left to right, so the pieces are joined in the same order they were stored.` },
+
+{ n: 39, d: "hard", t: "Array of function pointers",
+  p: String.raw`Create an array of two function pointers. The first doubles its argument, and the second squares it. Apply each to 5 and print the two results separated by a space.`,
+  ex: String.raw`10 25`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int(*)(int), 2> fns{
+        [](int x) { return x * 2; },
+        [](int x) { return x * x; },
+    };
+    for (std::size_t i = 0; i < fns.size(); ++i)
+        std::cout << fns[i](5) << (i + 1 < fns.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A captureless lambda converts to a plain function pointer, so an array of function pointers can hold different callables of the same signature.` },
+
+{ n: 40, d: "hard", t: "Moving an element out of an array of unique_ptr",
+  p: String.raw`Create an array of two std::unique_ptr<int>. Set the first to hold 7. Move that pointer into a new variable b. Print the value that b holds, then whether the first element is now empty, separated by a space.`,
+  ex: String.raw`7 true`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <memory>
+
+int main() {
+    std::array<std::unique_ptr<int>, 2> a;
+    a[0] = std::make_unique<int>(7);
+    auto b = std::move(a[0]);
+    std::cout << *b << ' ' << std::boolalpha << (a[0] == nullptr) << '\n';
+}`,
+  why: String.raw`unique_ptr cannot be copied, but it can be moved. After a move the source holds nullptr, and the array element still exists with that empty value.` },
+
+{ n: 41, d: "medium", t: "Sum the second members with bindings",
+  p: String.raw`Create an array of three pairs of a string and an int: a 1, b 2 and c 3. Using a range-based loop and structured bindings, sum the ints and print the total.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    const std::array<std::pair<std::string, int>, 3> items{{{"a", 1}, {"b", 2}, {"c", 3}}};
+    int total = 0;
+    for (const auto& [name, value] : items) total += value;
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Structured bindings unpack each pair in the loop header, which reads more clearly than accessing .second on every element.` },
+
+{ n: 42, d: "medium", t: "Swap two string elements",
+  p: String.raw`Create an array of two strings, a and b. Swap the two elements, then print both separated by a space.`,
+  ex: String.raw`b a`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::array<std::string, 2> s{"a", "b"};
+    std::swap(s[0], s[1]);
+    std::cout << s[0] << ' ' << s[1] << '\n';
+}`,
+  why: String.raw`std::swap moves the strings instead of copying them, so the cost does not depend on string length.` },
+
+{ n: 43, d: "medium", t: "Large array on the stack",
+  p: String.raw`Create an array of 1000 ints holding the numbers 0 to 999 in order, and print the sum of all elements.`,
+  ex: String.raw`499500`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    std::array<int, 1000> a{};
+    std::iota(a.begin(), a.end(), 0);
+    std::cout << std::accumulate(a.begin(), a.end(), 0L) << '\n';
+}`,
+  why: String.raw`The whole array lives inside its owner, so a large one on the stack needs enough stack space. For very large sizes a vector is safer.` },
+
+{ n: 44, d: "medium", t: "Trace of a 3 by 3 matrix",
+  p: String.raw`Create the 3 by 3 matrix with rows 1, 2, 3, 4, 5, 6, 7, 8, 9. Print the sum of its main diagonal.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<std::array<int, 3>, 3> m{{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}};
+    int trace = 0;
+    for (std::size_t i = 0; i < 3; ++i) trace += m[i][i];
+    std::cout << trace << '\n';
+}`,
+  why: String.raw`The main diagonal is the set of entries whose row index equals their column index. Summing those entries gives the trace.` },
+
+{ n: 45, d: "hard", t: "Sort structs by a member with a projection",
+  p: String.raw`Create an array of three people: alice aged 30, bob aged 25 and carol aged 41. Sort them by age in ascending order, then print their names separated by spaces.`,
+  ex: String.raw`bob alice carol`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+#include <string>
+
+struct Person {
+    std::string name;
+    int age;
+};
+
+int main() {
+    std::array<Person, 3> people{{{"alice", 30}, {"bob", 25}, {"carol", 41}}};
+    std::ranges::sort(people, {}, &Person::age);
+    for (std::size_t i = 0; i < people.size(); ++i)
+        std::cout << people[i].name << (i + 1 < people.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A projection tells the sort which member to compare, so the struct does not need an operator<. Passing a member pointer keeps the sort readable.` },
+
+{ n: 46, d: "medium", t: "Compare arrays with the spaceship operator",
+  p: String.raw`Using the three-way comparison operator, compare the arrays {1, 2} and {1, 3}. Print true if the result is less than zero.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <compare>
+
+int main() {
+    const std::array<int, 2> a{1, 2}, b{1, 3};
+    const auto order = a <=> b;
+    std::cout << std::boolalpha << (order < 0) << '\n';
+}`,
+  why: String.raw`Arrays support the three-way comparison operator, which orders them lexicographically. The result compares less than zero because 2 comes before 3.` },
+
+{ n: 47, d: "hard", t: "Arrays as map keys",
+  p: String.raw`Create a std::map whose keys are std::array<int, 2>. Insert the value x for the key {1, 2}. Print the value stored under that key.`,
+  ex: String.raw`x`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::array<int, 2>, std::string> labels;
+    labels[{1, 2}] = "x";
+    std::cout << labels[{1, 2}] << '\n';
+}`,
+  why: String.raw`Arrays are totally ordered, so they can serve as keys in an ordered map. The map compares the two elements in order to find the entry.` },
+
+{ n: 48, d: "hard", t: "Compile-time lookup table with a lambda",
+  p: String.raw`Build a constexpr array of 16 ints holding the squares of 0 to 15, using a constexpr lambda invoked immediately. Print the element at index 5.`,
+  ex: String.raw`25`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+constexpr std::array<int, 16> squares = [] {
+    std::array<int, 16> t{};
+    for (std::size_t i = 0; i < t.size(); ++i) t[i] = static_cast<int>(i * i);
+    return t;
+}();
+
+int main() {
+    std::cout << squares[5] << '\n';
+}`,
+  why: String.raw`Immediately invoking a lambda inside the initialiser lets the table be filled with a loop at compile time. Lambdas are implicitly constexpr when their body allows it.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "medium", t: "Parse an RGB colour from hex",
+  p: String.raw`Parse the hex colour string ff8000 into an array of three unsigned chars, one per channel. Print the three channel values separated by spaces, in decimal.`,
+  ex: String.raw`255 128 0`,
+  code: String.raw`#include <array>
+#include <cstdint>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string hex = "ff8000";
+    std::array<std::uint8_t, 3> rgb{};
+    for (std::size_t i = 0; i < 3; ++i)
+        rgb[i] = static_cast<std::uint8_t>(std::stoi(hex.substr(i * 2, 2), nullptr, 16));
+    for (std::size_t i = 0; i < 3; ++i) std::cout << +rgb[i] << (i + 1 < 3 ? ' ' : '\n');
+}`,
+  why: String.raw`Each channel is two hex digits. A fixed three-element array fits the data exactly, and the unary plus prints the bytes as numbers rather than characters.` },
+
+{ n: 50, d: "medium", t: "Tic-tac-toe row check",
+  p: String.raw`A 3 by 3 board is stored as an array of three rows of characters: the rows are XXX, OXO and OOX. Print the symbol of the first row if all its cells are the same, and print none otherwise.`,
+  ex: String.raw`X`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<std::array<char, 3>, 3> board{{
+        {'X', 'X', 'X'}, {'O', 'X', 'O'}, {'O', 'O', 'X'}}};
+    const auto& row = board[0];
+    const bool uniform = std::all_of(row.begin(), row.end(), [&](char c) { return c == row[0]; });
+    std::cout << (uniform ? row[0] : 'N') << '\n';
+}`,
+  why: String.raw`all_of checks a predicate against every cell in the row. Comparing each cell with the first one tests whether the row is uniform.` },
+
+{ n: 51, d: "easy", t: "Weekday names as string views",
+  p: String.raw`Store the three-letter weekday names Mon through Sun in an array of string_view. Print the name at index 3 (counting Mon as index 0).`,
+  ex: String.raw`Thu`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string_view>
+
+int main() {
+    constexpr std::array<std::string_view, 7> days{
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+    std::cout << days[3] << '\n';
+}`,
+  why: String.raw`string_view holds references to string literals with no allocation, and the array is a compile-time table indexed by day number.` },
+
+{ n: 52, d: "medium", t: "Min, max and average of a sensor window",
+  p: String.raw`A fixed window holds the readings 12, 15, 9 and 20. Print the minimum, the maximum and the integer average, separated by spaces.`,
+  ex: String.raw`9 20 14`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::array<int, 4> window{12, 15, 9, 20};
+    const auto [lo, hi] = std::minmax_element(window.begin(), window.end());
+    const int avg = std::accumulate(window.begin(), window.end(), 0) / static_cast<int>(window.size());
+    std::cout << *lo << ' ' << *hi << ' ' << avg << '\n';
+}`,
+  why: String.raw`A fixed-size window lets the average divide by a compile-time count. minmax_element gets both extremes in one pass.` },
+
+{ n: 53, d: "medium", t: "Distribution of two dice",
+  p: String.raw`Count how many ways two six-sided dice can total each value. Print the count for 7 and the count for 2, separated by a space.`,
+  ex: String.raw`6 1`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 13> ways{};   // index is the total, 0 to 12
+    for (int a = 1; a <= 6; ++a)
+        for (int b = 1; b <= 6; ++b)
+            ++ways[a + b];
+    std::cout << ways[7] << ' ' << ways[2] << '\n';
+}`,
+  why: String.raw`Each total from 2 to 12 has its own slot, so a fixed array indexed by the sum counts all 36 outcomes directly.` },
+
+{ n: 54, d: "medium", t: "One step of a cellular automaton",
+  p: String.raw`A row of five cells starts as 0, 1, 1, 0, 0. In the next generation, a cell is alive when exactly one of its left and right neighbours is alive. Cells outside the row count as dead. Print the next row as a string of digits with no spaces.`,
+  ex: String.raw`11110`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 5> row{0, 1, 1, 0, 0};
+    std::array<int, 5> next{};
+    for (std::size_t i = 0; i < row.size(); ++i) {
+        const int left = i > 0 ? row[i - 1] : 0;
+        const int right = i + 1 < row.size() ? row[i + 1] : 0;
+        next[i] = left ^ right;
+    }
+    for (int c : next) std::cout << c;
+    std::cout << '\n';
+}`,
+  why: String.raw`Because the row never grows, the next generation can be computed into a second array of the same size. Out-of-range neighbours are treated as zero.` },
+
+{ n: 55, d: "easy", t: "Cross product of basis vectors",
+  p: String.raw`Compute the cross product of the vectors {1, 0, 0} and {0, 1, 0} stored as arrays of three ints. Print its three components separated by spaces.`,
+  ex: String.raw`0 0 1`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+std::array<int, 3> cross(const std::array<int, 3>& a, const std::array<int, 3>& b) {
+    return {a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]};
+}
+
+int main() {
+    const auto c = cross({1, 0, 0}, {0, 1, 0});
+    std::cout << c[0] << ' ' << c[1] << ' ' << c[2] << '\n';
+}`,
+  why: String.raw`The cross product's components are fixed formulas over the input components, so a three-element array returned by value is a natural result type.` },
+
+{ n: 56, d: "easy", t: "Letter histogram",
+  p: String.raw`Count the letters in the word banana using an array of 26 ints indexed by letter. Print each letter that appears, followed by its count, in alphabetical order, separated by spaces.`,
+  ex: String.raw`a3 b1 n2`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::array<int, 26> counts{};
+    for (char c : std::string("banana")) ++counts[c - 'a'];
+    bool first = true;
+    for (std::size_t i = 0; i < counts.size(); ++i)
+        if (counts[i] > 0) {
+            std::cout << (first ? "" : " ") << static_cast<char>('a' + i) << counts[i];
+            first = false;
+        }
+    std::cout << '\n';
+}`,
+  why: String.raw`Subtracting 'a' turns each lowercase letter into an index from 0 to 25. A fixed array of counters replaces a map when the alphabet is known in advance.` },
+
+{ n: 57, d: "medium", t: "Row and column totals",
+  p: String.raw`Take the 2 by 3 table with rows 1, 2, 3 and 4, 5, 6. Print the sum of each row, then the sum of each column, separated by spaces.`,
+  ex: String.raw`6 15 5 7 9`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<std::array<int, 3>, 2> t{{{1, 2, 3}, {4, 5, 6}}};
+    for (const auto& row : t) {
+        int s = 0;
+        for (int x : row) s += x;
+        std::cout << s << ' ';
+    }
+    for (std::size_t c = 0; c < 3; ++c) {
+        int s = 0;
+        for (std::size_t r = 0; r < 2; ++r) s += t[r][c];
+        std::cout << s << (c + 1 < 3 ? ' ' : '\n');
+    }
+}`,
+  why: String.raw`Row totals sum across the inner arrays, and column totals fix the column index and sum down the rows. Both use the same stored table.` },
+
+{ n: 58, d: "medium", t: "Caesar shift with a lookup table",
+  p: String.raw`Build an array of 26 lowercase letters that maps each letter to the letter three places later, wrapping z around to a. Use it to encrypt the word abz and print the result.`,
+  ex: String.raw`dec`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::array<char, 26> shift{};
+    for (std::size_t i = 0; i < 26; ++i) shift[i] = static_cast<char>('a' + (i + 3) % 26);
+    std::string out;
+    for (char c : std::string("abz")) out += shift[c - 'a'];
+    std::cout << out << '\n';
+}`,
+  why: String.raw`The table precomputes the mapping for every letter, so encryption is one lookup per character. The modulo wraps the alphabet back to its start.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-array-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
+  { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
+  { from: 21, to: 48, label: "Hard", range: "Problems 21–48", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

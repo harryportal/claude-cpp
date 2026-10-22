@@ -1,0 +1,1135 @@
+<title>C++ Move Semantics</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 45 problems</p>
+    <h1>C++ Move Semantics Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">45</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="45" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "easy", t: "Moving a vector empties the source", idiom: "Move constructor",
+  p: String.raw`Create a vector a holding 1, 2 and 3. Move-construct a vector b from a. Print the size of a, a space, and the size of b, then a newline.`,
+  ex: String.raw`0 3`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 2, 3};
+    std::vector<int> b(std::move(a));
+    std::cout << a.size() << " " << b.size() << "\n";
+}`,
+  why: String.raw`A move constructor takes over the resources of its source. For std::vector that means the buffer changes owner, and the source is left empty.` },
+
+{ n: 2, d: "easy", t: "Moving an int copies it", idiom: "Moving trivial types",
+  p: String.raw`Create an int x equal to 7, then move-initialize an int y from x. Print x, a space, and y, then a newline.`,
+  ex: String.raw`7 7`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+int main() {
+    int x = 7;
+    int y = std::move(x);
+    std::cout << x << " " << y << "\n";
+}`,
+  why: String.raw`For types without special move operations, std::move is only a cast, and the move is an ordinary copy. The source keeps its value.` },
+
+{ n: 3, d: "easy", t: "Choose an overload with an rvalue", idiom: "Value categories",
+  p: String.raw`Define two functions named f. One takes an int lvalue reference and prints lvalue followed by a space. The other takes an int rvalue reference and prints rvalue followed by a space. Create an int x equal to 1. Call f with x, then with std::move(x), then with the literal 2. End with a newline.`,
+  ex: String.raw`lvalue rvalue rvalue`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+void f(int&) { std::cout << "lvalue "; }
+void f(int&&) { std::cout << "rvalue "; }
+
+int main() {
+    int x = 1;
+    f(x);
+    f(std::move(x));
+    f(2);
+    std::cout << "\n";
+}`,
+  why: String.raw`Overload resolution distinguishes named objects from temporaries and from values marked with std::move. This is how move-aware overloads are selected.` },
+
+{ n: 4, d: "easy", t: "std::move is a cast", idiom: "std::move is a cast",
+  p: String.raw`For an int variable x, print 1 if decltype(std::move(x)) is int&&, else 0, then a space, then 1 if decltype(x) is int, else 0, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+
+int main() {
+    int x = 0;
+    std::cout << std::is_same_v<decltype(std::move(x)), int&&> << " "
+              << std::is_same_v<decltype(x), int> << "\n";
+}`,
+  why: String.raw`std::move does not move anything. It converts its argument to an rvalue reference, and the move happens only if a function overload or constructor takes that reference.` },
+
+{ n: 5, d: "easy", t: "Passing by value as lvalue and as rvalue", idiom: "Copy versus move on call",
+  p: String.raw`Define struct Tracer with static int counters copies and moves. Its copy constructor increments copies and its move constructor increments moves. Define a function take that takes a Tracer by value and does nothing. Create a Tracer t, call take(t), then call take(std::move(t)). Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+void take(Tracer) {}
+
+int main() {
+    Tracer t;
+    take(t);
+    take(std::move(t));
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`Passing by value copies an lvalue but moves an rvalue. Counting the operations makes the difference visible.` },
+
+{ n: 6, d: "easy", t: "Moving a const object copies", idiom: "const defeats moves",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor increments moves, create a const Tracer c. Then construct a Tracer d from std::move(c). Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+int main() {
+    const Tracer c;
+    Tracer d(std::move(c));
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`std::move on a const object yields a const rvalue, which binds only to copy constructors. A const modifier therefore silently turns a move into a copy.` },
+
+{ n: 7, d: "easy", t: "Moved unique_ptr leaves null behind", idiom: "Ownership transfer",
+  p: String.raw`Create a unique_ptr p holding 5 using std::make_unique. Move it into a new unique_ptr q. Print 1 if p is null or 0 otherwise, then a space, and the value that q points to, then a newline.`,
+  ex: String.raw`1 5`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    auto p = std::make_unique<int>(5);
+    auto q = std::move(p);
+    std::cout << (p == nullptr) << " " << *q << "\n";
+}`,
+  why: String.raw`A unique_ptr transfers ownership on move and is left empty, so there is never a second owner to free the object twice.` },
+
+{ n: 8, d: "easy", t: "push_back of a temporary moves once", idiom: "Move into containers",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor increments moves, create an empty vector of Tracer, reserve room for one element, and push_back a temporary Tracer{}. Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+int main() {
+    std::vector<Tracer> v;
+    v.reserve(1);
+    v.push_back(Tracer{});
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`A temporary bound to push_back's rvalue overload is moved into the container's storage. Reserving first makes sure no reallocation adds further moves.` },
+
+{ n: 9, d: "easy", t: "std::swap moves three times", idiom: "Swap with move",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor and move assignment increment moves, create two Tracer values a and b. Set both counters to zero, then call std::swap(a, b). Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`0 3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+int main() {
+    Tracer a, b;
+    Tracer::copies = 0;
+    Tracer::moves = 0;
+    std::swap(a, b);
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`The generic swap is written in terms of moves: one construction and two assignments. Because it does not copy, swapping is cheap for any type with efficient moves.` },
+
+{ n: 10, d: "easy", t: "Move-only types reject copies", idiom: "Move-only types",
+  p: String.raw`Define struct Only with a default constructor, a move constructor, and a move assignment operator, where the copy constructor and copy assignment operator are deleted. Print 1 if Only is copy-constructible, else 0, then a space, then 1 if Only is move-constructible, else 0, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+struct Only {
+    Only() = default;
+    Only(Only&&) noexcept = default;
+    Only& operator=(Only&&) noexcept = default;
+    Only(const Only&) = delete;
+    Only& operator=(const Only&) = delete;
+};
+
+int main() {
+    std::cout << std::is_copy_constructible_v<Only> << " "
+              << std::is_move_constructible_v<Only> << "\n";
+}`,
+  why: String.raw`A move-only type expresses that it owns a unique resource. Deleting the copy operations turns an accidental copy into a compile error.` },
+
+{ n: 11, d: "easy", t: "Moving a vector keeps its buffer", idiom: "Buffer stealing",
+  p: String.raw`Create a vector v of 100 ints, all equal to 1. Save the pointer returned by v.data(). Move-construct a vector w from v. Print 1 if w.data() equals the saved pointer, else 0, then a space, then the size of w, then a newline.`,
+  ex: String.raw`1 100`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v(100, 1);
+    const int* saved = v.data();
+    std::vector<int> w(std::move(v));
+    std::cout << (w.data() == saved) << " " << w.size() << "\n";
+}`,
+  why: String.raw`Moving a vector transfers the pointer to its heap buffer rather than the elements. The elements never move, which is why the move is constant time.` },
+
+{ n: 12, d: "easy", t: "Guaranteed elision on return", idiom: "Copy elision",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor increments moves, define a function make that returns Tracer{}. Call auto t = make(). Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`0 0`,
+  code: String.raw`#include <iostream>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+Tracer make() { return Tracer{}; }
+
+int main() {
+    Tracer t = make();
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+    (void)t;
+}`,
+  why: String.raw`Since C++17, returning a prvalue initializes the caller's object directly, so neither a copy nor a move happens. Moving is needed only when the returned value is a named object.` },
+
+{ n: 13, d: "medium", t: "Move assignment takes over the buffer", idiom: "Move assignment",
+  p: String.raw`Create a vector a holding 1, 2 and 3, and a vector b holding 9. Move-assign a into b. Print the size of b, a space, and the first element of b, then a newline.`,
+  ex: String.raw`3 1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 2, 3};
+    std::vector<int> b{9};
+    b = std::move(a);
+    std::cout << b.size() << " " << b[0] << "\n";
+}`,
+  why: String.raw`Move assignment releases the target's old resources and takes the source's. The previous contents of b are discarded without being copied.` },
+
+{ n: 14, d: "medium", t: "Sink parameters are moved into the result", idiom: "Sink parameters",
+  p: String.raw`Define a function add_one that takes a std::vector<int> by value, appends 1 to it, and returns it. Create a vector a holding 5. Call auto r = add_one(std::move(a)). Print the size of a, a space, and the size of r, then a newline.`,
+  ex: String.raw`0 2`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+std::vector<int> add_one(std::vector<int> v) {
+    v.push_back(1);
+    return v;
+}
+
+int main() {
+    std::vector<int> a{5};
+    auto r = add_one(std::move(a));
+    std::cout << a.size() << " " << r.size() << "\n";
+}`,
+  why: String.raw`Taking a parameter by value lets the caller choose between copying and moving. The function moves the parameter into its result when it returns it, so a rvalue argument travels without copies.` },
+
+{ n: 15, d: "medium", t: "Growing a vector with a noexcept move", idiom: "Reallocation moves",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor is marked noexcept and increments moves, create an empty vector of Tracer without reserving. Push back four temporary Tracer{} values one after another. Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`0 7`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+int main() {
+    std::vector<Tracer> v;
+    for (int i = 0; i < 4; ++i) v.push_back(Tracer{});
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`When a vector outgrows its buffer, it moves the existing elements to new storage. A noexcept move makes that cheap and safe, so the vector uses it instead of copying.` },
+
+{ n: 16, d: "medium", t: "Growing a vector with a throwing move copies", idiom: "noexcept on move",
+  p: String.raw`Define struct Plain with static int counters copies and moves, a default constructor, a copy constructor that increments copies, and a move constructor that increments moves and is not marked noexcept. Push back four temporary Plain{} values into an empty vector without reserving. Print copies, a space, and moves, then a newline.`,
+  ex: String.raw`3 4`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct Plain {
+    static inline int copies = 0, moves = 0;
+    Plain() = default;
+    Plain(const Plain&) { ++copies; }
+    Plain(Plain&&) { ++moves; }
+};
+
+int main() {
+    std::vector<Plain> v;
+    for (int i = 0; i < 4; ++i) v.push_back(Plain{});
+    std::cout << Plain::copies << " " << Plain::moves << "\n";
+}`,
+  why: String.raw`A vector must keep its elements if a reallocation fails midway. Because a move that might throw cannot be trusted for that, the vector copies instead when the element type is copyable and its move is not noexcept.` },
+
+{ n: 17, d: "medium", t: "A member moved out through return", idiom: "Moving members",
+  p: String.raw`Define class Holder with a private std::vector<int> data_ initialized to 1, 2 and 3. Give it a public member take() that returns std::move(data_), and a public member left() that returns the size of data_. Create a Holder h, then call auto v = h.take(). Print the size of v, a space, and h.left(), then a newline.`,
+  ex: String.raw`3 0`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+class Holder {
+    std::vector<int> data_{1, 2, 3};
+public:
+    std::vector<int> take() { return std::move(data_); }
+    std::size_t left() const { return data_.size(); }
+};
+
+int main() {
+    Holder h;
+    auto v = h.take();
+    std::cout << v.size() << " " << h.left() << "\n";
+}`,
+  why: String.raw`Returning std::move of a member transfers the contents out of the object. This is the usual way to hand out an internal container without copying it, but the object is left empty afterwards.` },
+
+{ n: 18, d: "medium", t: "std::move on a const object yields const&&", idiom: "const and moves",
+  p: String.raw`Create a const std::vector<int> cv holding 1. Print 1 if decltype(std::move(cv)) is const std::vector<int>&&, else 0, then a space. Then construct a vector w from std::move(cv), and print the size of w, a space, and the size of cv, then a newline.`,
+  ex: String.raw`1 1 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<int> cv{1};
+    std::cout << std::is_same_v<decltype(std::move(cv)), const std::vector<int>&&> << " ";
+    std::vector<int> w(std::move(cv));
+    std::cout << w.size() << " " << cv.size() << "\n";
+}`,
+  why: String.raw`A const rvalue cannot be moved from, because the move constructor takes a non-const rvalue reference. The copy constructor accepts it, so the source is untouched.` },
+
+{ n: 19, d: "medium", t: "Perfect forwarding keeps the value category", idiom: "Forwarding references",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor increments moves, define a function target that takes a Tracer by value and does nothing. Define a function template wrap that takes T&& and calls target with std::forward<T>(x). Create a Tracer t and call wrap(t), then print copies, a space, and moves. Set both counters to zero, call wrap(Tracer{}), and print copies, a space, and moves, then a newline. Put both results on one line separated by a space.`,
+  ex: String.raw`1 0 0 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+void target(Tracer) {}
+
+template <class T>
+void wrap(T&& x) { target(std::forward<T>(x)); }
+
+int main() {
+    Tracer t;
+    wrap(t);
+    std::cout << Tracer::copies << " " << Tracer::moves << " ";
+    Tracer::copies = 0;
+    Tracer::moves = 0;
+    wrap(Tracer{});
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`A forwarding reference binds to lvalues and rvalues alike. std::forward passes on the original category, so the wrapper adds no copies and no moves of its own.` },
+
+{ n: 20, d: "medium", t: "Passing ownership to a function", idiom: "Sink unique_ptr",
+  p: String.raw`Define a function sink that takes a std::unique_ptr<int> by value and prints the value it points to followed by a space. Create a unique_ptr p holding 9. Call sink(std::move(p)). Print 1 if p is now null, else 0, then a newline.`,
+  ex: String.raw`9 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+void sink(std::unique_ptr<int> p) { std::cout << *p << " "; }
+
+int main() {
+    auto p = std::make_unique<int>(9);
+    sink(std::move(p));
+    std::cout << (p == nullptr) << "\n";
+}`,
+  why: String.raw`Taking a unique_ptr by value states in the signature that the function takes ownership. The object is destroyed when the parameter goes out of scope, unless the function moves it on.` },
+
+{ n: 21, d: "medium", t: "Which operations are noexcept", idiom: "Noexcept traits",
+  p: String.raw`Print 1 if std::vector<int> is nothrow move-constructible, else 0, then a space, then 1 if std::vector<int> is nothrow move-assignable, else 0, then a space, then 1 if std::string is nothrow move-constructible, else 0, then a newline.`,
+  ex: String.raw`1 1 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+int main() {
+    std::cout << std::is_nothrow_move_constructible_v<std::vector<int>> << " "
+              << std::is_nothrow_move_assignable_v<std::vector<int>> << " "
+              << std::is_nothrow_move_constructible_v<std::string> << "\n";
+}`,
+  why: String.raw`Standard containers mark their moves noexcept, which lets containers and algorithms rely on moves not throwing. Checking the traits is a quick way to confirm this for a type.` },
+
+{ n: 22, d: "medium", t: "Moving a range of unique_ptrs", idiom: "std::move algorithm",
+  p: String.raw`Create a vector src of three unique_ptr<int> holding 1, 2 and 3. Create a vector dst of three empty unique_ptr<int> values. Use the std::move algorithm to move all of src into dst. Print how many elements of src are now null, a space, and the sum of the values in dst, then a newline.`,
+  ex: String.raw`3 6`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> src;
+    for (int i = 1; i <= 3; ++i) src.push_back(std::make_unique<int>(i));
+    std::vector<std::unique_ptr<int>> dst(3);
+    std::move(src.begin(), src.end(), dst.begin());
+    int nulls = 0;
+    for (auto& p : src) if (!p) ++nulls;
+    int sum = 0;
+    for (auto& p : dst) sum += *p;
+    std::cout << nulls << " " << sum << "\n";
+}`,
+  why: String.raw`Algorithms that write to an output range assign to it, so the move algorithm uses move assignment on each element. Moving a unique_ptr leaves a null in the source, so the sources are safe to destroy.` },
+
+{ n: 23, d: "medium", t: "Self move assignment must be guarded", idiom: "Self-move safety",
+  p: String.raw`Define class Buf that owns a heap int, created from an int value. Its destructor deletes the int. Its move assignment must be correct even when the source is the same object, and value() returns the int, or -1 if there is none. Create Buf a(4), bind a reference r to a, and then move-assign a from r. Print a.value(), then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+class Buf {
+    int* p_ = nullptr;
+public:
+    explicit Buf(int v) : p_(new int(v)) {}
+    ~Buf() { delete p_; }
+    Buf& operator=(Buf&& o) noexcept {
+        if (this != &o) {
+            delete p_;
+            p_ = o.p_;
+            o.p_ = nullptr;
+        }
+        return *this;
+    }
+    int value() const { return p_ ? *p_ : -1; }
+};
+
+int main() {
+    Buf a(4);
+    Buf& r = a;
+    a = std::move(r);
+    std::cout << a.value() << "\n";
+}`,
+  why: String.raw`Without the self-check, freeing this object's resource before taking the source's would free the very pointer being transferred. Move assignment must handle the case where both sides are the same object.` },
+
+{ n: 24, d: "medium", t: "Moved-from state chosen by the class", idiom: "Known moved-from state",
+  p: String.raw`Define struct Num with an int member v, an explicit constructor from an int, and a move constructor that copies v and then sets the source's v to 0. Create Num a(5), then move-construct Num b from a. Print a.v, a space, and b.v, then a newline.`,
+  ex: String.raw`0 5`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Num {
+    int v;
+    explicit Num(int x) : v(x) {}
+    Num(Num&& o) noexcept : v(o.v) { o.v = 0; }
+};
+
+int main() {
+    Num a(5);
+    Num b(std::move(a));
+    std::cout << a.v << " " << b.v << "\n";
+}`,
+  why: String.raw`A moved-from object is valid but its state is up to the class. Choosing a specific state, such as zero, lets the program rely on it, which the standard does not promise for every type.` },
+
+{ n: 25, d: "medium", t: "Reusing a moved-from string", idiom: "Reuse after move",
+  p: String.raw`Create a std::string s holding hello. Move-construct a std::string t from s. Then assign again to s the text again. Print s, a space, and t, then a newline.`,
+  ex: String.raw`again hello`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::string s = "hello";
+    std::string t = std::move(s);
+    s = "again";
+    std::cout << s << " " << t << "\n";
+}`,
+  why: String.raw`After a move the source is valid, so it can be assigned a new value and used again. Only the values it held before the move are gone.` },
+
+{ n: 26, d: "hard", t: "Rule of five for an owning buffer", idiom: "Rule of five",
+  p: String.raw`Define class Buffer that owns a heap array of ints with a size. Its explicit constructor takes a size and allocates zeroed ints. Its copy constructor makes a deep copy. Its move constructor takes the array and leaves the source with size 0 and no array. Its assignment operator takes the parameter by value and swaps members, and its destructor frees the array. Create Buffer a(3), move-construct Buffer b from a, create Buffer c(2), and assign b to c. Print a.size(), a space, b.size(), a space, and c.size(), then a newline.`,
+  ex: String.raw`0 3 3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <utility>
+
+class Buffer {
+    int* data_ = nullptr;
+    std::size_t n_ = 0;
+public:
+    explicit Buffer(std::size_t n) : data_(new int[n]()), n_(n) {}
+    Buffer(const Buffer& o) : data_(new int[o.n_]), n_(o.n_) {
+        for (std::size_t i = 0; i < n_; ++i) data_[i] = o.data_[i];
+    }
+    Buffer(Buffer&& o) noexcept
+        : data_(std::exchange(o.data_, nullptr)), n_(std::exchange(o.n_, 0)) {}
+    Buffer& operator=(Buffer o) noexcept {
+        std::swap(data_, o.data_);
+        std::swap(n_, o.n_);
+        return *this;
+    }
+    ~Buffer() { delete[] data_; }
+    std::size_t size() const { return n_; }
+};
+
+int main() {
+    Buffer a(3);
+    Buffer b(std::move(a));
+    Buffer c(2);
+    c = b;
+    std::cout << a.size() << " " << b.size() << " " << c.size() << "\n";
+}`,
+  why: String.raw`A class that manages a resource needs to define copying, moving and destruction consistently. Taking assignment by value lets one operator serve both copy and move assignment, and the move constructor must leave the source in a state its destructor handles.` },
+
+{ n: 27, d: "hard", t: "Assignment by value covers both kinds", idiom: "Copy-and-swap",
+  p: String.raw`Define struct Box with a public std::vector<int> member v and a defaulted move constructor. Give it an assignment operator that takes Box by value, swaps v with the parameter's v, and returns a reference to itself. Create a Box a, set a.v to 1 and 2, create a Box b, then assign std::move(a) to b. Print the size of b.v, a space, and the size of a.v, then a newline.`,
+  ex: String.raw`2 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+struct Box {
+    std::vector<int> v;
+    Box() = default;
+    Box(Box&&) noexcept = default;
+    Box& operator=(Box o) noexcept {
+        v.swap(o.v);
+        return *this;
+    }
+};
+
+int main() {
+    Box a;
+    a.v = {1, 2};
+    Box b;
+    b = std::move(a);
+    std::cout << b.v.size() << " " << a.v.size() << "\n";
+}`,
+  why: String.raw`With copy-and-swap, the parameter is built by a copy or a move depending on the argument, and then the contents are swapped in. The source is left with whatever the parameter held, which is empty after a move.` },
+
+{ n: 28, d: "hard", t: "A forwarding constructor hijacks copies", idiom: "Forwarding constructor pitfall",
+  p: String.raw`Define class Wrapper with a user-provided default constructor, a copy constructor that prints copy followed by a space, and a template constructor taking T&& that prints template followed by a space. In main, create Wrapper a, then construct Wrapper b from a. Create const Wrapper c, then construct Wrapper d from c. End with a newline.`,
+  ex: String.raw`template copy`,
+  code: String.raw`#include <iostream>
+
+class Wrapper {
+public:
+    Wrapper() {}
+    Wrapper(const Wrapper&) { std::cout << "copy "; }
+    template <class T>
+    Wrapper(T&&) { std::cout << "template "; }
+};
+
+int main() {
+    Wrapper a;
+    Wrapper b(a);
+    const Wrapper c;
+    Wrapper d(c);
+    std::cout << "\n";
+}`,
+  why: String.raw`A constructor template that accepts any T&& is an exact match for a non-const lvalue, so it beats the copy constructor that takes const&. Classes with such constructors usually constrain them so they do not intercept copies.` },
+
+{ n: 29, d: "hard", t: "Reference collapsing in deduction", idiom: "Reference collapsing",
+  p: String.raw`Define a function template kind that takes T&& and returns 1 if T is an lvalue reference, else 2. For an int x equal to 3, print kind(x), a space, kind(5), a space, and kind(std::move(x)), then a space, then 1 if std::add_rvalue_reference_t<int&> is int&, else 0, then a newline.`,
+  ex: String.raw`1 2 2 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+
+template <class T>
+int kind(T&&) { return std::is_lvalue_reference_v<T> ? 1 : 2; }
+
+int main() {
+    int x = 3;
+    std::cout << kind(x) << " " << kind(5) << " " << kind(std::move(x)) << " "
+              << std::is_same_v<std::add_rvalue_reference_t<int&>, int&> << "\n";
+}`,
+  why: String.raw`In a forwarding reference, T is deduced as an lvalue reference for lvalues and as a plain type for rvalues. Applying & or && to a reference collapses to a single reference, which is why one template covers both cases.` },
+
+{ n: 30, d: "hard", t: "Forcing a move blocks elision", idiom: "Pessimizing std::move",
+  p: String.raw`Using struct Tracer with a static int counter moves, where the move constructor increments moves, define a global Tracer shared_state. Define a function plain that creates a local Tracer and returns it by name, and a function pessimized that returns std::move(shared_state). Call Tracer a = plain(), store the move count in first, and reset the counter to zero. Then call Tracer b = pessimized(). Print first, a space, and the move count, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int moves = 0;
+    Tracer() = default;
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+Tracer shared_state;
+
+Tracer plain() {
+    Tracer t;
+    return t;
+}
+
+Tracer pessimized() { return std::move(shared_state); }
+
+int main() {
+    Tracer a = plain();
+    int first = Tracer::moves;
+    Tracer::moves = 0;
+    Tracer b = pessimized();
+    std::cout << first << " " << Tracer::moves << "\n";
+    (void)a;
+    (void)b;
+}`,
+  why: String.raw`Returning a local by name lets the compiler build it directly in the caller's object. Writing std::move on that name disables this and forces a move, which is why the implicit move on return is preferred for locals.` },
+
+{ n: 31, d: "hard", t: "Move-only elements in a vector", idiom: "Move-only containers",
+  p: String.raw`Assert at compile time that std::unique_ptr<int> is not copy-constructible and is nothrow move-constructible. Create a vector v of unique_ptr<int> and push back a unique_ptr to 4. Move-construct a vector w from v. Print the size of w, a space, and the value of its first element, then a newline.`,
+  ex: String.raw`1 4`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <type_traits>
+#include <vector>
+
+static_assert(!std::is_copy_constructible_v<std::unique_ptr<int>>);
+static_assert(std::is_nothrow_move_constructible_v<std::unique_ptr<int>>);
+
+int main() {
+    std::vector<std::unique_ptr<int>> v;
+    v.push_back(std::make_unique<int>(4));
+    std::vector<std::unique_ptr<int>> w = std::move(v);
+    std::cout << w.size() << " " << *w[0] << "\n";
+}`,
+  why: String.raw`Containers of unique_ptr are move-only, so the compiler rejects any attempt to copy them. The static assertions document this property in the code and fail the build if it changes.` },
+
+{ n: 32, d: "hard", t: "Moving a value into a lambda", idiom: "Init-capture",
+  p: String.raw`Create a unique_ptr up holding 11. Create a lambda f with an init-capture named p that is initialized by moving up, and whose body returns the value p points to. Print 1 if up is now null, else 0, then a space, then f(), then a newline.`,
+  ex: String.raw`1 11`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto up = std::make_unique<int>(11);
+    auto f = [p = std::move(up)] { return *p; };
+    std::cout << (up == nullptr) << " " << f() << "\n";
+}`,
+  why: String.raw`An init-capture gives the lambda its own member initialized from any expression, so a move-only resource can be transferred into a closure. The closure then owns the resource.` },
+
+{ n: 33, d: "hard", t: "Moving out of an optional", idiom: "Moving through optional",
+  p: String.raw`Create std::optional<std::unique_ptr<int>> o holding a unique_ptr to 8. Move the contained unique_ptr out of o into a new variable p. Print 1 if the unique_ptr inside o is now null, else 0, then a space, then the value p points to, then a newline.`,
+  ex: String.raw`1 8`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <optional>
+#include <utility>
+
+int main() {
+    std::optional<std::unique_ptr<int>> o = std::make_unique<int>(8);
+    auto p = std::move(*o);
+    std::cout << (*o == nullptr) << " " << *p << "\n";
+}`,
+  why: String.raw`An optional keeps its value in place, so moving out of it leaves an engaged optional holding a moved-from object. Checking that state is part of using move-only values in optionals.` },
+
+{ n: 34, d: "extension", t: "Overloads for lvalue and rvalue objects", idiom: "Ref-qualified members",
+  p: String.raw`Define struct Obj with two member functions named get. The const& overload returns the text lvalue, and the && overload returns the text rvalue. Create Obj o, then print o.get(), a space, and Obj{}.get(), then a newline.`,
+  ex: String.raw`lvalue rvalue`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+struct Obj {
+    std::string get() const& { return "lvalue"; }
+    std::string get() && { return "rvalue"; }
+};
+
+int main() {
+    Obj o;
+    std::cout << o.get() << " " << Obj{}.get() << "\n";
+}`,
+  why: String.raw`Ref-qualifiers let a class choose different behavior for temporaries, which can safely hand out or steal its internals, and for named objects, which must be left intact.` },
+
+{ n: 35, d: "extension", t: "Passing a move-only argument to a thread", idiom: "Moving into threads",
+  p: String.raw`Define a function worker that takes a unique_ptr<int> by value and an int& out, and sets out to twice the value pointed to. In main, create int result equal to 0 and a unique_ptr holding 21. Start a std::thread running worker with the unique_ptr moved in and result passed by reference, then join it. Print result, then a newline.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <utility>
+
+void worker(std::unique_ptr<int> p, int& out) { out = *p * 2; }
+
+int main() {
+    int result = 0;
+    auto p = std::make_unique<int>(21);
+    std::thread t(worker, std::move(p), std::ref(result));
+    t.join();
+    std::cout << result << "\n";
+}`,
+  why: String.raw`std::thread copies or moves its arguments into internal storage, so move-only arguments must be moved in. A reference needs std::ref so that the thread does not receive a copy.` },
+
+{ n: 36, d: "extension", t: "Transferring a list node keeps its iterator valid", idiom: "Node transfer",
+  p: String.raw`Create std::list a holding 1, 2 and 3, and std::list b holding 9. Let it be an iterator to the second element of a. Use splice to move that element from a to the end of b. Print the value at the iterator, a space, the size of a, a space, and the size of b, then a newline.`,
+  ex: String.raw`2 2 2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 2, 3};
+    std::list<int> b{9};
+    auto it = std::next(a.begin());
+    b.splice(b.end(), a, it);
+    std::cout << *it << " " << a.size() << " " << b.size() << "\n";
+}`,
+  why: String.raw`A list node can change owner without being copied or reallocated, so iterators and references to it remain valid. Transferring nodes is a move at the level of the container's structure.` },
+
+{ n: 37, d: "extension", t: "Handle that transfers ownership", idiom: "Move constructor with std::exchange",
+  p: String.raw`Define class Handle that owns a heap int, built from an int value. Its move constructor takes the pointer using std::exchange, leaving the source with a null pointer. Its destructor deletes the pointer, valid() returns whether the pointer is non-null, and get() returns the int. Create Handle a(3), move-construct Handle b from a. Print a.valid(), a space, b.valid(), a space, and b.get(), then a newline.`,
+  ex: String.raw`0 1 3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+class Handle {
+    int* p_;
+public:
+    explicit Handle(int v) : p_(new int(v)) {}
+    Handle(Handle&& o) noexcept : p_(std::exchange(o.p_, nullptr)) {}
+    ~Handle() { delete p_; }
+    bool valid() const { return p_ != nullptr; }
+    int get() const { return *p_; }
+};
+
+int main() {
+    Handle a(3);
+    Handle b(std::move(a));
+    std::cout << a.valid() << " " << b.valid() << " " << b.get() << "\n";
+}`,
+  why: String.raw`std::exchange returns the old value and stores a new one in a single expression. It is a concise way to write moves that leave a null or empty source behind.` },
+
+{ n: 38, d: "extension", t: "move_if_noexcept chooses const or rvalue", idiom: "move_if_noexcept",
+  p: String.raw`Define struct Risky with a default constructor, a user-provided copy constructor, and a user-provided move constructor not marked noexcept. Define struct Safe with a default constructor, a user-provided copy constructor, and a move constructor marked noexcept. Create a Risky r and a Safe s. Print 1 if the type returned by std::move_if_noexcept(r), with its reference removed, is const-qualified, else 0, then a space, then the same check for s, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+
+struct Risky {
+    Risky() = default;
+    Risky(const Risky&) {}
+    Risky(Risky&&) {}
+};
+
+struct Safe {
+    Safe() = default;
+    Safe(const Safe&) {}
+    Safe(Safe&&) noexcept {}
+};
+
+int main() {
+    Risky r;
+    Safe s;
+    std::cout << std::is_const_v<std::remove_reference_t<decltype(std::move_if_noexcept(r))>> << " "
+              << std::is_const_v<std::remove_reference_t<decltype(std::move_if_noexcept(s))>> << "\n";
+}`,
+  why: String.raw`Containers use move_if_noexcept to decide between moving and copying during reallocation. It yields a const lvalue for types whose move may throw and copying is possible, and an rvalue otherwise.` },
+
+{ n: 39, d: "extension", t: "Forwarding keeps the value category", idiom: "std::forward",
+  p: String.raw`Define a function template pass that takes T&& x and returns std::forward<T>(x) with return type T&&. Create an int i equal to 4. Print 1 if decltype(pass(std::move(i))) is an rvalue reference, else 0, then a space, then 1 if decltype(pass(i)) is an lvalue reference, else 0, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <utility>
+
+template <class T>
+T&& pass(T&& x) { return std::forward<T>(x); }
+
+int main() {
+    int i = 4;
+    std::cout << std::is_rvalue_reference_v<decltype(pass(std::move(i)))> << " "
+              << std::is_lvalue_reference_v<decltype(pass(i))> << "\n";
+}`,
+  why: String.raw`std::forward restores the category of the argument as the caller passed it. That is what lets a generic wrapper pass lvalues on as lvalues and rvalues on as rvalues.` },
+
+{ n: 40, d: "applications", t: "Setter that takes its argument by value", idiom: "Sink setter",
+  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor and move assignment increment moves, define struct Holder with a member Tracer t and a member function set that takes Tracer x by value and assigns std::move(x) to t. Create Holder h and call h.set(Tracer{}). Print copies, a space, and moves. Reset both counters to zero, create a Tracer src, call h.set(src), and print copies, a space, and moves, then a newline. Put both results on one line separated by a space.`,
+  ex: String.raw`0 1 1 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+struct Tracer {
+    static inline int copies = 0, moves = 0;
+    Tracer() = default;
+    Tracer(const Tracer&) { ++copies; }
+    Tracer(Tracer&&) noexcept { ++moves; }
+    Tracer& operator=(const Tracer&) { ++copies; return *this; }
+    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
+};
+
+struct Holder {
+    Tracer t;
+    void set(Tracer x) { t = std::move(x); }
+};
+
+int main() {
+    Holder h;
+    h.set(Tracer{});
+    std::cout << Tracer::copies << " " << Tracer::moves << " ";
+    Tracer::copies = 0;
+    Tracer::moves = 0;
+    Tracer src;
+    h.set(src);
+    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
+}`,
+  why: String.raw`A setter that takes its argument by value lets one function accept both lvalues and rvalues. An rvalue costs only the move into the member, while an lvalue costs a copy and then a move.` },
+
+{ n: 41, d: "applications", t: "Moving elements into an output vector", idiom: "Pipeline stage transfer",
+  p: String.raw`Create a vector src of four unique_ptr<int> holding 1, 2, 3 and 4. Create an empty vector dst and reserve space for four elements. Move each element of src into dst using push_back. Print the sum of the values in dst, a space, and the size of src, then a newline.`,
+  ex: String.raw`10 4`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> src;
+    for (int i = 1; i <= 4; ++i) src.push_back(std::make_unique<int>(i));
+    std::vector<std::unique_ptr<int>> dst;
+    dst.reserve(src.size());
+    for (auto& p : src) dst.push_back(std::move(p));
+    int sum = 0;
+    for (auto& p : dst) sum += *p;
+    std::cout << sum << " " << src.size() << "\n";
+}`,
+  why: String.raw`Stages of a data pipeline often hand each item to the next stage. Moving the owning pointers transfers the items without copying them, and the source keeps its slots as nulls.` },
+
+{ n: 42, d: "applications", t: "Builder that changes behavior on temporaries", idiom: "Ref-qualified builder",
+  p: String.raw`Define class Builder holding a std::vector<int>. Give it add(int x) const-free overloads: the & overload appends x and returns a Builder&, and the && overload appends x and returns a Builder&&. Give it build() && that returns the stored vector by moving it out. Evaluate auto v = Builder{}.add(1).add(2).add(3).build(). Print the size of v, a space, and v[2], then a newline.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+class Builder {
+    std::vector<int> v_;
+public:
+    Builder& add(int x) & {
+        v_.push_back(x);
+        return *this;
+    }
+    Builder&& add(int x) && {
+        v_.push_back(x);
+        return std::move(*this);
+    }
+    std::vector<int> build() && { return std::move(v_); }
+};
+
+int main() {
+    auto v = Builder{}.add(1).add(2).add(3).build();
+    std::cout << v.size() << " " << v[2] << "\n";
+}`,
+  why: String.raw`A temporary builder can safely give up its contents, while a named builder must keep them. Ref-qualified overloads make that distinction, so chained calls on temporaries stay cheap.` },
+
+{ n: 43, d: "applications", t: "Taking the front element out of a deque", idiom: "Moving out of containers",
+  p: String.raw`Create a std::deque of unique_ptr<int> and push back unique_ptrs to 7 and 8. Move the front element into a new variable p, then pop the front element. Print the value p points to, a space, the size of the deque, a space, and the value of the new front element, then a newline.`,
+  ex: String.raw`7 1 8`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <memory>
+#include <utility>
+
+int main() {
+    std::deque<std::unique_ptr<int>> d;
+    d.push_back(std::make_unique<int>(7));
+    d.push_back(std::make_unique<int>(8));
+    auto p = std::move(d.front());
+    d.pop_front();
+    std::cout << *p << " " << d.size() << " " << *d.front() << "\n";
+}`,
+  why: String.raw`Removing an element from a queue after moving it out lets the caller own the element without a copy. The pop then only destroys the empty slot.` },
+
+{ n: 44, d: "applications", t: "Taking a batch and leaving an empty buffer", idiom: "std::exchange",
+  p: String.raw`Create a vector pending holding 1, 2 and 3. Use std::exchange to move its contents into a new vector batch, leaving pending holding an empty vector. Print the size of batch, a space, and the size of pending, then a newline.`,
+  ex: String.raw`3 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<int> pending{1, 2, 3};
+    auto batch = std::exchange(pending, std::vector<int>{});
+    std::cout << batch.size() << " " << pending.size() << "\n";
+}`,
+  why: String.raw`A common way to flush a buffer is to take its contents and replace it with an empty value in one step. std::exchange does both without a separate clear and without copying the elements.` },
+
+{ n: 45, d: "applications", t: "Handing a buffer to a container", idiom: "Hand-off to container",
+  p: String.raw`Create a vector of vectors chunks. Create a vector buf holding 1, 2 and 3. Move buf into chunks using push_back. Print the size of the first element of chunks, a space, and the size of buf, then a newline.`,
+  ex: String.raw`3 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<int>> chunks;
+    std::vector<int> buf{1, 2, 3};
+    chunks.push_back(std::move(buf));
+    std::cout << chunks[0].size() << " " << buf.size() << "\n";
+}`,
+  why: String.raw`Handing a buffer to a container without copying it is the usual way to build up collections of large data. The buffer is left empty, so it can be reused for the next batch.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-move-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 12, label: "Easy", range: "Problems 1–12", badge: "easy" },
+  { from: 13, to: 25, label: "Medium", range: "Problems 13–25", badge: "medium" },
+  { from: 26, to: 33, label: "Hard", range: "Problems 26–33", badge: "hard" },
+  { from: 34, to: 39, label: "Extension", range: "Problems 34–39", badge: null },
+  { from: 40, to: 45, label: "Applications", range: "Problems 40–45", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

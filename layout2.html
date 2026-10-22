@@ -1,0 +1,632 @@
+<title>C++ Memory Layout Gaps</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 19 problems</p>
+    <h1>C++ Memory Layout Gaps Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">19</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="19" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Size of a union holding three types", idiom: "Unions",
+  p: String.raw`Define a union U holding an int, a float and a char array of eight chars. Print sizeof U followed by a newline.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <iostream>
+
+union U {
+    int i;
+    float f;
+    char c[8];
+};
+
+int main() {
+    std::cout << sizeof(U) << "\n";
+}`,
+  why: String.raw`A union's size is the size of its largest member, rounded up to the largest alignment. All members share the same bytes, so the union need not be the sum of its members.` },
+
+{ n: 2, d: "easy", t: "Sizes of lambdas with different captures", idiom: "Lambda layout",
+  p: String.raw`Create three lambdas: one with no captures, one that captures an int named x by value, and one that captures x by reference. Print sizeof of each, separated by spaces, then a newline. x is an int with value 5.`,
+  ex: String.raw`1 4 8`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    auto none = [] { return 1; };
+    int x = 5;
+    auto byval = [x] { return x; };
+    auto byref = [&x] { return x; };
+    std::cout << sizeof(none) << " " << sizeof(byval) << " " << sizeof(byref) << "\n";
+}`,
+  why: String.raw`A lambda is a class with one member for each capture. A capture by value stores the value, while a capture by reference stores a pointer, and a lambda with no captures stores nothing.` },
+
+{ n: 3, d: "easy", t: "Sum the elements of a trailing buffer", idiom: "Trailing storage",
+  p: String.raw`Define Header with an int member n. Reserve one block of raw bytes large enough for a Header followed by four ints. Construct a Header with n set to 4 at the start of the block. Store the numbers 1 to 4 in the ints that follow the Header, then sum the values read back using the count in the Header. Print the sum, then a newline. Release the block afterwards.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <new>
+
+struct Header {
+    int n;
+};
+
+int main() {
+    const int n = 4;
+    std::size_t bytes = sizeof(Header) + n * sizeof(int);
+    unsigned char* buf = new unsigned char[bytes];
+    Header* h = new (buf) Header{n};
+    int* data = reinterpret_cast<int*>(buf + sizeof(Header));
+    for (int i = 0; i < n; ++i) data[i] = i + 1;
+    int sum = 0;
+    for (int i = 0; i < h->n; ++i) sum += data[i];
+    std::cout << sum << "\n";
+    h->~Header();
+    delete[] buf;
+}`,
+  why: String.raw`A header and its elements can live in one allocation, with the elements placed directly after the header. One allocation then serves both, and the count tells the reader how many elements follow.` },
+
+{ n: 4, d: "easy", t: "Call a C-linkage function", idiom: "C interop",
+  p: String.raw`Declare a function add with C linkage that takes two ints and returns their sum. Call it with 2 and 3 and print the result followed by a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+extern "C" int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << add(2, 3) << "\n";
+}`,
+  why: String.raw`extern "C" gives a function the unmangled name and calling convention expected by C code. Functions with this linkage can be called from or defined in C.` },
+
+{ n: 5, d: "easy", t: "Inline variable with external linkage", idiom: "Inline variables and ODR",
+  p: String.raw`Declare an inline int named counter with the value 3. Print its value followed by a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+
+inline int counter = 3;
+
+int main() {
+    std::cout << counter << "\n";
+}`,
+  why: String.raw`An inline variable has one definition across all translation units that include it. That allows the definition to live in a header without breaking the one-definition rule.` },
+
+{ n: 6, d: "easy", t: "Element access and distance with pointers", idiom: "Pointer arithmetic",
+  p: String.raw`Create an int array holding 10, 20, 30, 40 and 50. Make a pointer to its first element. Print the value three elements past the start, a space, then the distance in elements from the start to one past the last element, then a newline.`,
+  ex: String.raw`40 5`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int a[5] = {10, 20, 30, 40, 50};
+    int* p = a;
+    std::cout << *(p + 3) << " " << (a + 5) - a << "\n";
+}`,
+  why: String.raw`Adding an integer to a pointer moves it by that many elements, not bytes. The difference between two pointers into the same array is the number of elements between them.` },
+
+// ---------- Medium ----------
+{ n: 7, d: "medium", t: "Tagged union with a kind field", idiom: "Unions",
+  p: String.raw`Define Tagged with an enum member k of type Kind, which has values I and D, and an anonymous union holding an int i and a double d. Print sizeof Tagged followed by a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`16`,
+  code: String.raw`#include <iostream>
+
+struct Tagged {
+    enum Kind { I, D } k;
+    union {
+        int i;
+        double d;
+    };
+};
+
+int main() {
+    std::cout << sizeof(Tagged) << "\n";
+}`,
+  why: String.raw`The enum takes four bytes and the union needs eight-byte alignment because of the double. The union starts at offset eight, so the struct is sixteen bytes in total.` },
+
+{ n: 8, d: "medium", t: "Two lambdas with identical bodies", idiom: "Lambda layout",
+  p: String.raw`Create two lambdas a and b, each taking an int and returning it unchanged. Create a third variable c as a copy of a. Print 1 if the type of a and b are the same or 0 otherwise, then a space, then 1 if the type of a and c are the same or 0 otherwise, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+int main() {
+    auto a = [](int x) { return x; };
+    auto b = [](int x) { return x; };
+    auto c = a;
+    std::cout << std::is_same_v<decltype(a), decltype(b)> << " " << std::is_same_v<decltype(a), decltype(c)> << "\n";
+}`,
+  why: String.raw`Each lambda expression creates its own unnamed class type, even when the code is identical. Copying a lambda gives a value of the same type.` },
+
+{ n: 9, d: "medium", t: "Count thread-local constructions across threads", idiom: "Thread-local storage",
+  p: String.raw`Define Probe with a constructor that increments the global counter ctor_count, a destructor that increments dtor_count, and a member function touch that does nothing. Protect both counters with a mutex. Declare a thread_local Probe named p. Start three threads, where each calls touch on p. Join them, then print ctor_count, a space, and dtor_count, then a newline.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int ctor_count = 0, dtor_count = 0;
+std::mutex m;
+
+struct Probe {
+    Probe() { std::lock_guard g(m); ++ctor_count; }
+    ~Probe() { std::lock_guard g(m); ++dtor_count; }
+    void touch() {}
+};
+
+thread_local Probe p;
+
+int main() {
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 3; ++i) ts.emplace_back([] { p.touch(); });
+    for (auto& t : ts) t.join();
+    std::cout << ctor_count << " " << dtor_count << "\n";
+}`,
+  why: String.raw`A thread_local object is constructed separately in each thread, on first use there, and destroyed when that thread ends. Joining guarantees the destructors have finished before the counts are read.` },
+
+{ n: 10, d: "medium", t: "Pass a struct to a C-linkage function", idiom: "C interop",
+  p: String.raw`Define Point with int members x and y. Define a function shift with C linkage that takes a pointer to Point and an int d, adds d to x and subtracts d from y. In main, create a Point with x 1 and y 2, call shift with d equal to 5, and print x and y separated by a space, then a newline.`,
+  ex: String.raw`6 -3`,
+  code: String.raw`#include <iostream>
+
+struct Point {
+    int x;
+    int y;
+};
+
+extern "C" void shift(Point* p, int d) {
+    p->x += d;
+    p->y -= d;
+}
+
+int main() {
+    Point pt{1, 2};
+    shift(&pt, 5);
+    std::cout << pt.x << " " << pt.y << "\n";
+}`,
+  why: String.raw`A standard-layout struct has the same members in the same order that C code would expect, so a C function can read and write it through a pointer. The C side sees only the bytes of the struct.` },
+
+{ n: 11, d: "medium", t: "Thread-local address differs between threads", idiom: "Thread-local storage",
+  p: String.raw`Declare a thread_local int named slot with value 0. In main, store the address of slot. Start a thread that stores its own address of slot into a pointer variable, then join. Print 1 if the two addresses differ, or 0 otherwise, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <thread>
+
+thread_local int slot = 0;
+
+int main() {
+    int* main_addr = &slot;
+    int* other = nullptr;
+    std::thread t([&other] { other = &slot; });
+    t.join();
+    std::cout << (main_addr != other) << "\n";
+}`,
+  why: String.raw`Each thread has its own instance of a thread_local variable, so the same name refers to different memory in different threads. The address alone tells them apart.` },
+
+{ n: 12, d: "medium", t: "Map a page and write through the pointer", idiom: "Memory mapping",
+  p: String.raw`Map one page of anonymous, private, read-write memory. Store 42 in its first int and print that value, a space, then 1 if the mapping's address is a multiple of 4096 or 0 otherwise, then a newline. Unmap the page afterwards.`,
+  ex: String.raw`42 1`,
+  code: String.raw`#include <sys/mman.h>
+#include <cstdint>
+#include <iostream>
+
+int main() {
+    void* mem = mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    int* p = static_cast<int*>(mem);
+    *p = 42;
+    std::cout << *p << " " << (reinterpret_cast<std::uintptr_t>(mem) % 4096 == 0) << "\n";
+    munmap(mem, 4096);
+}`,
+  why: String.raw`mmap asks the operating system for pages of memory directly, outside the heap. The returned region is page-aligned, which is why its address is a multiple of the page size.` },
+
+{ n: 13, d: "medium", t: "Static local inside an inline function", idiom: "Inline variables and ODR",
+  p: String.raw`Define an inline function next_id that has a static int id starting at 0, increments it and returns it. In main, call next_id twice and print the two results separated by a space, then a newline.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <iostream>
+
+inline int next_id() {
+    static int id = 0;
+    return ++id;
+}
+
+int main() {
+    int a = next_id();
+    int b = next_id();
+    std::cout << a << " " << b << "\n";
+}`,
+  why: String.raw`An inline function may appear in several translation units, but its static local is still a single object shared by all of them. Each call sees the value left by the previous call.` },
+
+{ n: 14, d: "medium", t: "Resume a minimal coroutine", idiom: "Coroutine frames",
+  p: String.raw`Write a minimal coroutine type Task with a promise type that starts suspended, does not suspend at the end, and returns void. Write a coroutine job that prints start, then suspends, then prints resumed when resumed. In main, create the task and print suspended. Resume the task, print between, resume it again, and print end.`,
+  ex: String.raw`suspended
+start
+between
+resumed
+end`,
+  code: String.raw`#include <coroutine>
+#include <iostream>
+
+struct Task {
+    struct promise_type {
+        Task get_return_object() {
+            return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void return_void() {}
+        void unhandled_exception() {}
+    };
+    std::coroutine_handle<promise_type> h;
+    explicit Task(std::coroutine_handle<promise_type> handle) : h(handle) {}
+    Task(Task&& o) noexcept : h(o.h) { o.h = nullptr; }
+    ~Task() {
+        if (h) h.destroy();
+    }
+};
+
+Task job() {
+    std::cout << "start\n";
+    co_await std::suspend_always{};
+    std::cout << "resumed\n";
+}
+
+int main() {
+    Task t = job();
+    std::cout << "suspended\n";
+    t.h.resume();
+    std::cout << "between\n";
+    t.h.resume();
+    std::cout << "end\n";
+}`,
+  why: String.raw`A coroutine starts suspended and runs only when resumed. Each co_await hands control back to the caller, and the next resume continues from that point, with the locals kept in the coroutine frame.` },
+
+// ---------- Hard ----------
+{ n: 15, d: "hard", t: "Sizes and alignment of two unions", idiom: "Unions",
+  p: String.raw`Define union A with a char and a double. Define union B with a char array of nine chars and a double. Print sizeof A, alignof A, sizeof B and alignof B, separated by spaces, then a newline.`,
+  ex: String.raw`8 8 16 8`,
+  code: String.raw`#include <iostream>
+
+union A {
+    char c;
+    double d;
+};
+
+union B {
+    char a[9];
+    double d;
+};
+
+int main() {
+    std::cout << sizeof(A) << " " << alignof(A) << " " << sizeof(B) << " " << alignof(B) << "\n";
+}`,
+  why: String.raw`A union is aligned to its most aligned member and sized to hold its largest member, padded to a multiple of that alignment. Nine chars need sixteen bytes once padded to eight-byte alignment.` },
+
+{ n: 16, d: "hard", t: "Read a member through a byte offset", idiom: "Pointer arithmetic",
+  p: String.raw`Define S with a char a set to 1, an int b set to 7 and a double c set to 2.5, in that order. Starting from the address of the object as a char pointer, add the offset of b and read an int there, and print it. Then print the byte distance from the address of a to the address of c, separated by a space, then a newline.`,
+  ex: String.raw`7 8`,
+  code: String.raw`#include <cstddef>
+#include <cstdint>
+#include <iostream>
+
+struct S {
+    char a;
+    int b;
+    double c;
+};
+
+int main() {
+    S s{1, 7, 2.5};
+    char* base = reinterpret_cast<char*>(&s);
+    int b = *reinterpret_cast<int*>(base + offsetof(S, b));
+    std::cout << b << " " << (reinterpret_cast<std::uintptr_t>(&s.c) - reinterpret_cast<std::uintptr_t>(&s.a)) << "\n";
+}`,
+  why: String.raw`Offsets measured in bytes give exact positions within an object. Moving a char pointer by an offset and reading an int there gives the same value as reading the member by name, when the offset is correct.` },
+
+{ n: 17, d: "hard", t: "Destroy a suspended coroutine", idiom: "Coroutine frames",
+  p: String.raw`Use a coroutine type Task with a promise type that starts suspended and does not suspend at the end. Define Tracker with a destructor that prints local dtor. The coroutine job creates a local Tracker, prints start, then suspends. In main, in a nested block, create a task from job, resume it once, and print suspended. Leave the block without resuming again. After the block, print end.`,
+  ex: String.raw`start
+suspended
+local dtor
+end`,
+  code: String.raw`#include <coroutine>
+#include <iostream>
+
+struct Task {
+    struct promise_type {
+        Task get_return_object() {
+            return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void return_void() {}
+        void unhandled_exception() {}
+    };
+    std::coroutine_handle<promise_type> h;
+    explicit Task(std::coroutine_handle<promise_type> handle) : h(handle) {}
+    Task(Task&& o) noexcept : h(o.h) { o.h = nullptr; }
+    ~Task() {
+        if (h) h.destroy();
+    }
+};
+
+struct Tracker {
+    ~Tracker() { std::cout << "local dtor\n"; }
+};
+
+Task job() {
+    Tracker t;
+    std::cout << "start\n";
+    co_await std::suspend_always{};
+    std::cout << "never\n";
+}
+
+int main() {
+    {
+        Task task = job();
+        task.h.resume();
+        std::cout << "suspended\n";
+    }
+    std::cout << "end\n";
+}`,
+  why: String.raw`A suspended coroutine's locals live in its frame, not on the stack. Destroying the coroutine handle destroys the frame, so local destructors run even though the body never finished.` },
+
+{ n: 18, d: "hard", t: "Two pages with a pointer distance", idiom: "Memory mapping",
+  p: String.raw`Map two pages, 8192 bytes, of anonymous private read-write memory. Treat the start of the first page as an int and the start of the second page as an int. Store 1 in the first and 2 in the second. Print the byte distance from the first int to the second, then a space, then their sum, then a space, then the offset of the mapping's address within its page, then a newline. Unmap afterwards.`,
+  ex: String.raw`4096 3 0`,
+  code: String.raw`#include <sys/mman.h>
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
+
+int main() {
+    const std::size_t size = 2 * 4096;
+    char* mem = static_cast<char*>(mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    int* first = reinterpret_cast<int*>(mem);
+    int* second = reinterpret_cast<int*>(mem + 4096);
+    *first = 1;
+    *second = 2;
+    std::cout << (reinterpret_cast<char*>(second) - reinterpret_cast<char*>(first)) << " "
+              << *first + *second << " "
+              << reinterpret_cast<std::uintptr_t>(mem) % 4096 << "\n";
+    munmap(mem, size);
+}`,
+  why: String.raw`Two pages of one mapping are contiguous, so the distance between addresses in them is exactly the page size. Because the mapping starts on a page boundary, its offset within the page is zero.` },
+
+{ n: 19, d: "hard", t: "Store a trailing array after a header", idiom: "Trailing storage",
+  p: String.raw`Define Header with a char tag set to x. Reserve raw storage for a Header followed by three doubles, where the doubles start at the first offset that is a multiple of the alignment of double. Construct the Header at the start, store 1.0, 2.0 and 3.0 in the doubles, and print the offset of the doubles, then a space, then their sum, then a newline. Release the storage afterwards.`,
+  ex: String.raw`8 6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <new>
+
+struct Header {
+    char tag;
+};
+
+int main() {
+    constexpr std::size_t n = 3;
+    constexpr std::size_t off = (sizeof(Header) + alignof(double) - 1) / alignof(double) * alignof(double);
+    unsigned char* buf = new unsigned char[off + n * sizeof(double)];
+    Header* h = new (buf) Header{'x'};
+    double* data = reinterpret_cast<double*>(buf + off);
+    for (std::size_t i = 0; i < n; ++i) data[i] = static_cast<double>(i + 1);
+    std::cout << off << " " << data[0] + data[1] + data[2] << "\n";
+    h->~Header();
+    delete[] buf;
+}`,
+  why: String.raw`Rounding the header size up to the alignment of double gives the first position where the doubles are correctly aligned. Placing data at that offset keeps the header and the array in one allocation without any misaligned access.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-layout2-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 6, label: "Easy", range: "Problems 1–6", badge: "easy" },
+  { from: 7, to: 14, label: "Medium", range: "Problems 7–14", badge: "medium" },
+  { from: 15, to: 19, label: "Hard", range: "Problems 15–19", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

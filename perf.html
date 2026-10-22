@@ -1,0 +1,2417 @@
+<title>C++ High-Performance Patterns</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 88 problems</p>
+    <h1>C++ High-Performance Patterns Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">88</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="88" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Reserved capacity avoids reallocation", idiom: "Allocation avoidance",
+  p: String.raw`Create an empty vector of ints and reserve room for ten elements. Record the address of its data. Push the numbers 0 to 9. Print same if the data address is unchanged, or moved otherwise, then a newline.`,
+  ex: String.raw`same`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    v.reserve(10);
+    const int* before = v.data();
+    for (int i = 0; i < 10; ++i) v.push_back(i);
+    std::cout << (before == v.data() ? "same" : "moved") << "\n";
+}`,
+  why: String.raw`Reserving the final size up front means the pushes never need a new buffer. The data pointer stays valid, and no elements are copied or moved.` },
+
+{ n: 2, d: "easy", t: "Push a moved object into a vector", idiom: "Moves and copies",
+  p: String.raw`Define Counted with static counters copies and moves. Its copy constructor increments copies, and its move constructor is noexcept and increments moves. Create a Counted and push it into an empty vector using a move. Print copies, a space, then moves, then a newline.`,
+  ex: String.raw`copies 0 moves 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+struct Counted {
+    static inline int copies = 0, moves = 0;
+    Counted() = default;
+    Counted(const Counted&) { ++copies; }
+    Counted(Counted&&) noexcept { ++moves; }
+    Counted& operator=(const Counted&) = default;
+    Counted& operator=(Counted&&) noexcept = default;
+};
+
+int main() {
+    std::vector<Counted> v;
+    Counted x;
+    v.push_back(std::move(x));
+    std::cout << "copies " << Counted::copies << " moves " << Counted::moves << "\n";
+}`,
+  why: String.raw`Moving an object into a container uses the move constructor, so the expensive copy is avoided. The moved-from object still exists, but its contents now belong to the container.` },
+
+{ n: 3, d: "easy", t: "Branchless minimum of two ints", idiom: "Branch behaviour",
+  p: String.raw`Write branchless_min(a, b) that returns the smaller of two ints using only arithmetic and bit operations, with no if statement or conditional operator. Print branchless_min(3, 8), a space, then branchless_min(9, 4), then a newline.`,
+  ex: String.raw`3 4`,
+  code: String.raw`#include <iostream>
+
+int branchless_min(int a, int b) {
+    int diff = a - b;
+    int mask = diff >> 31;
+    return b + (diff & mask);
+}
+
+int main() {
+    std::cout << branchless_min(3, 8) << " " << branchless_min(9, 4) << "\n";
+}`,
+  why: String.raw`When the difference is negative, the shift produces an all-ones mask that selects a - b, so the result is a. Otherwise the mask is zero and the result is b. No branch is taken, so the result cannot be mispredicted.` },
+
+{ n: 4, d: "easy", t: "Multiply and divide without overflow", idiom: "Numerical traps",
+  p: String.raw`Let a and b be the int 100000, and c the int 1000. Compute a times b divided by c, doing the multiplication in a type wide enough to hold the product. Print the result followed by a newline.`,
+  ex: String.raw`10000000`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int a = 100000, b = 100000, c = 1000;
+    long long wide = static_cast<long long>(a) * b / c;
+    std::cout << wide << "\n";
+}`,
+  why: String.raw`The product of two ints can be as large as 10^10, far beyond the range of int. Converting one operand before multiplying keeps the whole calculation in long long.` },
+
+{ n: 5, d: "easy", t: "Count set bits in a 16-bit mask", idiom: "Bit tricks",
+  p: String.raw`Print the number of 1 bits in the unsigned value 0xF0F0, followed by a newline. Use the standard library for the count.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <bit>
+#include <iostream>
+
+int main() {
+    std::cout << std::popcount(0xF0F0u) << "\n";
+}`,
+  why: String.raw`Counting set bits is a single instruction on most processors. The standard library exposes it as popcount, which compilers map to that instruction when it exists.` },
+
+{ n: 6, d: "easy", t: "Best bid from a price level map", idiom: "Order book structures",
+  p: String.raw`Keep bids in a map from price to quantity. Add these orders: 5 at price 100, 10 at 101, 7 at 99, and 5 more at 101. The best bid is the highest price with a bid. Print best, a space, the best price, then the word qty, a space, and the quantity at that price, then a newline.`,
+  ex: String.raw`best 101 qty 15`,
+  code: String.raw`#include <iostream>
+#include <map>
+
+int main() {
+    std::map<int, int> bids;
+    bids[100] += 5;
+    bids[101] += 10;
+    bids[99] += 7;
+    bids[101] += 5;
+    auto best = bids.rbegin();
+    std::cout << "best " << best->first << " qty " << best->second << "\n";
+}`,
+  why: String.raw`An ordered map keeps price levels sorted, so the best bid is always at one end. Reading it is constant time, and aggregating quantities at a price is one lookup.` },
+
+{ n: 7, d: "easy", t: "Welford mean and variance of a small list", idiom: "Welford and reproducible Monte Carlo",
+  p: String.raw`Using the values 2, 4, 4, 4, 5, 5, 7 and 9, compute the mean and the population variance with a single pass that updates a running mean and a running sum of squared deviations. Print the mean, a space, then the variance, then a newline.`,
+  ex: String.raw`5 4`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    double data[] = {2, 4, 4, 4, 5, 5, 7, 9};
+    double mean = 0, m2 = 0;
+    int n = 0;
+    for (double x : data) {
+        ++n;
+        double delta = x - mean;
+        mean += delta / n;
+        m2 += delta * (x - mean);
+    }
+    std::cout << mean << " " << m2 / n << "\n";
+}`,
+  why: String.raw`The running update keeps the mean and the sum of squared deviations without storing the values. Each step uses the updated mean, which is what keeps the method numerically stable.` },
+
+{ n: 8, d: "easy", t: "Compile-time table of squares", idiom: "Compile-time tables and measurement",
+  p: String.raw`Build an array of the squares of 0 to 9 at compile time. Check at compile time that the entry for 5 is 25. Print the entry for 7, then a newline.`,
+  ex: String.raw`49`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+constexpr std::array<int, 10> make_squares() {
+    std::array<int, 10> t{};
+    for (int i = 0; i < 10; ++i) t[i] = i * i;
+    return t;
+}
+
+constexpr auto squares = make_squares();
+static_assert(squares[5] == 25);
+
+int main() {
+    std::cout << squares[7] << "\n";
+}`,
+  why: String.raw`A constexpr function fills the table during compilation, so the program only reads precomputed values at run time. The static_assert proves a table entry at build time.` },
+
+// ---------- Medium ----------
+{ n: 9, d: "medium", t: "Arena allocation with alignment", idiom: "Allocation avoidance",
+  p: String.raw`Write class Arena that owns a 256-byte aligned buffer and a used count. Its allocate function takes a size and an alignment, rounds the current position up to the alignment, reserves the requested bytes, and returns the address. Allocate one int, then one double, from an Arena. Store 3 in the int and 2.5 in the double. Print the int, a space, the double, a space, then the number of bytes used, then a newline.`,
+  ex: String.raw`3 2.5 16`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <new>
+
+class Arena {
+    alignas(std::max_align_t) unsigned char buf_[256];
+    std::size_t used_ = 0;
+public:
+    void* allocate(std::size_t n, std::size_t align) {
+        std::size_t p = (used_ + align - 1) / align * align;
+        if (p + n > sizeof buf_) throw std::bad_alloc();
+        used_ = p + n;
+        return buf_ + p;
+    }
+    std::size_t used() const { return used_; }
+};
+
+int main() {
+    Arena a;
+    int* x = static_cast<int*>(a.allocate(sizeof(int), alignof(int)));
+    double* y = static_cast<double*>(a.allocate(sizeof(double), alignof(double)));
+    *x = 3;
+    *y = 2.5;
+    std::cout << *x << " " << *y << " " << a.used() << "\n";
+}`,
+  why: String.raw`A bump allocator hands out memory by moving one pointer forward, which costs almost nothing. Rounding up to each object's alignment keeps every object correctly aligned, at the cost of some padding.` },
+
+{ n: 10, d: "medium", t: "Clearing keeps the buffer", idiom: "Allocation avoidance",
+  p: String.raw`Fill a vector of ints with 100 values. Record its capacity. Clear the vector, push one value, and print 1 if the capacity is unchanged or 0 otherwise, then a space, then the size of the vector, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    for (int i = 0; i < 100; ++i) v.push_back(i);
+    std::size_t cap = v.capacity();
+    v.clear();
+    v.push_back(7);
+    std::cout << (v.capacity() == cap ? 1 : 0) << " " << v.size() << "\n";
+}`,
+  why: String.raw`Clearing a vector destroys its elements but keeps the storage. Reusing a vector across iterations therefore avoids paying for the allocation again.` },
+
+{ n: 11, d: "medium", t: "Move a container of counted objects", idiom: "Moves and copies",
+  p: String.raw`Define Counted with static counters copies and moves, as before. Define make as a function returning a new Counted by value. In main, write Counted c equal to make(), then print copies, a space, then moves, then a newline.`,
+  ex: String.raw`copies 0 moves 0`,
+  code: String.raw`#include <iostream>
+
+struct Counted {
+    static inline int copies = 0, moves = 0;
+    Counted() = default;
+    Counted(const Counted&) { ++copies; }
+    Counted(Counted&&) noexcept { ++moves; }
+};
+
+Counted make() { return Counted(); }
+
+int main() {
+    Counted c = make();
+    (void)c;
+    std::cout << "copies " << Counted::copies << " moves " << Counted::moves << "\n";
+}`,
+  why: String.raw`Returning a temporary and initialising a variable from it lets the compiler build the object directly in its final place. Neither a copy nor a move is needed at all.` },
+
+{ n: 12, d: "medium", t: "Reallocation moves elements unless space is reserved", idiom: "Moves and copies",
+  p: String.raw`Define Item with an int v, an explicit constructor from int, a noexcept move constructor that increments a static counter moves, and a copy constructor. Create an empty vector of Item and emplace three items with values 0 to 2. Print moves without reserve, a space, and the count. Reset the counter. Create another empty vector, reserve room for three items, emplace the same three values, and print moves with reserve, a space, and that count, then a newline.`,
+  ex: String.raw`moves without reserve 3
+moves with reserve 0`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct Item {
+    static inline int moves = 0;
+    int v;
+    explicit Item(int x) : v(x) {}
+    Item(Item&& o) noexcept : v(o.v) { ++moves; }
+    Item(const Item& o) : v(o.v) {}
+};
+
+int main() {
+    std::vector<Item> v;
+    for (int i = 0; i < 3; ++i) v.emplace_back(i);
+    std::cout << "moves without reserve " << Item::moves << "\n";
+    Item::moves = 0;
+    std::vector<Item> w;
+    w.reserve(3);
+    for (int i = 0; i < 3; ++i) w.emplace_back(i);
+    std::cout << "moves with reserve " << Item::moves << "\n";
+}`,
+  why: String.raw`When a vector grows past its capacity it moves the existing elements into a larger buffer. A noexcept move makes that the cheap path, and reserving the final size avoids growth entirely.` },
+
+{ n: 13, d: "medium", t: "Moving a vector keeps its buffer", idiom: "Moves and copies",
+  p: String.raw`Create a vector of unique_ptr to int with one element holding 9. Record the address of that pointed-to int. Move the vector into a second vector. Print 1 if the second vector's element points to the recorded address or 0 otherwise, then a space, then the value it holds, then a space, then 1 if the first vector is empty or 0 otherwise, then a newline.`,
+  ex: String.raw`1 9 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::unique_ptr<int>> a;
+    a.push_back(std::make_unique<int>(9));
+    int* addr = a[0].get();
+    std::vector<std::unique_ptr<int>> b = std::move(a);
+    std::cout << (b[0].get() == addr ? 1 : 0) << " " << *b[0] << " " << (a.empty() ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Moving a vector transfers its buffer pointer, so the elements stay where they were. No element is copied, and the source is left empty.` },
+
+{ n: 14, d: "medium", t: "Branch-free counting with a sum", idiom: "Branch behaviour",
+  p: String.raw`Given the ints 12, 55, 49, 50, 3, 99 and 48 in an array, count how many are less than 50 by adding a comparison result to a counter for each element, with no if statement. Print the count, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int data[] = {12, 55, 49, 50, 3, 99, 48};
+    int count = 0;
+    for (int x : data) count += (x < 50);
+    std::cout << count << "\n";
+}`,
+  why: String.raw`A comparison produces zero or one, which can be added directly. The loop has no unpredictable branch, so its speed does not depend on the pattern of the data.` },
+
+{ n: 15, d: "medium", t: "Sum order does not change the total", idiom: "Branch behaviour",
+  p: String.raw`Fill a vector of 1000 values using a simple linear congruential sequence starting from seed 12345, where each value is the bits 16 to 23 of the new state. Compute the sum of the values that are at least 128, in the original order. Then sort a copy and compute the same sum over the copy. Print same if the two sums match or differ otherwise, then a newline.`,
+  ex: String.raw`same`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v(1000);
+    unsigned s = 12345;
+    for (auto& x : v) {
+        s = s * 1103515245u + 12345u;
+        x = (s >> 16) & 255;
+    }
+    long long sum_unsorted = 0, sum_sorted = 0;
+    for (int x : v)
+        if (x >= 128) sum_unsorted += x;
+    std::vector<int> w = v;
+    std::sort(w.begin(), w.end());
+    for (int x : w)
+        if (x >= 128) sum_sorted += x;
+    std::cout << (sum_unsorted == sum_sorted ? "same" : "differ") << "\n";
+}`,
+  why: String.raw`Sorting the data makes the branch on each value predictable, which is why it is faster on real hardware. The total is the same in either order, so the speed change does not affect the answer.` },
+
+{ n: 16, d: "medium", t: "Subtract a difference without losing precision", idiom: "Numerical traps",
+  p: String.raw`Add 0.1 to a double total ten times, starting from zero, and compare the result with 1.0. Then sum the same ten values with Kahan compensated summation, where a separate correction variable is carried through each addition. Compare that result with 1.0. Print 1 if the naive total equals 1.0 or 0 otherwise, then a space, then 1 if the compensated total equals 1.0 or 0 otherwise, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    double naive = 0.0;
+    for (int i = 0; i < 10; ++i) naive += 0.1;
+    double sum = 0.0, c = 0.0;
+    for (int i = 0; i < 10; ++i) {
+        double y = 0.1 - c;
+        double t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+    std::cout << (naive == 1.0 ? 1 : 0) << " " << (sum == 1.0 ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Each addition of 0.1 rounds, and the rounding errors add up. Kahan summation records the part of each sum that was lost and feeds it back into the next addition, which keeps the error small.` },
+
+{ n: 17, d: "medium", t: "NaN compares unequal to itself", idiom: "Numerical traps",
+  p: String.raw`Create a quiet NaN double. Print 1 if it equals itself, or 0 otherwise, then a space, then 1 if the standard library says it is NaN, or 0 otherwise, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <cmath>
+#include <iostream>
+#include <limits>
+
+int main() {
+    double nan = std::numeric_limits<double>::quiet_NaN();
+    std::cout << (nan == nan ? 1 : 0) << " " << (std::isnan(nan) ? 1 : 0) << "\n";
+}`,
+  why: String.raw`IEEE 754 defines NaN as unequal to every value, including itself. Checks for NaN must use a test made for that purpose, because an equality test silently fails.` },
+
+{ n: 18, d: "medium", t: "Bit masks extract a bit field", idiom: "Bit tricks",
+  p: String.raw`Test whether each of the unsigned values 1, 6, 8 and 0 is a power of two, using a bit test on x and x minus one. Print each answer as 1 or 0, followed by a space, on one line, then a newline.`,
+  ex: String.raw`1 0 1 0 `,
+  code: String.raw`#include <iostream>
+
+bool is_pow2(unsigned x) {
+    return x && !(x & (x - 1));
+}
+
+int main() {
+    unsigned xs[] = {1, 6, 8, 0};
+    for (unsigned x : xs) std::cout << is_pow2(x) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A power of two has exactly one set bit, and subtracting one flips that bit and sets all the bits below it. Their AND is zero only for powers of two, and zero is excluded explicitly.` },
+
+{ n: 19, d: "medium", t: "Trailing zeros and bit width", idiom: "Bit tricks",
+  p: String.raw`For the unsigned value 40, print the number of trailing zero bits, then a space, then the number of bits needed to represent it, then a newline.`,
+  ex: String.raw`3 6`,
+  code: String.raw`#include <bit>
+#include <iostream>
+
+int main() {
+    unsigned x = 40;
+    std::cout << std::countr_zero(x) << " " << std::bit_width(x) << "\n";
+}`,
+  why: String.raw`Trailing zeros locate the lowest set bit, and bit width gives the position of the highest one. Both come from single instructions on common processors.` },
+
+{ n: 20, d: "medium", t: "Order book matching against best bids", idiom: "Order book structures",
+  p: String.raw`Keep bids in a map from price to quantity. Add 5 at 100, 10 at 101 and 7 at 99. Then sell 12 at price 100: match against the highest bids first, as long as the bid price is at least 100, and remove any price level that becomes empty. Print sold, a space, the amount sold, then best, a space, the highest remaining bid price, a space, qty, a space, the quantity at that price, a space, total, a space, and the sum of all remaining quantities, then a newline.`,
+  ex: String.raw`sold 12 best 100 qty 3 total 10`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <map>
+
+struct Book {
+    std::map<int, int> bids;
+    int sell(int price, int qty) {
+        int sold = 0;
+        while (qty > 0 && !bids.empty()) {
+            auto it = std::prev(bids.end());
+            if (it->first < price) break;
+            int take = std::min(qty, it->second);
+            it->second -= take;
+            qty -= take;
+            sold += take;
+            if (it->second == 0) bids.erase(it);
+        }
+        return sold;
+    }
+};
+
+int main() {
+    Book book;
+    book.bids[100] += 5;
+    book.bids[101] += 10;
+    book.bids[99] += 7;
+    int sold = book.sell(100, 12);
+    auto best = book.bids.rbegin();
+    int total = 0;
+    for (auto& [p, q] : book.bids) total += q;
+    std::cout << "sold " << sold << " best " << best->first << " qty " << best->second << " total " << total << "\n";
+}`,
+  why: String.raw`Matching walks down from the best price while the incoming order is willing to trade. The map keeps each level's quantity, and levels that empty are removed so the best bid stays correct.` },
+
+{ n: 21, d: "medium", t: "Sorted vector and ordered map agree on the best price", idiom: "Order book structures",
+  p: String.raw`Insert the prices 100, 103, 99, 101 and 102 into a sorted vector using insertion at the right position, and into a std::map. Print agree followed by the best price if the highest element in both structures is the same, or disagree otherwise, then a newline.`,
+  ex: String.raw`agree 103`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <map>
+#include <vector>
+
+int main() {
+    std::vector<int> sorted;
+    std::map<int, int> levels;
+    for (int p : {100, 103, 99, 101, 102}) {
+        auto pos = std::upper_bound(sorted.begin(), sorted.end(), p);
+        sorted.insert(pos, p);
+        levels[p] = 1;
+    }
+    bool same = sorted.back() == levels.rbegin()->first;
+    std::cout << (same ? "agree " : "disagree ") << sorted.back() << "\n";
+}`,
+  why: String.raw`A sorted vector keeps its maximum at the end, and a map keeps its maximum at the last node. Both give the same answer, but the vector pays for each insert with shifting, while the map pays with allocation and pointer chasing.` },
+
+{ n: 22, d: "medium", t: "Repeatable pseudo-random streams", idiom: "Welford and reproducible Monte Carlo",
+  p: String.raw`Write a 64-bit linear congruential generator with multiplier 6364136223846793005, increment 1442695040888963407, and output the top 32 bits of the state, shifted right by 33. Write run(seed), which creates a generator from the seed, draws 1000 values, and returns the sum of each value modulo 1000. Print same if run(42) equals run(42), or differ otherwise, then a space, then same if run(42) equals run(43), or differ otherwise, then a newline.`,
+  ex: String.raw`same differ`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+class Lcg {
+    std::uint64_t s_;
+public:
+    explicit Lcg(std::uint64_t seed) : s_(seed) {}
+    std::uint32_t next() {
+        s_ = s_ * 6364136223846793005ULL + 1442695040888963407ULL;
+        return static_cast<std::uint32_t>(s_ >> 33);
+    }
+};
+
+long long run(std::uint64_t seed) {
+    Lcg g(seed);
+    long long sum = 0;
+    for (int i = 0; i < 1000; ++i) sum += g.next() % 1000;
+    return sum;
+}
+
+int main() {
+    std::cout << (run(42) == run(42) ? "same" : "differ") << " "
+              << (run(42) == run(43) ? "same" : "differ") << "\n";
+}`,
+  why: String.raw`A seeded generator produces the same sequence every time, which makes a simulation repeatable and debuggable. Different seeds give different sequences, so the second comparison differs.` },
+
+{ n: 23, d: "medium", t: "Mean and variance with a large offset", idiom: "Welford and reproducible Monte Carlo",
+  p: String.raw`Use the values 1000000004, 1000000007, 1000000013 and 1000000016. Compute their mean and population variance in a single pass with a running mean and a running sum of squared deviations, using doubles. Print the mean with one decimal place, a space, the variance with one decimal place, then a newline.`,
+  ex: String.raw`1000000010.0 22.5`,
+  code: String.raw`#include <iomanip>
+#include <iostream>
+
+int main() {
+    double data[] = {1000000004.0, 1000000007.0, 1000000013.0, 1000000016.0};
+    double mean = 0, m2 = 0;
+    int n = 0;
+    for (double x : data) {
+        ++n;
+        double delta = x - mean;
+        mean += delta / n;
+        m2 += delta * (x - mean);
+    }
+    std::cout << std::fixed << std::setprecision(1) << mean << " " << m2 / n << "\n";
+}`,
+  why: String.raw`Updating the mean from deviations keeps the arithmetic on small differences, not on the large values. The running method is the one that stays accurate when the data sit far from zero.` },
+
+{ n: 24, d: "medium", t: "Fixed-point table of population counts", idiom: "Compile-time tables and measurement",
+  p: String.raw`Build at compile time a table of 256 bytes, where entry i is the number of 1 bits in i. Print entry 255, a space, then entry 10, then a newline.`,
+  ex: String.raw`8 2`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+constexpr std::array<unsigned char, 256> make_pop() {
+    std::array<unsigned char, 256> t{};
+    for (int i = 1; i < 256; ++i)
+        t[i] = static_cast<unsigned char>(t[i / 2] + (i & 1));
+    return t;
+}
+
+constexpr auto kPop = make_pop();
+
+int main() {
+    std::cout << static_cast<int>(kPop[255]) << " " << static_cast<int>(kPop[0b1010]) << "\n";
+}`,
+  why: String.raw`Each entry is built from an earlier one: the count for i is the count for i divided by two, plus the low bit. Computing the table during compilation leaves nothing to do at run time.` },
+
+{ n: 25, d: "medium", t: "Check that repeated runs agree", idiom: "Compile-time tables and measurement",
+  p: String.raw`Write a function work that returns the sum of the integers from 1 to 1000. Compute the reference value once. Then run work three times, counting how many results equal the reference. Print checksum, a space, the reference, a space, runs, a space, the count, a space, then ok, then a newline.`,
+  ex: String.raw`checksum 500500 runs 3 ok`,
+  code: String.raw`#include <iostream>
+
+long long work() {
+    long long s = 0;
+    for (int i = 1; i <= 1000; ++i) s += i;
+    return s;
+}
+
+int main() {
+    long long ref = work();
+    int ok = 0;
+    for (int run = 0; run < 3; ++run)
+        if (work() == ref) ++ok;
+    std::cout << "checksum " << ref << " runs " << ok << " ok\n";
+}`,
+  why: String.raw`A benchmark that runs the same work repeatedly must check each result. A wrong answer that is fast is not a measurement of the right code, so the check comes before any timing.` },
+
+// ---------- Hard ----------
+{ n: 26, d: "hard", t: "Free list that reuses nodes without allocating", idiom: "Allocation avoidance",
+  p: String.raw`Define Node with an int value and a Node pointer next. Write class Pool that owns a vector of three Node objects, and links them into a free list. acquire returns the first free node and removes it from the list. release puts a node back at the front. Acquire two nodes a and b, release a, then acquire again into c. Print reused, a space, 1 if c is the same as a or 0 otherwise, then a space, then distinct, a space, and 1 if b is different from a or 0 otherwise, then a newline.`,
+  ex: String.raw`reused 1 distinct 1`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+struct Node {
+    int value;
+    Node* next;
+};
+
+class Pool {
+    std::vector<Node> storage_;
+    Node* free_ = nullptr;
+public:
+    explicit Pool(std::size_t n) : storage_(n) {
+        for (auto& node : storage_) {
+            node.next = free_;
+            free_ = &node;
+        }
+    }
+    Node* acquire() {
+        Node* n = free_;
+        if (n) free_ = n->next;
+        return n;
+    }
+    void release(Node* n) {
+        n->next = free_;
+        free_ = n;
+    }
+};
+
+int main() {
+    Pool pool(3);
+    Node* a = pool.acquire();
+    Node* b = pool.acquire();
+    pool.release(a);
+    Node* c = pool.acquire();
+    std::cout << "reused " << (c == a ? 1 : 0) << " distinct " << (b != a ? 1 : 0) << "\n";
+}`,
+  why: String.raw`A pool hands out nodes that already exist, so the allocator is never called after construction. Its storage never resizes, which keeps every node address stable while it is in use.` },
+
+{ n: 27, d: "hard", t: "Move a vector of counted objects without element moves", idiom: "Moves and copies",
+  p: String.raw`Define Counted with static counters copies and moves, and a move constructor that increments moves. Create a vector of Counted with capacity reserved for two elements, and emplace two objects. Move the vector into a new vector. Print copies, a space, moves, a space, and the size of the new vector, then a newline. Moves should be counted only from the vector operations themselves.`,
+  ex: String.raw`copies 0 moves 0 2`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+struct Counted {
+    static inline int copies = 0, moves = 0;
+    Counted() = default;
+    Counted(const Counted&) { ++copies; }
+    Counted(Counted&&) noexcept { ++moves; }
+};
+
+int main() {
+    std::vector<Counted> a;
+    a.reserve(2);
+    a.emplace_back();
+    a.emplace_back();
+    Counted::moves = 0;
+    std::vector<Counted> b = std::move(a);
+    std::cout << "copies " << Counted::copies << " moves " << Counted::moves << " " << b.size() << "\n";
+}`,
+  why: String.raw`Moving a vector hands over its buffer, so none of the elements are touched. Only element-wise operations such as growth or copying would cause copies or moves.` },
+
+{ n: 28, d: "hard", t: "Table lookup instead of a branch chain", idiom: "Branch behaviour",
+  p: String.raw`Build at compile time a table of 256 booleans that is true for the lowercase vowels a, e, i, o and u. Count how many characters of the string performance are vowels by looking each character up in the table, with no if or switch statement in the loop. Print the count, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <array>
+#include <initializer_list>
+#include <iostream>
+#include <string_view>
+
+constexpr std::array<bool, 256> make_vowels() {
+    std::array<bool, 256> t{};
+    for (char c : {'a', 'e', 'i', 'o', 'u'})
+        t[static_cast<unsigned char>(c)] = true;
+    return t;
+}
+
+constexpr auto kVowel = make_vowels();
+
+int main() {
+    std::string_view s = "performance";
+    int count = 0;
+    for (char c : s)
+        count += kVowel[static_cast<unsigned char>(c)];
+    std::cout << count << "\n";
+}`,
+  why: String.raw`A table turns a chain of comparisons into one memory read per character. The loop has no branch that depends on the data, so its speed stays steady on any input.` },
+
+{ n: 29, d: "hard", t: "Midpoint of large ints without overflow", idiom: "Numerical traps",
+  p: String.raw`Let lo be 2000000000 and hi be 2100000000, both ints. Compute their midpoint in a way that never forms lo plus hi, using an int. Print the midpoint, then a space, then 1 if it equals the midpoint computed in a long long from the true sum, or 0 otherwise, then a newline.`,
+  ex: String.raw`2050000000 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int lo = 2000000000, hi = 2100000000;
+    int mid = lo + (hi - lo) / 2;
+    long long check = (static_cast<long long>(lo) + hi) / 2;
+    std::cout << mid << " " << (mid == check ? 1 : 0) << "\n";
+}`,
+  why: String.raw`The sum of two large ints can be larger than int can hold, and signed overflow is undefined. Adding half of the difference keeps every intermediate value within range.` },
+
+{ n: 30, d: "hard", t: "Pack and unpack three colour channels", idiom: "Bit tricks",
+  p: String.raw`Pack the red value 5, green value 200 and blue value 17 into one 32-bit unsigned integer, with red in bits 16 to 23, green in bits 8 to 15 and blue in bits 0 to 7. Print the packed value, then a space, then the three channels read back in the same order, separated by spaces, then a newline.`,
+  ex: String.raw`378897 5 200 17`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+std::uint32_t pack(std::uint32_t r, std::uint32_t g, std::uint32_t b) {
+    return (r << 16) | (g << 8) | b;
+}
+
+int main() {
+    std::uint32_t p = pack(5, 200, 17);
+    std::cout << p << " " << ((p >> 16) & 0xFF) << " " << ((p >> 8) & 0xFF) << " " << (p & 0xFF) << "\n";
+}`,
+  why: String.raw`Each channel occupies its own eight-bit field. Shifting moves a field into position, and masking with 0xFF reads it back out without touching its neighbours.` },
+
+{ n: 31, d: "hard", t: "Ring buffer of recent prices", idiom: "Order book structures",
+  p: String.raw`Write class Ring that holds up to four int prices in a fixed array, overwriting the oldest when full. push adds a price. at_recent(k) returns the k-th most recent price, where k is zero for the newest. size returns how many prices are stored. Push the prices 100, 101, 103, 102, 104 and 105 in that order. Print the three most recent prices, separated by spaces, then a newline, then the size.`,
+  ex: String.raw`105 104 102
+4`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <initializer_list>
+#include <iostream>
+
+class Ring {
+    std::array<int, 4> buf_{};
+    std::size_t head_ = 0, size_ = 0;
+public:
+    void push(int v) {
+        buf_[head_] = v;
+        head_ = (head_ + 1) % buf_.size();
+        if (size_ < buf_.size()) ++size_;
+    }
+    int at_recent(std::size_t k) const {
+        return buf_[(head_ + buf_.size() - 1 - k) % buf_.size()];
+    }
+    std::size_t size() const { return size_; }
+};
+
+int main() {
+    Ring r;
+    for (int p : {100, 101, 103, 102, 104, 105}) r.push(p);
+    for (std::size_t k = 0; k < 3; ++k)
+        std::cout << r.at_recent(k) << (k < 2 ? " " : "\n");
+    std::cout << r.size() << "\n";
+}`,
+  why: String.raw`A fixed-size ring keeps the latest window of data with no allocation and no shifting. Walking backwards from the write position recovers the newest entries in order.` },
+
+{ n: 32, d: "hard", t: "Parallel Monte Carlo matches the sequential run", idiom: "Welford and reproducible Monte Carlo",
+  p: String.raw`Use a 64-bit linear congruential generator with multiplier 6364136223846793005, increment 1442695040888963407, and output the top 32 bits of the state shifted right by 33. Write run(seed), which draws 1000 values and returns the sum of each value modulo 1000. Sequentially compute run(1) plus run(2) plus run(3) plus run(4). Then run the same four seeds, one per thread, storing each result in its own slot, and add the slots in order. Print match if the two totals are equal or mismatch otherwise, then a newline.`,
+  ex: String.raw`match`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+class Lcg {
+    std::uint64_t s_;
+public:
+    explicit Lcg(std::uint64_t seed) : s_(seed) {}
+    std::uint32_t next() {
+        s_ = s_ * 6364136223846793005ULL + 1442695040888963407ULL;
+        return static_cast<std::uint32_t>(s_ >> 33);
+    }
+};
+
+long long run(std::uint64_t seed) {
+    Lcg g(seed);
+    long long sum = 0;
+    for (int i = 0; i < 1000; ++i) sum += g.next() % 1000;
+    return sum;
+}
+
+int main() {
+    long long seq = run(1) + run(2) + run(3) + run(4);
+    std::vector<long long> parts(4, 0);
+    std::vector<std::thread> ts;
+    for (int t = 0; t < 4; ++t)
+        ts.emplace_back([&parts, t] { parts[t] = run(t + 1); });
+    for (auto& th : ts) th.join();
+    long long par = 0;
+    for (long long p : parts) par += p;
+    std::cout << (par == seq ? "match" : "mismatch") << "\n";
+}`,
+  why: String.raw`Giving each thread its own seed and its own result slot makes the parallel work independent of scheduling. Combining the slots in a fixed order gives the same total as the sequential run.` },
+
+{ n: 33, d: "hard", t: "Keep a loop's result alive with a volatile sink", idiom: "Compile-time tables and measurement",
+  p: String.raw`Write a loop that adds the integers 0 to 999 into a volatile long long named sink, so the compiler cannot discard the work. After the loop, print sink, then a space, then 1 if sink equals 999 times 1000 divided by 2, or 0 otherwise, then a newline.`,
+  ex: String.raw`499500 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    volatile long long sink = 0;
+    for (int i = 0; i < 1000; ++i)
+        sink = sink + i;
+    long long v = sink;
+    std::cout << v << " " << (v == 999LL * 1000 / 2 ? 1 : 0) << "\n";
+}`,
+  why: String.raw`An optimiser may remove a computation whose result is never used, which would make a benchmark measure nothing. Storing into a volatile object forces each update to happen, and checking the value against a formula confirms the work was done correctly.` },
+
+// ---------- Extension ----------
+{ n: 34, d: "extension", t: "Small inline buffer that spills to the heap", idiom: "Small-buffer optimisation",
+  p: String.raw`Write class SmallVec that stores up to four ints inside the object. When a fifth int is pushed, it moves all its contents to a std::vector on the heap. Provide push, is_inline, get and sum. Push 1 to 4, then record is_inline. Push 5 and 6, then record is_inline again. Print inline, a space, the first flag, a space, inline, a space, the second flag, a space, sum, a space, and the sum of all six values, then a newline.`,
+  ex: String.raw`inline 1 inline 0 sum 21`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+class SmallVec {
+    int inline_[4] = {0, 0, 0, 0};
+    int n_ = 0;
+    bool spilled_ = false;
+    std::vector<int> heap_;
+public:
+    void push(int v) {
+        if (!spilled_ && n_ < 4) {
+            inline_[n_++] = v;
+            return;
+        }
+        if (!spilled_) {
+            heap_.assign(inline_, inline_ + n_);
+            spilled_ = true;
+        }
+        heap_.push_back(v);
+        ++n_;
+    }
+    bool is_inline() const { return !spilled_; }
+    int get(int i) const { return spilled_ ? heap_[i] : inline_[i]; }
+    long long sum() const {
+        long long s = 0;
+        for (int i = 0; i < n_; ++i) s += get(i);
+        return s;
+    }
+};
+
+int main() {
+    SmallVec v;
+    for (int i = 1; i <= 4; ++i) v.push(i);
+    bool a = v.is_inline();
+    v.push(5);
+    v.push(6);
+    bool b = v.is_inline();
+    std::cout << "inline " << a << " inline " << b << " sum " << v.sum() << "\n";
+}`,
+  why: String.raw`Small inline storage avoids a heap allocation for the common small case. The object only pays for the allocation once it outgrows the inline slots, and the spill copies the existing values across.` },
+
+{ n: 35, d: "extension", t: "Look up strings without building a key", idiom: "Transparent lookup",
+  p: String.raw`Create a std::map from std::string to int, using the transparent comparator std::less with no template argument, and insert apple with 3, banana with 0 and pear with 7. Keep three queries as std::string_view values: pear, kiwi and apple. Count how many queries are found using find with the string_view directly, without constructing a std::string for each query. Print found, a space, and the count, then a newline.`,
+  ex: String.raw`found 2`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <string_view>
+#include <vector>
+
+int main() {
+    std::map<std::string, int, std::less<>> stock{{"apple", 3}, {"banana", 0}, {"pear", 7}};
+    std::vector<std::string_view> queries{"pear", "kiwi", "apple"};
+    int found = 0;
+    for (auto q : queries)
+        if (stock.find(q) != stock.end()) ++found;
+    std::cout << "found " << found << "\n";
+}`,
+  why: String.raw`A transparent comparator lets a map compare keys of a different type. A string_view query is compared directly with the stored strings, so the lookup builds no temporary string.` },
+
+{ n: 36, d: "extension", t: "Count temporaries when pushing versus emplacing", idiom: "Emplacement",
+  p: String.raw`Define Thing with an int constructor and a noexcept move constructor. Both constructors increment a static counter called made. Reset made to zero, push Thing(3) into an empty vector, and record made. Reset made again, emplace 3 into a second empty vector, and print push, a space, the recorded count, a space, emplace, a space, the second count, then a newline.`,
+  ex: String.raw`push 2 emplace 1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct Thing {
+    static inline int made = 0;
+    int v;
+    Thing(int x) : v(x) { ++made; }
+    Thing(Thing&& o) noexcept : v(o.v) { ++made; }
+};
+
+int main() {
+    Thing::made = 0;
+    std::vector<Thing> a;
+    a.push_back(Thing(3));
+    int push_count = Thing::made;
+    Thing::made = 0;
+    std::vector<Thing> b;
+    b.emplace_back(3);
+    std::cout << "push " << push_count << " emplace " << Thing::made << "\n";
+}`,
+  why: String.raw`push_back of a temporary builds the object once, then moves it into the vector. emplace_back forwards the arguments and builds the object directly in the vector's storage, so no move is needed.` },
+
+{ n: 37, d: "extension", t: "Float addition is not associative", idiom: "Floating-point association",
+  p: String.raw`Let a be the float 1e8. Compute x as a plus 1.0f minus a, grouping the operations left to right. Compute y as a minus a plus 1.0f. Print x, a space, and y, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    float a = 1e8f;
+    float x = (a + 1.0f) - a;
+    float y = (a - a) + 1.0f;
+    std::cout << x << " " << y << "\n";
+}`,
+  why: String.raw`A float near 1e8 has a spacing of eight between representable values, so adding one rounds back to a. Changing the grouping changes which operations round, so the two results differ.` },
+
+{ n: 38, d: "extension", t: "Integer division and modulo with negative values", idiom: "Integer division",
+  p: String.raw`Write floor_div(a, b) that returns the quotient rounded toward negative infinity for ints. Print -7 divided by 2 using the built-in division, a space, -7 modulo 2 using the built-in operator, a space, and floor_div(-7, 2), then a newline.`,
+  ex: String.raw`-3 -1 -4`,
+  code: String.raw`#include <iostream>
+
+int floor_div(int a, int b) {
+    int q = a / b;
+    if ((a % b != 0) && ((a < 0) != (b < 0))) --q;
+    return q;
+}
+
+int main() {
+    std::cout << -7 / 2 << " " << -7 % 2 << " " << floor_div(-7, 2) << "\n";
+}`,
+  why: String.raw`C++ integer division truncates toward zero, so the remainder takes the sign of the dividend. Rounding toward negative infinity needs a correction when the signs differ and the division was inexact.` },
+
+{ n: 39, d: "extension", t: "Compare floats with a relative tolerance", idiom: "Approximate comparison",
+  p: String.raw`Write approx_equal(a, b) for doubles, which returns true when the absolute difference is at most 1e-9 times the larger of the two magnitudes. Set a to 0.1 plus 0.2 and b to 0.3. Print 1 if a equals b exactly or 0 otherwise, then a space, then 1 if approx_equal says they are close or 0 otherwise, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <algorithm>
+#include <cmath>
+#include <iostream>
+
+bool approx_equal(double a, double b, double rel = 1e-9) {
+    return std::fabs(a - b) <= rel * std::max(std::fabs(a), std::fabs(b));
+}
+
+int main() {
+    double a = 0.1 + 0.2, b = 0.3;
+    std::cout << (a == b ? 1 : 0) << " " << (approx_equal(a, b) ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Binary floats cannot store 0.1 or 0.3 exactly, so their sums differ in the last bits. A tolerance scaled to the magnitude of the values accepts that difference without accepting real errors.` },
+
+{ n: 40, d: "extension", t: "Visit each set bit with clear-lowest", idiom: "Bit iteration",
+  p: String.raw`Let x be the unsigned value 0b10110100. Repeatedly do the following while x is nonzero: print the position of its lowest set bit, followed by a space, then clear that lowest set bit. Print a newline at the end.`,
+  ex: String.raw`2 4 5 7 `,
+  code: String.raw`#include <bit>
+#include <iostream>
+
+int main() {
+    unsigned x = 0b10110100;
+    while (x) {
+        std::cout << std::countr_zero(x) << " ";
+        x &= x - 1;
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Subtracting one from a number flips its lowest set bit and every bit below it. Anding the two clears exactly the lowest set bit, so the loop runs once per set bit and nothing else.` },
+
+{ n: 41, d: "extension", t: "Rotate bits without shifting out", idiom: "Rotations",
+  p: String.raw`Rotate the unsigned value 0x80000001 left by one bit, and the unsigned value 1 right by one bit, using the standard rotation functions. Print the first result in hexadecimal, a space, then the second in hexadecimal, then a newline.`,
+  ex: String.raw`3 80000000`,
+  code: String.raw`#include <bit>
+#include <iostream>
+
+int main() {
+    std::cout << std::hex << std::rotl(0x80000001u, 1) << " " << std::rotr(1u, 1) << "\n";
+}`,
+  why: String.raw`A rotation moves bits that fall off one end back in at the other. Unlike a shift, it loses no bits, which is useful in hashing and in random-number generators.` },
+
+{ n: 42, d: "extension", t: "Cancel an order by id from both indexes", idiom: "Order book cancellation",
+  p: String.raw`Write class Book with a map from price to total quantity, and a map from order id to a struct holding its price and quantity. add(id, price, qty) records the order in both maps. cancel(id) removes the order from both, reduces its price level, and removes the level if it reaches zero. level(price) returns the quantity at a price, and total returns the sum of all quantities. Add order 1 for 5 at 100, order 2 for 3 at 100, and order 3 for 4 at 99. Cancel order 2. Print level, a space, 100, a space, the quantity at 100, a space, total, a space, and the total quantity, then a newline.`,
+  ex: String.raw`level 100 qty 5 total 9`,
+  code: String.raw`#include <iostream>
+#include <map>
+
+struct Order {
+    int price;
+    int qty;
+};
+
+class Book {
+    std::map<int, int> levels_;
+    std::map<int, Order> orders_;
+public:
+    void add(int id, int price, int qty) {
+        orders_[id] = {price, qty};
+        levels_[price] += qty;
+    }
+    void cancel(int id) {
+        auto it = orders_.find(id);
+        if (it == orders_.end()) return;
+        int price = it->second.price;
+        levels_[price] -= it->second.qty;
+        if (levels_[price] == 0) levels_.erase(price);
+        orders_.erase(it);
+    }
+    int level(int price) const {
+        auto it = levels_.find(price);
+        return it == levels_.end() ? 0 : it->second;
+    }
+    int total() const {
+        int t = 0;
+        for (auto& [p, q] : levels_) t += q;
+        return t;
+    }
+};
+
+int main() {
+    Book b;
+    b.add(1, 100, 5);
+    b.add(2, 100, 3);
+    b.add(3, 99, 4);
+    b.cancel(2);
+    std::cout << "level 100 qty " << b.level(100) << " total " << b.total() << "\n";
+}`,
+  why: String.raw`Cancelling needs to find an order by id and to update the level it belongs to. Keeping an index by id alongside the price levels makes both steps direct, instead of searching the whole book.` },
+
+{ n: 43, d: "extension", t: "Merge two running statistics summaries", idiom: "Parallel Welford merge",
+  p: String.raw`Define Stats with a count n, a mean and a sum of squared deviations m2, and an add(x) method using a running update. Define a static merge(a, b) that combines two summaries using the standard parallel formula: the combined mean, and m2 equal to the sum of both m2 values plus the squared difference of the means times the product of the counts divided by the total count. Feed 1, 2 and 3 into one Stats, and 10 and 20 into another. Also feed all five values into a third Stats in order. Merge the first two. Print the merged mean with one decimal place, a space, then 1 if the merged m2 is within 1e-9 of the single-pass m2, or 0 otherwise, then a newline.`,
+  ex: String.raw`7.2 1`,
+  code: String.raw`#include <cmath>
+#include <iomanip>
+#include <iostream>
+
+struct Stats {
+    double n = 0, mean = 0, m2 = 0;
+    void add(double x) {
+        n += 1;
+        double d = x - mean;
+        mean += d / n;
+        m2 += d * (x - mean);
+    }
+    static Stats merge(const Stats& a, const Stats& b) {
+        Stats r;
+        r.n = a.n + b.n;
+        double d = b.mean - a.mean;
+        r.mean = a.mean + d * b.n / r.n;
+        r.m2 = a.m2 + b.m2 + d * d * a.n * b.n / r.n;
+        return r;
+    }
+};
+
+int main() {
+    Stats a, b, all;
+    for (double x : {1.0, 2.0, 3.0}) {
+        a.add(x);
+        all.add(x);
+    }
+    for (double x : {10.0, 20.0}) {
+        b.add(x);
+        all.add(x);
+    }
+    Stats m = Stats::merge(a, b);
+    std::cout << std::fixed << std::setprecision(1) << m.mean << " "
+              << (std::fabs(m.m2 - all.m2) < 1e-9 ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Two summaries can be combined without revisiting the data, which is what lets each thread compute its own statistics and merge them at the end. The correction term accounts for the spread between the two group means.` },
+
+{ n: 44, d: "extension", t: "Prime count from a compile-time sieve", idiom: "Compile-time sieve",
+  p: String.raw`At compile time, build a table of booleans for the numbers 0 to 50 that marks primes using the sieve of Eratosthenes. At compile time, count the primes in that table and check that the count is 15. At run time, find the largest prime up to 50 from the table. Print the count, a space, and the largest prime, then a newline.`,
+  ex: String.raw`15 47`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+constexpr std::array<bool, 51> sieve() {
+    std::array<bool, 51> is{};
+    for (int i = 2; i <= 50; ++i) is[i] = true;
+    for (int i = 2; i * i <= 50; ++i) {
+        if (is[i]) {
+            for (int j = i * i; j <= 50; j += i) is[j] = false;
+        }
+    }
+    return is;
+}
+
+constexpr auto kIsPrime = sieve();
+
+constexpr int count_primes() {
+    int c = 0;
+    for (int i = 0; i <= 50; ++i) c += kIsPrime[i];
+    return c;
+}
+
+static_assert(count_primes() == 15);
+
+int main() {
+    int last = 0;
+    for (int i = 0; i <= 50; ++i)
+        if (kIsPrime[i]) last = i;
+    std::cout << count_primes() << " " << last << "\n";
+}`,
+  why: String.raw`A constexpr function runs during compilation, so the sieve and the count are fixed before the program starts. The static_assert turns a wrong table into a build error rather than a wrong answer.` },
+
+{ n: 45, d: "extension", t: "Select between two values without a branch", idiom: "Branch-free select",
+  p: String.raw`Write select(cond, a, b), where cond is 0 or 1, that returns a when cond is 1 and b when cond is 0, using only bitwise operations and arithmetic, with no if or conditional operator. Print select(1, 10, 20), a space, then select(0, 10, 20), then a newline.`,
+  ex: String.raw`10 20`,
+  code: String.raw`#include <iostream>
+
+int select(int cond, int a, int b) {
+    int mask = -cond;
+    return b ^ ((a ^ b) & mask);
+}
+
+int main() {
+    std::cout << select(1, 10, 20) << " " << select(0, 10, 20) << "\n";
+}`,
+  why: String.raw`Negating one gives a mask of all ones, and zero gives a mask of all zeros. The mask chooses whether the XOR of the two values is applied, so the selection happens without a jump.` },
+
+// ---------- Applications ----------
+{ n: 46, d: "applications", t: "Sum a field in two particle layouts", idiom: "Data layout",
+  p: String.raw`Define ParticleAoS as a struct with float members x, y, vx and vy, and ParticlesSoA as a struct holding four vectors of float with the same names. Fill 100 particles in both layouts, with x equal to i and the others 0, 1 and 2, as appropriate, for i from 0 to 99. Sum all x values in each layout. Print the two sums separated by a space, then a newline.`,
+  ex: String.raw`4950 4950`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+struct ParticleAoS {
+    float x, y, vx, vy;
+};
+
+struct ParticlesSoA {
+    std::vector<float> x, y, vx, vy;
+};
+
+int main() {
+    std::vector<ParticleAoS> aos;
+    ParticlesSoA soa;
+    for (int i = 0; i < 100; ++i) {
+        float v = static_cast<float>(i);
+        aos.push_back({v, 0, 1, 2});
+        soa.x.push_back(v);
+        soa.y.push_back(0);
+        soa.vx.push_back(1);
+        soa.vy.push_back(2);
+    }
+    float sa = 0, ss = 0;
+    for (auto& p : aos) sa += p.x;
+    for (float x : soa.x) ss += x;
+    std::cout << sa << " " << ss << "\n";
+}`,
+  why: String.raw`An array of structs interleaves fields, while a struct of arrays keeps each field contiguous. A loop that reads only one field touches less memory in the second layout, and both layouts give the same answer.` },
+
+{ n: 47, d: "applications", t: "Transpose a matrix block by block", idiom: "Cache blocking",
+  p: String.raw`Create a 4 by 4 int matrix m with entry i times 4 plus j at row i, column j. Transpose it into a second matrix t, processing it in 2 by 2 blocks, so that t at row j, column i equals m at row i, column j. Print t at row 0 column 1, a space, then t at row 1 column 0, then a newline.`,
+  ex: String.raw`4 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const int N = 4, B = 2;
+    int m[N][N], t[N][N];
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            m[i][j] = i * N + j;
+    for (int bi = 0; bi < N; bi += B)
+        for (int bj = 0; bj < N; bj += B)
+            for (int i = bi; i < bi + B; ++i)
+                for (int j = bj; j < bj + B; ++j)
+                    t[j][i] = m[i][j];
+    std::cout << t[0][1] << " " << t[1][0] << "\n";
+}`,
+  why: String.raw`A plain transpose reads one matrix along rows and writes the other along columns, so one side always jumps through memory. Working in small blocks keeps both the reads and writes within a region that fits in cache.` },
+
+{ n: 48, d: "applications", t: "Branchless lower bound on a sorted array", idiom: "Branchless search",
+  p: String.raw`Write lower_bound_bl(first, n, key), which returns the index of the first element of a sorted int array that is at least key, using a loop that selects the next base with a conditional expression and never uses an early exit. Apply it to the array 1, 3, 5, 7, 9, 11, 13, 15 with key 10. Print the index, then a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+
+int lower_bound_bl(const int* first, int n, int key) {
+    const int* base = first;
+    while (n > 1) {
+        int half = n / 2;
+        base = (base[half] < key) ? base + half : base;
+        n -= half;
+    }
+    return static_cast<int>(base - first) + (*base < key);
+}
+
+int main() {
+    int a[] = {1, 3, 5, 7, 9, 11, 13, 15};
+    std::cout << lower_bound_bl(a, 8, 10) << "\n";
+}`,
+  why: String.raw`A standard binary search branches on every comparison, and those branches are hard to predict. Selecting the next base with a conditional expression lets the compiler emit a select instead, and the loop always runs the same number of steps for a given size.` },
+
+{ n: 49, d: "applications", t: "Parse numbers without allocating", idiom: "Parsing without allocation",
+  p: String.raw`Using the text 12 345 -7 held in a string view, parse each whitespace-separated integer with the standard library's from-chars function, working directly on the characters without creating any strings. Print the sum of the three values, then a newline.`,
+  ex: String.raw`350`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <string_view>
+
+int main() {
+    std::string_view s = "12 345 -7";
+    long long sum = 0;
+    const char* p = s.data();
+    const char* end = s.data() + s.size();
+    while (p < end) {
+        while (p < end && *p == ' ') ++p;
+        if (p == end) break;
+        int v = 0;
+        auto [ptr, ec] = std::from_chars(p, end, v);
+        if (ec != std::errc()) break;
+        sum += v;
+        p = ptr;
+    }
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`from_chars reads digits straight from a buffer and reports where it stopped. It never allocates or locks a locale, which makes it much cheaper than stream extraction in hot parsing loops.` },
+
+{ n: 50, d: "applications", t: "Store prices as integer ticks", idiom: "Fixed-point arithmetic",
+  p: String.raw`Prices are stored as integer ticks of one hundredth. Three prices of 19.99 are held as 1999 ticks each, in an int64 vector. Sum the ticks. Print the whole part of the total, then a dot, then the two-digit fractional part, with a leading zero if it is below ten, then a newline.`,
+  ex: String.raw`59.97`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<std::int64_t> ticks{1999, 1999, 1999};
+    std::int64_t total = 0;
+    for (auto t : ticks) total += t;
+    std::cout << total / 100 << "." << (total % 100 < 10 ? "0" : "") << total % 100 << "\n";
+}`,
+  why: String.raw`Binary floating point cannot store 19.99 exactly, so sums of prices drift. Integer ticks are exact, and only the final display converts them back to a decimal form.` },
+
+{ n: 51, d: "applications", t: "Break a dependency chain with four accumulators", idiom: "Dependency chains",
+  p: String.raw`Sum the integers 1 to 1000 twice. The first sum uses one accumulator. The second uses four accumulators, one for each position within a group of four, and combines them at the end. Print the four-accumulator total, a space, then 1 if it equals the one-accumulator total or 0 otherwise, then a newline.`,
+  ex: String.raw`500500 1`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    long long a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+    int i = 1;
+    for (; i + 3 <= 1000; i += 4) {
+        a0 += i;
+        a1 += i + 1;
+        a2 += i + 2;
+        a3 += i + 3;
+    }
+    for (; i <= 1000; ++i) a0 += i;
+    long long seq = 0;
+    for (int k = 1; k <= 1000; ++k) seq += k;
+    long long par = a0 + a1 + a2 + a3;
+    std::cout << par << " " << (par == seq ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Each addition into one accumulator must wait for the previous one, which forms a chain the processor cannot overlap. Separate accumulators let independent additions run side by side, and the total is unchanged for integers.` },
+
+{ n: 52, d: "applications", t: "Sort unsigned integers without comparisons", idiom: "Non-comparison sorting",
+  p: String.raw`Write an LSD radix sort for unsigned 32-bit integers that processes one byte per pass, from least significant to most significant, using counting buckets and a temporary vector. Sort the values 170, 45, 75, 90, 802, 24, 2 and 66. Print the sorted values, each followed by a space, then a newline.`,
+  ex: String.raw`2 24 45 66 75 90 170 802 `,
+  code: String.raw`#include <cstddef>
+#include <cstdint>
+#include <iostream>
+#include <vector>
+
+void radix_sort(std::vector<std::uint32_t>& v) {
+    std::vector<std::uint32_t> tmp(v.size());
+    for (int shift = 0; shift < 32; shift += 8) {
+        std::size_t count[257] = {};
+        for (auto x : v) ++count[((x >> shift) & 0xFF) + 1];
+        for (int b = 0; b < 256; ++b) count[b + 1] += count[b];
+        for (auto x : v) tmp[count[(x >> shift) & 0xFF]++] = x;
+        v.swap(tmp);
+    }
+}
+
+int main() {
+    std::vector<std::uint32_t> v{170, 45, 75, 90, 802, 24, 2, 66};
+    radix_sort(v);
+    for (auto x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Each pass distributes the values into buckets by one byte, stably, so the order from earlier passes is preserved. After four passes the whole key is ordered, and the sort never compares two values directly.` },
+
+{ n: 53, d: "applications", t: "Probe a linear-probing table", idiom: "Open addressing",
+  p: String.raw`Write class IntSet with eight slots, each an optional int, and a table index of key modulo 8. insert(k) places k in the first empty slot found by moving forward one slot at a time, wrapping around. probes_for(k) starts at key modulo 8, counts one probe for each slot it examines, and stops when it finds k. Insert 3, then 11, then 19. Print probes, a space, and probes_for(19), then a newline.`,
+  ex: String.raw`probes 3`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+#include <optional>
+
+class IntSet {
+    std::array<std::optional<int>, 8> slots_{};
+public:
+    void insert(int k) {
+        std::size_t i = static_cast<std::size_t>(k) % 8;
+        while (slots_[i]) i = (i + 1) % 8;
+        slots_[i] = k;
+    }
+    int probes_for(int k) const {
+        std::size_t i = static_cast<std::size_t>(k) % 8;
+        int probes = 1;
+        while (slots_[i] && *slots_[i] != k) {
+            i = (i + 1) % 8;
+            ++probes;
+        }
+        return probes;
+    }
+};
+
+int main() {
+    IntSet s;
+    s.insert(3);
+    s.insert(11);
+    s.insert(19);
+    std::cout << "probes " << s.probes_for(19) << "\n";
+}`,
+  why: String.raw`Keys that share a home slot are placed in the next free slots, so a lookup walks along that run. Storing the values in one array keeps the walk within a few adjacent cache lines.` },
+
+{ n: 54, d: "applications", t: "Report invalid input as a value", idiom: "Error values instead of exceptions",
+  p: String.raw`Write parse_int(s), which returns an optional int. It converts the whole string view to an int with the standard from-chars function, and returns nothing if the conversion fails or does not consume every character. Parse the strings 5, x and 7. Count the valid results and the invalid ones. Print valid, a space, the valid count, a space, invalid, a space, and the invalid count, then a newline.`,
+  ex: String.raw`valid 2 invalid 1`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <optional>
+#include <string_view>
+#include <system_error>
+#include <vector>
+
+std::optional<int> parse_int(std::string_view s) {
+    int v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc() || p != s.data() + s.size()) return std::nullopt;
+    return v;
+}
+
+int main() {
+    std::vector<std::string_view> in{"5", "x", "7"};
+    int valid = 0, invalid = 0;
+    for (auto s : in) {
+        if (parse_int(s)) ++valid;
+        else ++invalid;
+    }
+    std::cout << "valid " << valid << " invalid " << invalid << "\n";
+}`,
+  why: String.raw`A failed parse is an expected outcome for input, not an exceptional event. Returning an empty optional keeps the failure in the normal control flow, and it costs nothing when the input is good.` },
+
+{ n: 55, d: "applications", t: "Copy records as bytes and compare them", idiom: "Trivially copyable copies",
+  p: String.raw`Define Rec with an int id and a float score. Create an array of three Rec with ids 1, 2, 3 and scores 0.5, 1.5, 2.5. Copy the bytes of the whole array into a second array of three Rec. Print equal if the byte comparison of the two arrays reports no difference, or differ otherwise, then a newline.`,
+  ex: String.raw`equal`,
+  code: String.raw`#include <cstring>
+#include <iostream>
+
+struct Rec {
+    int id;
+    float score;
+};
+
+int main() {
+    Rec src[3] = {{1, 0.5f}, {2, 1.5f}, {3, 2.5f}};
+    Rec dst[3];
+    std::memcpy(dst, src, sizeof src);
+    std::cout << (std::memcmp(src, dst, sizeof src) == 0 ? "equal" : "differ") << "\n";
+}`,
+  why: String.raw`Rec has no padding and is trivially copyable, so copying its bytes produces identical objects. Bulk byte copies are often the fastest way to move plain records.` },
+
+{ n: 56, d: "applications", t: "Fuse two passes into one loop", idiom: "Loop fusion",
+  p: String.raw`Compute the sum of the squares of 1 to 10 and the sum of their cubes, using one loop that updates both sums. Also compute the same two sums with two separate loops. Print the fused sum of squares, a space, the fused sum of cubes, a space, then same if both pairs match or differ otherwise, then a newline.`,
+  ex: String.raw`385 3025 same`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    long long sq = 0, cu = 0;
+    for (int i = 1; i <= 10; ++i) {
+        sq += static_cast<long long>(i) * i;
+        cu += static_cast<long long>(i) * i * i;
+    }
+    long long sq2 = 0, cu2 = 0;
+    for (int i = 1; i <= 10; ++i) sq2 += static_cast<long long>(i) * i;
+    for (int i = 1; i <= 10; ++i) cu2 += static_cast<long long>(i) * i * i;
+    std::cout << sq << " " << cu << " " << (sq == sq2 && cu == cu2 ? "same" : "differ") << "\n";
+}`,
+  why: String.raw`Fusing loops reads the input once instead of twice, which helps when the data is larger than cache. The results are the same, so fusion is a change of scheduling rather than of meaning.` },
+
+// ---------- More applications ----------
+{ n: 57, d: "applications", t: "Fixed-capacity stack without heap allocation", idiom: "Fixed-capacity storage",
+  p: String.raw`Write class FixedStack, a template on element type T and capacity N, that stores its elements in a std::array and tracks a size. push(v) stores the value and returns true when there is room, or returns false and changes nothing when the stack is full. Push the values 0 to 4 into a FixedStack of int with capacity 4. Print each push result as 1 or 0, separated by spaces, then a space, the word size, a space, and the final size, then a newline.`,
+  ex: String.raw`1 1 1 1 0 size 4`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+template <class T, std::size_t N>
+class FixedStack {
+    std::array<T, N> data_{};
+    std::size_t size_ = 0;
+public:
+    bool push(const T& v) {
+        if (size_ == N) return false;
+        data_[size_++] = v;
+        return true;
+    }
+    std::size_t size() const { return size_; }
+};
+
+int main() {
+    FixedStack<int, 4> s;
+    for (int i = 0; i < 5; ++i) std::cout << s.push(i) << " ";
+    std::cout << "size " << s.size() << "\n";
+}`,
+  why: String.raw`A fixed-capacity container keeps all its storage inside the object, so pushing never touches the allocator. Reporting a full stack through the return value lets the caller decide what to do without an exception.` },
+
+{ n: 58, d: "applications", t: "Remove matching elements by swapping with the back", idiom: "Swap-and-pop removal",
+  p: String.raw`Start with the vector 5, 1, 5, 2, 5, 3. Remove every element equal to 5 without preserving order: whenever the element at the current index is 5, overwrite it with the last element and shrink the vector by one, without advancing the index. Otherwise advance the index. Sort the remaining elements and print them, each followed by a space, then a newline.`,
+  ex: String.raw`1 2 3 `,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{5, 1, 5, 2, 5, 3};
+    std::size_t i = 0;
+    while (i < v.size()) {
+        if (v[i] == 5) {
+            v[i] = v.back();
+            v.pop_back();
+        } else {
+            ++i;
+        }
+    }
+    std::sort(v.begin(), v.end());
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Overwriting a removed element with the last one costs one copy and no shifting, so removal is constant time per element. Order is lost, which is acceptable when the container is a set of values rather than a sequence.` },
+
+{ n: 59, d: "applications", t: "Absolute value without a branch", idiom: "Branchless absolute value",
+  p: String.raw`Write abs_bl(x) for a 32-bit int using only arithmetic and bitwise operations, with no conditional. It should compute the sign mask as x shifted right by 31, then return x xor mask minus mask. Print abs_bl(-5), a space, abs_bl(7), a space, abs_bl(0), then a newline.`,
+  ex: String.raw`5 7 0`,
+  code: String.raw`#include <iostream>
+
+int abs_bl(int x) {
+    int m = x >> 31;
+    return (x ^ m) - m;
+}
+
+int main() {
+    std::cout << abs_bl(-5) << " " << abs_bl(7) << " " << abs_bl(0) << "\n";
+}`,
+  why: String.raw`For a negative number the mask is all ones, so the xor flips every bit and the subtraction adds one back, which is negation. For a non-negative number the mask is zero and the value is unchanged.` },
+
+{ n: 60, d: "applications", t: "Compare signed and unsigned values safely", idiom: "Mixed-sign comparison",
+  p: String.raw`Let a be the int -1 and b be the unsigned int 1. Print 1 if a is less than b in the mathematical sense, using a standard comparison that handles mixed signs correctly, or 0 otherwise, then a space. Then print 1 if the unsigned conversion of a is less than b, or 0 otherwise, using plain unsigned comparison, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+int main() {
+    int a = -1;
+    unsigned b = 1;
+    std::cout << std::cmp_less(a, b) << " " << (static_cast<unsigned>(a) < b) << "\n";
+}`,
+  why: String.raw`In a comparison between int and unsigned, the int is converted to unsigned, so -1 becomes a very large value. The standard comparison functions compare by value instead, which avoids that trap.` },
+
+{ n: 61, d: "applications", t: "Gray code sequence", idiom: "Gray code",
+  p: String.raw`For n from 0 to 7, compute the Gray code of n as n xor (n shifted right by one), and print each value followed by a space, then a newline.`,
+  ex: String.raw`0 1 3 2 6 7 5 4 `,
+  code: String.raw`#include <iostream>
+
+int main() {
+    for (unsigned n = 0; n < 8; ++n)
+        std::cout << (n ^ (n >> 1)) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Consecutive Gray codes differ in exactly one bit. That property is useful for encoders, where a small change in the input changes only one signal line.` },
+
+{ n: 62, d: "applications", t: "Reverse the bits of a byte", idiom: "Bit reversal",
+  p: String.raw`Write reverse8(x) that returns the 8-bit value with the bits of x in reverse order, built one bit at a time from the least significant end. Print reverse8 of the binary value 00010110 as a decimal number, then a newline.`,
+  ex: String.raw`104`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+std::uint8_t reverse8(std::uint8_t x) {
+    std::uint8_t r = 0;
+    for (int i = 0; i < 8; ++i) {
+        r = static_cast<std::uint8_t>((r << 1) | (x & 1));
+        x >>= 1;
+    }
+    return r;
+}
+
+int main() {
+    std::cout << static_cast<int>(reverse8(0b00010110)) << "\n";
+}`,
+  why: String.raw`Each step moves the lowest bit of the input into the bottom of the result, after shifting the result left. After eight steps every bit has crossed to its mirror position.` },
+
+{ n: 63, d: "applications", t: "Depth of the top two bid levels", idiom: "Order book depth",
+  p: String.raw`Keep bids in a std::map from price to quantity: 100 has 5, 101 has 10, 99 has 7, and 102 has 1. Walk the bids from the highest price downward and print the first two levels as price, a colon, and quantity, separated by a space, then a newline.`,
+  ex: String.raw`102:1 101:10`,
+  code: String.raw`#include <iostream>
+#include <map>
+
+int main() {
+    std::map<int, int> bids{{100, 5}, {101, 10}, {99, 7}, {102, 1}};
+    int shown = 0;
+    for (auto it = bids.rbegin(); it != bids.rend() && shown < 2; ++it, ++shown) {
+        std::cout << it->first << ":" << it->second << (shown == 0 ? " " : "\n");
+    }
+}`,
+  why: String.raw`Market depth is read from the best price inwards, and a reverse iterator on an ordered map gives that order without sorting. Stopping after two levels keeps the walk short.` },
+
+{ n: 64, d: "applications", t: "Delta-encode timestamps and decode them", idiom: "Delta encoding",
+  p: String.raw`Start with timestamps 1000, 1003, 1010 and 1011 in a vector of long long. Encode them as differences, where each element is the timestamp minus the previous timestamp, with the first previous value being zero. Then decode the differences back into timestamps by accumulating them. Print the last decoded value, a space, then 1 if the decoded values equal the originals or 0 otherwise, then a newline.`,
+  ex: String.raw`1011 1`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<long long> ts{1000, 1003, 1010, 1011};
+    std::vector<long long> deltas;
+    long long prev = 0;
+    for (auto t : ts) {
+        deltas.push_back(t - prev);
+        prev = t;
+    }
+    long long cur = 0;
+    std::vector<long long> decoded;
+    for (auto d : deltas) {
+        cur += d;
+        decoded.push_back(cur);
+    }
+    std::cout << decoded.back() << " " << (decoded == ts ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Sorted timestamps have small differences, which take fewer bits than the full values. Decoding is a running sum, so the original sequence is recovered exactly.` },
+
+{ n: 65, d: "applications", t: "FNV-1a hash of two strings", idiom: "Non-cryptographic hashing",
+  p: String.raw`Write fnv1a(s) for a string view, using the 32-bit FNV-1a algorithm: start from the offset basis 2166136261, and for each byte, xor the hash with the byte and then multiply by 16777619, with unsigned 32-bit wraparound. Print the hash of the empty string, a space, and the hash of the single character a, both in lowercase hexadecimal, then a newline.`,
+  ex: String.raw`811c9dc5 e40c292c`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <string_view>
+
+std::uint32_t fnv1a(std::string_view s) {
+    std::uint32_t h = 2166136261u;
+    for (unsigned char c : s) {
+        h ^= c;
+        h *= 16777619u;
+    }
+    return h;
+}
+
+int main() {
+    std::cout << std::hex << fnv1a("") << " " << fnv1a("a") << "\n";
+}`,
+  why: String.raw`FNV-1a is a simple, fast hash that spreads small changes across all bits. It is not secure against deliberate collisions, but it is well suited to hash tables and checksums of trusted data.` },
+
+{ n: 66, d: "applications", t: "Fibonacci at compile time", idiom: "Constexpr functions",
+  p: String.raw`Write a constexpr function fib(n) that returns the n-th Fibonacci number using a loop, with fib(0) equal to 0 and fib(1) equal to 1. Check at compile time that fib(10) is 55. Print fib(10), then a newline.`,
+  ex: String.raw`55`,
+  code: String.raw`#include <iostream>
+
+constexpr int fib(int n) {
+    int a = 0, b = 1;
+    for (int i = 0; i < n; ++i) {
+        int t = a + b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+static_assert(fib(10) == 55);
+
+int main() {
+    std::cout << fib(10) << "\n";
+}`,
+  why: String.raw`A constexpr function can run during compilation when its arguments are known. Checking a value with static_assert means a wrong definition stops the build instead of producing a wrong answer later.` },
+
+{ n: 67, d: "applications", t: "Median by partial selection", idiom: "Selection by partition",
+  p: String.raw`Given the vector 9, 1, 5, 3, 7, rearrange it so that the element at index 2 is the one that would be there if the vector were sorted, without fully sorting it. Print that element, then a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{9, 1, 5, 3, 7};
+    std::nth_element(v.begin(), v.begin() + 2, v.end());
+    std::cout << v[2] << "\n";
+}`,
+  why: String.raw`Finding one order statistic needs only a partition, not a full sort, so it takes linear time on average. The median is the middle order statistic of the data.` },
+
+{ n: 68, d: "applications", t: "Check which types have a non-throwing move", idiom: "Move-noexcept traits",
+  p: String.raw`Define A with a defaulted default constructor, a move constructor marked noexcept, and a copy constructor. Define B the same way, but with a move constructor that is not marked noexcept. Print 1 if A's move constructor is known not to throw, or 0 otherwise, then a space, then the same answer for B, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+struct A {
+    A() = default;
+    A(A&&) noexcept {}
+    A(const A&) {}
+};
+
+struct B {
+    B() = default;
+    B(B&&) {}
+    B(const B&) {}
+};
+
+int main() {
+    std::cout << std::is_nothrow_move_constructible_v<A> << " " << std::is_nothrow_move_constructible_v<B> << "\n";
+}`,
+  why: String.raw`Containers such as vector move their elements on growth only when the move cannot throw, and otherwise copy them to keep the strong guarantee. Marking a move constructor noexcept therefore changes what the container does at run time.` },
+
+{ n: 69, d: "applications", t: "Add with overflow checks before the operation", idiom: "Overflow-checked arithmetic",
+  p: String.raw`Write add_checked(a, b, out) for ints. It returns false and leaves out unchanged if a plus b would overflow, and otherwise stores the sum in out and returns true. The check must be made before the addition, without any operation that overflows. Call it with INT_MAX minus 1 and 5, then with 1 and 2. Print the first result as 1 or 0, a space, the second result as 1 or 0, a space, then the value stored by the second call, then a newline.`,
+  ex: String.raw`0 1 3`,
+  code: String.raw`#include <climits>
+#include <iostream>
+
+bool add_checked(int a, int b, int& out) {
+    if ((b > 0 && a > INT_MAX - b) || (b < 0 && a < INT_MIN - b)) return false;
+    out = a + b;
+    return true;
+}
+
+int main() {
+    int out = 0;
+    bool ok1 = add_checked(INT_MAX - 1, 5, out);
+    bool ok2 = add_checked(1, 2, out);
+    std::cout << ok1 << " " << ok2 << " " << out << "\n";
+}`,
+  why: String.raw`Signed overflow is undefined behaviour, so the program must not compute a sum that might not fit. Comparing with the limit minus the operand, before adding, keeps every operation within range.` },
+
+// ---------- Allocation, layout and encoding patterns ----------
+{ n: 70, d: "applications", t: "Inline small buffer that spills to the heap", idiom: "Inline small buffer",
+  p: String.raw`Write a class Small of int with inline capacity 4 that stores its elements in its own object until a fifth element arrives, then moves them to heap storage and grows from there. Provide push(v) and size(). Replace the global operator new so that it increments a counter named allocs. Push the values 0 to 5 into a Small, and print the size, a space, and the number of allocations made during the pushes, then a newline.`,
+  ex: String.raw`6 1`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <cstdlib>
+#include <iostream>
+
+int allocs = 0;
+void* operator new(std::size_t n) { ++allocs; return std::malloc(n); }
+void operator delete(void* p) noexcept { std::free(p); }
+void operator delete(void* p, std::size_t) noexcept { std::free(p); }
+
+class Small {
+    static constexpr std::size_t kInline = 4;
+    std::array<int, kInline> inline_{};
+    int* heap_ = nullptr;
+    std::size_t size_ = 0;
+    std::size_t cap_ = kInline;
+    int* data() { return heap_ ? heap_ : inline_.data(); }
+public:
+    ~Small() { delete[] heap_; }
+    void push(int v) {
+        if (size_ == cap_) {
+            std::size_t ncap = cap_ * 2;
+            int* nh = new int[ncap];
+            for (std::size_t i = 0; i < size_; ++i) nh[i] = data()[i];
+            delete[] heap_;
+            heap_ = nh;
+            cap_ = ncap;
+        }
+        data()[size_++] = v;
+    }
+    std::size_t size() const { return size_; }
+};
+
+int main() {
+    Small s;
+    int before = allocs;
+    for (int i = 0; i < 6; ++i) s.push(i);
+    std::cout << s.size() << " " << allocs - before << "\n";
+}`,
+  why: String.raw`Small containers avoid allocation for the common case where the contents fit in the object. Counting allocations makes the benefit visible: the first four pushes allocate nothing, and only the spill causes one allocation.` },
+
+{ n: 71, d: "applications", t: "Bump allocation with alignment in a fixed buffer", idiom: "Bump allocation",
+  p: String.raw`Write a class Arena that owns a 64-byte buffer aligned to 16 bytes. Its allocate(size, align) returns a pointer to a region of size bytes starting at an address that is a multiple of align, placed at the first free position after earlier allocations, or nullptr if it does not fit. Also provide offset(p), which returns the byte offset of p from the start of the buffer. Allocate 3 bytes with alignment 1, then 8 bytes with alignment 8, then 4 bytes with alignment 4. Print the offsets of the three returned pointers separated by spaces, then a newline.`,
+  ex: String.raw`0 8 16`,
+  code: String.raw`#include <cstddef>
+#include <cstdint>
+#include <iostream>
+
+class Arena {
+    alignas(16) unsigned char buf_[64];
+    std::size_t used_ = 0;
+public:
+    void* allocate(std::size_t size, std::size_t align) {
+        std::uintptr_t base = reinterpret_cast<std::uintptr_t>(buf_);
+        std::uintptr_t cur = base + used_;
+        std::uintptr_t aligned = (cur + align - 1) & ~(align - 1);
+        std::size_t end = (aligned - base) + size;
+        if (end > sizeof(buf_)) return nullptr;
+        used_ = end;
+        return reinterpret_cast<void*>(aligned);
+    }
+    std::size_t offset(const void* p) const {
+        return reinterpret_cast<std::uintptr_t>(p) - reinterpret_cast<std::uintptr_t>(buf_);
+    }
+};
+
+int main() {
+    Arena a;
+    void* p1 = a.allocate(3, 1);
+    void* p2 = a.allocate(8, 8);
+    void* p3 = a.allocate(4, 4);
+    std::cout << a.offset(p1) << " " << a.offset(p2) << " " << a.offset(p3) << "\n";
+}`,
+  why: String.raw`Arena allocation is a pointer bump plus rounding up to the required alignment, so each allocation is cheap and nothing is freed individually. The rounding step is where alignment requirements of later objects show up in the offsets.` },
+
+{ n: 72, d: "applications", t: "Short strings stored without a heap allocation", idiom: "Small-string optimization",
+  p: String.raw`Write a class MiniStr whose constructor takes a C string. Strings of at most 15 characters must be stored inside the object, and longer strings must be stored on the heap. The class must not be copyable. Replace the global operator new so that it increments a counter named allocs. Construct a MiniStr from "short" in its own scope, then one from "this text is longer than fifteen characters" in its own scope, and print the number of allocations made by each construction, separated by a space, then a newline.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+
+int allocs = 0;
+void* operator new(std::size_t n) { ++allocs; return std::malloc(n); }
+void operator delete(void* p) noexcept { std::free(p); }
+void operator delete(void* p, std::size_t) noexcept { std::free(p); }
+
+class MiniStr {
+    static constexpr std::size_t kSmall = 15;
+    char small_[kSmall + 1];
+    char* heap_ = nullptr;
+    std::size_t len_;
+public:
+    explicit MiniStr(const char* s) : len_(std::strlen(s)) {
+        if (len_ <= kSmall) {
+            std::memcpy(small_, s, len_ + 1);
+        } else {
+            heap_ = new char[len_ + 1];
+            std::memcpy(heap_, s, len_ + 1);
+        }
+    }
+    MiniStr(const MiniStr&) = delete;
+    MiniStr& operator=(const MiniStr&) = delete;
+    ~MiniStr() { delete[] heap_; }
+    std::size_t size() const { return len_; }
+};
+
+int main() {
+    int c0 = allocs;
+    { MiniStr a("short"); }
+    int c1 = allocs;
+    { MiniStr b("this text is longer than fifteen characters"); }
+    int c2 = allocs;
+    std::cout << c1 - c0 << " " << c2 - c1 << "\n";
+}`,
+  why: String.raw`Most strings in real programs are short, so storing them in the object avoids the allocator entirely. The count of allocations shows the switch between the two representations at the capacity boundary.` },
+
+{ n: 73, d: "applications", t: "First zero byte found in a 64-bit word", idiom: "SWAR byte search",
+  p: String.raw`Write a function that receives a 64-bit unsigned value in which byte i, counting from the least significant byte, holds the i-th character of a string. It must return the index of the first byte equal to zero, counting from the least significant byte, or 8 if no byte is zero. Build the word for the 8 characters h, e, l, l, o, the zero character, x, y, and build a second word from eight letters a. Print the result for the first word, a space, and the result for the second word, then a newline.`,
+  ex: String.raw`5 8`,
+  code: String.raw`#include <bit>
+#include <cstdint>
+#include <iostream>
+
+std::uint64_t load_word(const char* b) {
+    std::uint64_t w = 0;
+    for (int i = 0; i < 8; ++i)
+        w |= static_cast<std::uint64_t>(static_cast<unsigned char>(b[i])) << (8 * i);
+    return w;
+}
+
+int first_zero_byte(std::uint64_t v) {
+    constexpr std::uint64_t lo = 0x0101010101010101ULL;
+    constexpr std::uint64_t hi = 0x8080808080808080ULL;
+    std::uint64_t m = (v - lo) & ~v & hi;
+    return m ? std::countr_zero(m) / 8 : 8;
+}
+
+int main() {
+    const char a[8] = {'h', 'e', 'l', 'l', 'o', 0, 'x', 'y'};
+    const char b[8] = {'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'};
+    std::cout << first_zero_byte(load_word(a)) << " " << first_zero_byte(load_word(b)) << "\n";
+}`,
+  why: String.raw`Checking eight bytes at once with word arithmetic is the core of fast string scanning in parsers. The lowest flagged bit is always exact, so counting trailing zeros gives the position of the first match.` },
+
+{ n: 74, d: "applications", t: "Recover the owner of an embedded link", idiom: "Intrusive containers",
+  p: String.raw`Define struct Link holding a pointer to the next Link, and struct Item holding an int named value and a Link named link. Create three items with values 1, 2 and 3, and link them into a ring through their links, so that the link of item 1 points to the link of item 2, and so on, with the last pointing back to the first. Starting from the link of item 1, follow the links three times, and sum the values of the items that each link belongs to. Print the sum, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+struct Link { Link* next = nullptr; };
+struct Item { int value; Link link; };
+
+Item* owner(Link* l) {
+    return reinterpret_cast<Item*>(reinterpret_cast<unsigned char*>(l) - offsetof(Item, link));
+}
+
+int main() {
+    Item a{1, {}}, b{2, {}}, c{3, {}};
+    a.link.next = &b.link;
+    b.link.next = &c.link;
+    c.link.next = &a.link;
+    int sum = 0;
+    Link* cur = &a.link;
+    for (int i = 0; i < 3; ++i) {
+        sum += owner(cur)->value;
+        cur = cur->next;
+    }
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`Intrusive containers keep the link inside the object, so inserting an object never allocates a node. Getting back to the containing object from its link is done by subtracting the member's offset, which is why standard layout matters here.` },
+
+{ n: 75, d: "applications", t: "Object pool that reuses released slots", idiom: "Object pool",
+  p: String.raw`Write a class template Pool<T, N> that holds storage for N objects of type T inside itself, with allocate() returning a pointer to a free slot or nullptr when none is left, and release(p) returning a slot to the pool. Neither operation may call the global operator new. Create a Pool of int with 4 slots, allocate two slots a and b, release a, then allocate a slot c. Print 1 if a equals c, a space, and 1 if b is not equal to c, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <class T, std::size_t N>
+class Pool {
+    union Slot {
+        Slot* next;
+        alignas(T) unsigned char raw[sizeof(T)];
+    };
+    Slot slots_[N];
+    Slot* free_ = nullptr;
+public:
+    Pool() {
+        for (std::size_t i = 0; i < N; ++i) {
+            slots_[i].next = free_;
+            free_ = &slots_[i];
+        }
+    }
+    T* allocate() {
+        if (!free_) return nullptr;
+        Slot* s = free_;
+        free_ = s->next;
+        return reinterpret_cast<T*>(s->raw);
+    }
+    void release(T* p) {
+        Slot* s = reinterpret_cast<Slot*>(p);
+        s->next = free_;
+        free_ = s;
+    }
+};
+
+int main() {
+    Pool<int, 4> pool;
+    int* a = pool.allocate();
+    int* b = pool.allocate();
+    pool.release(a);
+    int* c = pool.allocate();
+    std::cout << (a == c) << " " << (b != c) << "\n";
+}`,
+  why: String.raw`A pool gives constant-time allocation and release without touching the heap, and reuses memory that is hot in the cache. Storing the free-list link inside the unused slots means the pool needs no extra memory.` },
+
+{ n: 76, d: "applications", t: "Variable-length integer encoding", idiom: "Varint encoding",
+  p: String.raw`Encode unsigned 64-bit integers in the little-endian base-128 format: each output byte holds seven bits of the value, starting with the least significant seven, and its top bit is set when further bytes follow. Write encode(v) returning the bytes and decode(bytes) returning the value. Print the encoded byte counts of 1, 300 and 4294967295, separated by spaces, then the value obtained by decoding the encoding of 300, then a newline.`,
+  ex: String.raw`1 2 5 300`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <vector>
+
+std::vector<unsigned char> encode(std::uint64_t v) {
+    std::vector<unsigned char> out;
+    do {
+        unsigned char b = v & 0x7F;
+        v >>= 7;
+        if (v) b |= 0x80;
+        out.push_back(b);
+    } while (v);
+    return out;
+}
+
+std::uint64_t decode(const std::vector<unsigned char>& in) {
+    std::uint64_t v = 0;
+    int shift = 0;
+    for (unsigned char b : in) {
+        v |= static_cast<std::uint64_t>(b & 0x7F) << shift;
+        shift += 7;
+        if (!(b & 0x80)) break;
+    }
+    return v;
+}
+
+int main() {
+    std::cout << encode(1).size() << " " << encode(300).size() << " "
+              << encode(4294967295ULL).size() << " " << decode(encode(300)) << "\n";
+}`,
+  why: String.raw`Small integers take one byte, which is why many binary formats use this encoding for lengths and field numbers. The continuation bit makes the format self-delimiting, so a reader never needs an outside length.` },
+
+{ n: 77, d: "applications", t: "Fixed-capacity FIFO without allocation", idiom: "Fixed-capacity ring",
+  p: String.raw`Implement a class Fifo that stores up to 4 int values in an array inside the object, with no heap allocation. push(v) returns false when full and true otherwise. pop(out) stores the oldest value in out and returns true, or returns false when empty. Push the values 1 to 5 in order and print each push result followed by a space. Then pop two values and print each followed by a space. Push 5 and print its result followed by a space. Then pop until empty, printing each value followed by a space. End with a newline.`,
+  ex: String.raw`1 1 1 1 0 1 2 1 3 4 5`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+class Fifo {
+    std::array<int, 4> buf_{};
+    std::size_t head_ = 0, tail_ = 0;
+public:
+    bool push(int v) {
+        if (tail_ - head_ == buf_.size()) return false;
+        buf_[tail_++ % buf_.size()] = v;
+        return true;
+    }
+    bool pop(int& out) {
+        if (head_ == tail_) return false;
+        out = buf_[head_++ % buf_.size()];
+        return true;
+    }
+};
+
+int main() {
+    Fifo q;
+    for (int i = 1; i <= 5; ++i) std::cout << q.push(i) << " ";
+    int v = 0;
+    for (int i = 0; i < 2; ++i) {
+        q.pop(v);
+        std::cout << v << " ";
+    }
+    std::cout << q.push(5) << " ";
+    while (q.pop(v)) std::cout << v << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A bounded queue in a fixed array never allocates after construction, which suits real-time code. Counting head and tail as ever-growing indices makes full and empty easy to tell apart without wasting a slot.` },
+
+{ n: 78, d: "applications", t: "Counters that do not share a cache line", idiom: "Cache-line padding",
+  p: String.raw`Define a struct Padded holding one long named value, with its size and alignment chosen so that every element of a std::vector<Padded> occupies its own 64-byte cache line. Create a vector of 4 Padded values. Start 4 threads, where thread i adds 1 to element i of the vector 1000 times. Join the threads, then print sizeof(Padded), a space, alignof(Padded), a space, and the sum of all the values, then a newline.`,
+  ex: String.raw`64 64 4000`,
+  code: String.raw`#include <iostream>
+#include <thread>
+#include <vector>
+
+struct alignas(64) Padded {
+    long value = 0;
+};
+
+int main() {
+    std::vector<Padded> counters(4);
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 4; ++i) {
+        threads.emplace_back([&counters, i] {
+            for (int k = 0; k < 1000; ++k) counters[i].value++;
+        });
+    }
+    for (auto& t : threads) t.join();
+    long sum = 0;
+    for (auto& c : counters) sum += c.value;
+    std::cout << sizeof(Padded) << " " << alignof(Padded) << " " << sum << "\n";
+}`,
+  why: String.raw`When two threads write to different variables that share a cache line, the line bounces between their cores, which slows both. Padding each counter to a full line keeps the writes independent.` },
+
+// ---------- Expression, pointer, dispatch and table patterns ----------
+{ n: 79, d: "applications", t: "Elementwise sum without temporary vectors", idiom: "Expression templates",
+  p: String.raw`Define a class Vec holding n doubles, with a constructor taking a size and a fill value. Make a + b + c work elementwise for Vec values, so that assigning the sum to a new Vec computes each element directly from the operands. Count the Vec objects constructed by the program using a global counter that the Vec constructors increment. Create a, b and c with size 3 and fill values 1, 2 and 3, then set the counter to zero. Evaluate Vec r = a + b + c, and print the counter value, a space, and r[0], then a newline.`,
+  ex: String.raw`1 6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+int constructions = 0;
+
+class Vec {
+    std::vector<double> d_;
+public:
+    Vec(std::size_t n, double v) : d_(n, v) { ++constructions; }
+    template <class E>
+    Vec(const E& e) : d_(e.size()) {
+        ++constructions;
+        for (std::size_t i = 0; i < d_.size(); ++i) d_[i] = e[i];
+    }
+    double operator[](std::size_t i) const { return d_[i]; }
+    std::size_t size() const { return d_.size(); }
+};
+
+template <class L, class R>
+struct Add {
+    const L& l;
+    const R& r;
+    double operator[](std::size_t i) const { return l[i] + r[i]; }
+    std::size_t size() const { return l.size(); }
+};
+
+Add<Vec, Vec> operator+(const Vec& a, const Vec& b) { return {a, b}; }
+
+template <class L, class R>
+Add<Add<L, R>, Vec> operator+(const Add<L, R>& a, const Vec& b) { return {a, b}; }
+
+int main() {
+    Vec a(3, 1.0), b(3, 2.0), c(3, 3.0);
+    constructions = 0;
+    Vec r = a + b + c;
+    std::cout << constructions << " " << r[0] << "\n";
+}`,
+  why: String.raw`Libraries such as Eigen use expression templates so that a chain of operators builds a description of the computation instead of a chain of temporary results. Evaluating the whole expression at assignment makes one pass over the data and allocates only the final result.` },
+
+{ n: 80, d: "applications", t: "Store a pointer and a tag in one word", idiom: "Tagged pointer",
+  p: String.raw`Write a class TaggedPtr that holds an int pointer and a tag from 0 to 3 in a single word-sized value, using the low bits of the pointer, which are zero because the pointed-to int is 8-byte aligned. Provide ptr() and tag(). Create an 8-byte aligned int holding 42, build a TaggedPtr from its address with tag 2, and print the int obtained through ptr(), a space, the tag, a space, and 1 if ptr() equals the original address or 0 otherwise, then a newline.`,
+  ex: String.raw`42 2 1`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+class TaggedPtr {
+    std::uintptr_t bits_;
+public:
+    TaggedPtr(int* p, unsigned tag) : bits_(reinterpret_cast<std::uintptr_t>(p) | tag) {}
+    int* ptr() const { return reinterpret_cast<int*>(bits_ & ~std::uintptr_t{3}); }
+    unsigned tag() const { return static_cast<unsigned>(bits_ & 3); }
+};
+
+int main() {
+    alignas(8) static int x = 42;
+    TaggedPtr t(&x, 2);
+    std::cout << *t.ptr() << " " << t.tag() << " " << (t.ptr() == &x) << "\n";
+}`,
+  why: String.raw`Compilers and runtimes store small flags in the spare low bits of aligned pointers, for example LLVM's PointerIntPair. The representation stays one word, so passing and storing these values costs nothing extra.` },
+
+{ n: 81, d: "applications", t: "Non-owning reference to any callable", idiom: "Non-owning callable reference",
+  p: String.raw`Write a class FunctionRef that can refer to any callable object taking an int and returning an int, without copying or owning it, and that provides operator() taking an int. Write apply_twice(FunctionRef f, int x) returning f(f(x)). Define a lambda that adds 10 to its argument, call apply_twice with that lambda and argument 1, and print the result, then a newline.`,
+  ex: String.raw`21`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+class FunctionRef {
+    void* obj_;
+    int (*call_)(void*, int);
+public:
+    template <class F, class = std::enable_if_t<!std::is_same_v<std::decay_t<F>, FunctionRef>>>
+    FunctionRef(F& f)
+        : obj_(const_cast<void*>(static_cast<const void*>(&f))),
+          call_([](void* o, int x) { return (*static_cast<F*>(o))(x); }) {}
+    int operator()(int x) const { return call_(obj_, x); }
+};
+
+int apply_twice(FunctionRef f, int x) { return f(f(x)); }
+
+int main() {
+    int offset = 10;
+    auto add = [offset](int x) { return x + offset; };
+    std::cout << apply_twice(add, 1) << "\n";
+}`,
+  why: String.raw`A callable reference costs two pointers and never allocates, unlike a type that owns a copy of the callable. It suits callbacks that are used only for the duration of a call, such as visitors passed into a traversal.` },
+
+{ n: 82, d: "applications", t: "Set that stays correct after erasing in open addressing", idiom: "Deletion markers",
+  p: String.raw`Implement a set of ints with an 8-slot table using open addressing: the starting slot is the value modulo 8, and a collision moves to the next slot, wrapping around. Provide insert(k), contains(k) and erase(k). Erasing a key must not make later keys in the same probe sequence unfindable, and inserting must not add a key that is already present. Insert 1, 9 and 17, erase 9, then print contains(17), a space, contains(9), a space, and then after inserting 9 again, contains(9), then a newline.`,
+  ex: String.raw`1 0 1`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+class IntSet {
+    enum State : unsigned char { Empty, Full, Deleted };
+    struct Slot { State st = Empty; int key = 0; };
+    std::array<Slot, 8> t_{};
+    static std::size_t home(int k) { return static_cast<std::size_t>(k) % 8; }
+public:
+    void insert(int k) {
+        std::size_t free_slot = 8;
+        std::size_t i = home(k);
+        for (int n = 0; n < 8; ++n, i = (i + 1) % 8) {
+            if (t_[i].st == Full) {
+                if (t_[i].key == k) return;
+            } else {
+                if (free_slot == 8) free_slot = i;
+                if (t_[i].st == Empty) break;
+            }
+        }
+        if (free_slot < 8) t_[free_slot] = {Full, k};
+    }
+    bool contains(int k) const {
+        std::size_t i = home(k);
+        for (int n = 0; n < 8; ++n, i = (i + 1) % 8) {
+            if (t_[i].st == Empty) return false;
+            if (t_[i].st == Full && t_[i].key == k) return true;
+        }
+        return false;
+    }
+    void erase(int k) {
+        std::size_t i = home(k);
+        for (int n = 0; n < 8; ++n, i = (i + 1) % 8) {
+            if (t_[i].st == Empty) return;
+            if (t_[i].st == Full && t_[i].key == k) {
+                t_[i].st = Deleted;
+                return;
+            }
+        }
+    }
+};
+
+int main() {
+    IntSet s;
+    s.insert(1);
+    s.insert(9);
+    s.insert(17);
+    s.erase(9);
+    std::cout << s.contains(17) << " " << s.contains(9) << " ";
+    s.insert(9);
+    std::cout << s.contains(9) << "\n";
+}`,
+  why: String.raw`Clearing a slot on erase would break the probe chains that later keys depend on, so open-addressing tables mark the slot as deleted instead. Inserts can reuse those marked slots, but must still check the whole chain for an existing key first.` },
+
+{ n: 83, d: "applications", t: "Map lookup by string_view without building a key", idiom: "Transparent comparators",
+  p: String.raw`Create a std::map from std::string keys to int values, with a comparator that allows the map to be searched using std::string_view and C strings as well as std::string, without constructing a std::string for the search. The map contains apple with value 3 and pear with value 5. Look up pear using a std::string_view, and count the entries with key kiwi using a C string. Print the value found for pear, a space, and the count for kiwi, then a newline.`,
+  ex: String.raw`5 0`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <string_view>
+
+struct Less {
+    using is_transparent = void;
+    bool operator()(std::string_view a, std::string_view b) const { return a < b; }
+};
+
+int main() {
+    std::map<std::string, int, Less> m{{"apple", 3}, {"pear", 5}};
+    std::string_view key = "pear";
+    auto it = m.find(key);
+    std::cout << (it != m.end() ? it->second : -1) << " " << m.count("kiwi") << "\n";
+}`,
+  why: String.raw`Without a transparent comparator, every lookup with a string_view or C string first builds a std::string, which costs an allocation when the text is long. Heterogeneous lookup keeps the key as it is and only compares.` },
+
+{ n: 84, d: "applications", t: "Combine field hashes into one hash", idiom: "Hash combining",
+  p: String.raw`Write a function hash_combine that takes a size_t seed by reference and a value of any type, and mixes the std::hash of the value into the seed using the Boost-style formula with the constant 0x9e3779b97f4a7c15 and shifts by 6 and 2. Define a struct Point with an int x and a std::string name, and a function hash_point that combines the hashes of both fields. Create a = {1, "a"}, b = {1, "a"} and c = {2, "a"}. Print 1 if hash_point(a) equals hash_point(b), else 0, then a space, then 1 if hash_point(a) equals hash_point(c), else 0, then a newline.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <string>
+
+template <class T>
+void hash_combine(std::size_t& seed, const T& v) {
+    seed ^= std::hash<T>{}(v) + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+}
+
+struct Point {
+    int x;
+    std::string name;
+};
+
+std::size_t hash_point(const Point& p) {
+    std::size_t seed = 0;
+    hash_combine(seed, p.x);
+    hash_combine(seed, p.name);
+    return seed;
+}
+
+int main() {
+    Point a{1, "a"}, b{1, "a"}, c{2, "a"};
+    std::cout << (hash_point(a) == hash_point(b)) << " " << (hash_point(a) == hash_point(c)) << "\n";
+}`,
+  why: String.raw`Hash tables of composite keys need one hash per key, built from the hashes of its fields. Mixing with shifts and a large odd constant spreads the bits of each field, so keys differing in one field usually get different hashes.` },
+
+{ n: 85, d: "applications", t: "String copies that share until modified", idiom: "Copy-on-write",
+  p: String.raw`Write a class CowString that holds text in a reference-counted representation shared between copies. Copying must not copy the text. Before changing the text, a copy that shares it must get its own copy of the representation, while other copies keep the old text. Provide a constructor from std::string, append(c) for one character, and str(). Create a CowString a from "abc", copy it into b, append d to b, then print the text of a, a space, and the text of b, then a newline.`,
+  ex: String.raw`abc abcd`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class CowString {
+    struct Rep {
+        std::string s;
+        int refs;
+    };
+    Rep* rep_;
+    void detach() {
+        if (rep_->refs > 1) {
+            --rep_->refs;
+            rep_ = new Rep{rep_->s, 1};
+        }
+    }
+public:
+    explicit CowString(std::string s) : rep_(new Rep{std::move(s), 1}) {}
+    CowString(const CowString& o) : rep_(o.rep_) { ++rep_->refs; }
+    CowString& operator=(const CowString& o) {
+        if (this != &o) {
+            ++o.rep_->refs;
+            if (--rep_->refs == 0) delete rep_;
+            rep_ = o.rep_;
+        }
+        return *this;
+    }
+    ~CowString() {
+        if (--rep_->refs == 0) delete rep_;
+    }
+    void append(char c) {
+        detach();
+        rep_->s.push_back(c);
+    }
+    const std::string& str() const { return rep_->s; }
+};
+
+int main() {
+    CowString a(std::string("abc"));
+    CowString b = a;
+    b.append('d');
+    std::cout << a.str() << " " << b.str() << "\n";
+}`,
+  why: String.raw`Copy-on-write lets many copies share one buffer until one of them changes, which saves memory and copying for data that is mostly read. The detach step is what keeps a write from being visible through the other copies.` },
+
+{ n: 86, d: "applications", t: "Handles that detect reuse of a slot", idiom: "Generational handles",
+  p: String.raw`Implement a table that stores ints and returns handles, each made of an index and a generation number. Removing a value must invalidate the handle that was returned for it, even if its slot is later reused for a new value. Provide add(v) returning a handle, remove(h), and get(h) returning a pointer to the value or nullptr if the handle is no longer valid. Add 10, remove that value using its handle, then add 20. Print 1 if the first handle still refers to a value, else 0, then a space, the value referred to by the second handle, then a space, and 1 if both handles have the same index, else 0, then a newline.`,
+  ex: String.raw`0 20 1`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <vector>
+
+struct Handle {
+    std::uint32_t index;
+    std::uint32_t gen;
+};
+
+class Table {
+    struct Slot {
+        int value = 0;
+        std::uint32_t gen = 0;
+        bool alive = false;
+    };
+    std::vector<Slot> slots_;
+    std::vector<std::uint32_t> free_;
+public:
+    Handle add(int v) {
+        std::uint32_t idx;
+        if (!free_.empty()) {
+            idx = free_.back();
+            free_.pop_back();
+        } else {
+            idx = static_cast<std::uint32_t>(slots_.size());
+            slots_.push_back({});
+        }
+        slots_[idx].value = v;
+        slots_[idx].alive = true;
+        return {idx, slots_[idx].gen};
+    }
+    int* get(Handle h) {
+        if (h.index >= slots_.size()) return nullptr;
+        Slot& s = slots_[h.index];
+        return (s.alive && s.gen == h.gen) ? &s.value : nullptr;
+    }
+    void remove(Handle h) {
+        if (get(h)) {
+            slots_[h.index].alive = false;
+            ++slots_[h.index].gen;
+            free_.push_back(h.index);
+        }
+    }
+};
+
+int main() {
+    Table t;
+    Handle h1 = t.add(10);
+    t.remove(h1);
+    Handle h2 = t.add(20);
+    std::cout << (t.get(h1) ? 1 : 0) << " " << *t.get(h2) << " " << (h1.index == h2.index) << "\n";
+}`,
+  why: String.raw`Storing pointers to elements breaks as soon as the element is removed and its memory reused. Pairing an index with a generation number lets stale handles be detected cheaply, which is common in game engines and entity systems.` },
+
+{ n: 87, d: "applications", t: "Bit flags as a scoped enumeration", idiom: "Typed bit flags",
+  p: String.raw`Define an enum class Perm with the distinct bit values Read, Write and Exec, where Read is bit 0, Write is bit 1 and Exec is bit 2. Provide operator | and operator & for Perm, returning Perm. Define a function any(p) that returns true when p has any bit set. Build p as Read combined with Exec. Print 1 if p & Write is set, else 0, then a space, then 1 if p & Exec is set, else 0, then a space, then the numeric value of p, then a newline.`,
+  ex: String.raw`0 1 5`,
+  code: String.raw`#include <iostream>
+
+enum class Perm : unsigned { Read = 1u << 0, Write = 1u << 1, Exec = 1u << 2 };
+
+constexpr Perm operator|(Perm a, Perm b) {
+    return static_cast<Perm>(static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+constexpr Perm operator&(Perm a, Perm b) {
+    return static_cast<Perm>(static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
+
+constexpr bool any(Perm p) { return static_cast<unsigned>(p) != 0; }
+
+int main() {
+    Perm p = Perm::Read | Perm::Exec;
+    std::cout << any(p & Perm::Write) << " " << any(p & Perm::Exec) << " "
+              << static_cast<unsigned>(p) << "\n";
+}`,
+  why: String.raw`A scoped enumeration with bit values keeps flags type-safe while still compiling to a single integer. Defining the operators once lets flag combinations read like the names they stand for.` },
+
+{ n: 88, d: "applications", t: "Process a sequence in cache-sized windows", idiom: "Chunked views",
+  p: String.raw`Using non-owning views of a vector holding the integers 1 to 8, split the vector into consecutive pieces of at most 3 elements, starting from the beginning, without copying any elements. For each piece, compute its sum. Print the sums separated by spaces, then a newline.`,
+  ex: String.raw`6 15 15`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <numeric>
+#include <span>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6, 7, 8};
+    std::span<const int> s(v);
+    for (std::size_t i = 0; i < s.size(); i += 3) {
+        std::size_t len = std::min<std::size_t>(3, s.size() - i);
+        auto chunk = s.subspan(i, len);
+        std::cout << std::accumulate(chunk.begin(), chunk.end(), 0)
+                  << (i + 3 < s.size() ? " " : "\n");
+    }
+}`,
+  why: String.raw`Working through data in blocks that fit in cache is a standard way to get speed from large arrays. Views make the blocks cheap to create, because a span is only a pointer and a length.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-perf-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 8, label: "Easy", range: "Problems 1–8", badge: "easy" },
+  { from: 9, to: 25, label: "Medium", range: "Problems 9–25", badge: "medium" },
+  { from: 26, to: 33, label: "Hard", range: "Problems 26–33", badge: "hard" },
+  { from: 34, to: 45, label: "Extension", range: "Problems 34–45", badge: null },
+  { from: 46, to: 88, label: "Applications", range: "Problems 46–88", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

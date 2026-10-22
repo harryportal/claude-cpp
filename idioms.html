@@ -1,0 +1,4254 @@
+<title>C++ Idioms Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 120 problems</p>
+    <h1>C++ Idioms Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">120</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Close a resource at scope end", idiom: "RAII",
+  p: String.raw`A class Resource prints open when it is constructed and close when it is destroyed. Create a Resource inside an inner block, end the block, then print done.`,
+  ex: String.raw`open
+close
+done`,
+  code: String.raw`#include <iostream>
+
+struct Resource {
+    Resource() { std::cout << "open\n"; }
+    ~Resource() { std::cout << "close\n"; }
+};
+
+int main() {
+    {
+        Resource r;
+    }
+    std::cout << "done\n";
+}`,
+  why: String.raw`Tying a resource's release to an object's destructor means the resource is released on every exit path, including early returns and exceptions.` },
+
+{ n: 2, d: "easy", t: "Copy a plain data record", idiom: "Rule of zero",
+  p: String.raw`A struct Config holds a string name and a vector of ints, and has no special member functions. Create a Config named abc with values 1 and 2, copy it into a new Config, and print the length of the copy's name and the number of its values, separated by a space.`,
+  ex: String.raw`3 2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+struct Config {
+    std::string name;
+    std::vector<int> values;
+};
+
+int main() {
+    Config c{"abc", {1, 2}};
+    Config d = c;
+    std::cout << d.name.size() << ' ' << d.values.size() << '\n';
+}`,
+  why: String.raw`A class built only from members that copy themselves needs no copy or destructor of its own, so the compiler's defaults are correct.` },
+
+{ n: 3, d: "easy", t: "Run cleanup when a block exits", idiom: "Scope guard",
+  p: String.raw`Write a class ScopeExit that stores a function and calls it when it is destroyed. Inside a block, create a ScopeExit whose function prints cleanup, and print work inside the same block. After the block, print end.`,
+  ex: String.raw`work
+cleanup
+end`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+
+class ScopeExit {
+    std::function<void()> f;
+public:
+    explicit ScopeExit(std::function<void()> g) : f(std::move(g)) {}
+    ~ScopeExit() { f(); }
+};
+
+int main() {
+    {
+        ScopeExit g([] { std::cout << "cleanup\n"; });
+        std::cout << "work\n";
+    }
+    std::cout << "end\n";
+}`,
+  why: String.raw`Running a stored action from a destructor guarantees cleanup happens when the block ends, however the block is left.` },
+
+{ n: 4, d: "easy", t: "Remove even numbers in place", idiom: "Erase-remove idiom",
+  p: String.raw`Given the vector 1 2 3 4 5 6, remove all even numbers from it in place. Print the remaining numbers separated by spaces.`,
+  ex: String.raw`1 3 5`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6};
+    v.erase(std::remove_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }), v.end());
+    for (std::size_t i = 0; i < v.size(); ++i)
+        std::cout << v[i] << (i + 1 < v.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Moving the unwanted elements to the back and then erasing that range is the standard way to remove many elements from a vector efficiently.` },
+
+{ n: 5, d: "easy", t: "Assign one buffer to another", idiom: "Copy-and-swap",
+  p: String.raw`Create a Buffer class that owns a dynamic array of ints and knows its size. Create a Buffer of size 2 and a Buffer of size 4, assign the first to the second, and print the second's size.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <utility>
+
+class Buffer {
+    int* d;
+    std::size_t n;
+public:
+    explicit Buffer(std::size_t k) : d(new int[k]{}), n(k) {}
+    Buffer(const Buffer& o) : d(new int[o.n]), n(o.n) { std::copy(o.d, o.d + n, d); }
+    friend void swap(Buffer& a, Buffer& b) noexcept {
+        std::swap(a.d, b.d);
+        std::swap(a.n, b.n);
+    }
+    Buffer& operator=(Buffer o) {
+        swap(*this, o);
+        return *this;
+    }
+    ~Buffer() { delete[] d; }
+    std::size_t size() const { return n; }
+};
+
+int main() {
+    Buffer a(2);
+    Buffer b(4);
+    b = a;
+    std::cout << b.size() << '\n';
+}`,
+  why: String.raw`Taking the assigned value by value and swapping it into place gives assignment that is exception safe and handles self-assignment without a special check.` },
+
+{ n: 6, d: "easy", t: "Build a request with chained calls", idiom: "Named parameter idiom",
+  p: String.raw`Write a Request class whose methods method, url and timeout each set one field and return the request so that calls can be chained. Build a GET request for http://x with a timeout of 30, and print its string form, which is the method, url and timeout separated by spaces.`,
+  ex: String.raw`GET http://x 30`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Request {
+    std::string m;
+    std::string u;
+    int t = 0;
+public:
+    Request& method(std::string s) { m = std::move(s); return *this; }
+    Request& url(std::string s) { u = std::move(s); return *this; }
+    Request& timeout(int s) { t = s; return *this; }
+    std::string str() const { return m + ' ' + u + ' ' + std::to_string(t); }
+};
+
+int main() {
+    std::cout << Request().method("GET").url("http://x").timeout(30).str() << '\n';
+}`,
+  why: String.raw`Setters that return a reference to the object let callers name each option in the order they like, which reads well for optional settings.` },
+
+{ n: 7, d: "easy", t: "Prevent copying a type", idiom: "Non-copyable type",
+  p: String.raw`Define a class Locked that cannot be copied. Print true if Locked cannot be copy constructed, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+class Locked {
+public:
+    Locked() = default;
+    Locked(const Locked&) = delete;
+    Locked& operator=(const Locked&) = delete;
+};
+
+int main() {
+    std::cout << std::boolalpha << !std::is_copy_constructible_v<Locked> << '\n';
+}`,
+  why: String.raw`Deleting the copy operations makes the compiler reject any attempt to duplicate an object that owns something unique, such as a lock or a file.` },
+
+{ n: 8, d: "easy", t: "One shared instance", idiom: "Meyers singleton",
+  p: String.raw`A class Logger has a single shared instance that is returned by a static function, and its constructor is private. Print true if two calls to that function return the same object, otherwise false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+
+class Logger {
+public:
+    static Logger& instance() {
+        static Logger l;
+        return l;
+    }
+private:
+    Logger() = default;
+};
+
+int main() {
+    std::cout << std::boolalpha << (&Logger::instance() == &Logger::instance()) << '\n';
+}`,
+  why: String.raw`A function-local static is created once, the first time it is reached, so every caller gets the same object without any manual setup.` },
+
+{ n: 9, d: "easy", t: "Destroy a derived object through a base pointer", idiom: "Virtual destructor for a polymorphic base",
+  p: String.raw`Define a class Base and a class Derived that derives from it. Each destructor prints its class name. Create a Derived on the heap, hold it through a Base pointer, delete it through that pointer, then print done.`,
+  ex: String.raw`derived
+base
+done`,
+  code: String.raw`#include <iostream>
+
+struct Base {
+    virtual ~Base() { std::cout << "base\n"; }
+};
+
+struct Derived : Base {
+    ~Derived() override { std::cout << "derived\n"; }
+};
+
+int main() {
+    Base* b = new Derived();
+    delete b;
+    std::cout << "done\n";
+}`,
+  why: String.raw`A base class that is used polymorphically needs a virtual destructor. Without it, deleting through a base pointer skips the derived part of the cleanup.` },
+
+{ n: 10, d: "easy", t: "Close a file even when a write fails", idiom: "RAII",
+  p: String.raw`Define a FileHandle class whose constructor takes a name and prints open followed by the name. Its destructor prints close followed by the name. Its method write takes an int and throws an invalid_argument with the message negative if the value is below zero. Otherwise it prints the name, an arrow and the value. Define a function save that creates a FileHandle named a.txt, writes the value it is given, then prints saved. In main, call save with 7, then call save with -1 inside a try block, printing error followed by the message when it is caught.`,
+  ex: String.raw`open a.txt
+a.txt <- 7
+saved
+close a.txt
+open a.txt
+close a.txt
+error: negative`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+
+class FileHandle {
+    std::string name_;
+public:
+    explicit FileHandle(std::string n) : name_(std::move(n)) { std::cout << "open " << name_ << "\n"; }
+    ~FileHandle() { std::cout << "close " << name_ << "\n"; }
+    void write(int v) const {
+        if (v < 0) throw std::invalid_argument("negative");
+        std::cout << name_ << " <- " << v << "\n";
+    }
+};
+
+void save(int v) {
+    FileHandle f("a.txt");
+    f.write(v);
+    std::cout << "saved\n";
+}
+
+int main() {
+    save(7);
+    try {
+        save(-1);
+    } catch (const std::exception& e) {
+        std::cout << "error: " << e.what() << "\n";
+    }
+}`,
+  why: String.raw`The destructor runs during stack unwinding, so the file is closed even though write threw before save could print saved. The caller sees the error without any cleanup code of its own.` },
+
+{ n: 11, d: "easy", t: "Discard a guard once the step succeeds", idiom: "Scope guard",
+  p: String.raw`Write a Guard class that stores a function and calls it when destroyed, unless its dismiss method has been called. Define a function step that takes a bool. It creates a Guard whose function prints rollback, prints step followed by the bool, and dismisses the guard if the bool is true. Call step with true, then with false, then print end.`,
+  ex: String.raw`step 1
+step 0
+rollback
+end`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+
+class Guard {
+    std::function<void()> f_;
+    bool active_ = true;
+public:
+    explicit Guard(std::function<void()> f) : f_(std::move(f)) {}
+    void dismiss() { active_ = false; }
+    ~Guard() { if (active_) f_(); }
+};
+
+void step(bool ok) {
+    Guard g([] { std::cout << "rollback\n"; });
+    std::cout << "step " << ok << "\n";
+    if (ok) g.dismiss();
+}
+
+int main() {
+    step(true);
+    step(false);
+    std::cout << "end\n";
+}`,
+  why: String.raw`The guard runs its cleanup on every exit path, and dismissing it means the step has succeeded and needs no undo. Only the failing call prints rollback.` },
+
+{ n: 12, d: "easy", t: "Keep a document's fields through a move", idiom: "Rule of zero",
+  p: String.raw`Define a struct Document with a std::string title, a std::vector of std::string tags, and a std::unique_ptr to an int revision. It has no special member functions. Create a Document a with title notes, tags x and y, and revision 3. Move a into a new Document b. Print the title, the number of tags and the revision of b, then whether a's revision is null as 1 or 0, then the number of tags in a, all separated by spaces.`,
+  ex: String.raw`notes 2 3 1 0`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Document {
+    std::string title;
+    std::vector<std::string> tags;
+    std::unique_ptr<int> revision;
+};
+
+int main() {
+    Document a{"notes", {"x", "y"}, std::make_unique<int>(3)};
+    Document b = std::move(a);
+    std::cout << b.title << ' ' << b.tags.size() << ' ' << *b.revision << ' '
+              << (a.revision == nullptr) << ' ' << a.tags.size() << '\n';
+}`,
+  why: String.raw`Each member knows how to move itself, so the struct needs no special members. The unique_ptr makes the type move-only, and the compiler generates a correct move.` },
+
+{ n: 13, d: "easy", t: "Build a window with optional settings", idiom: "Named parameter idiom",
+  p: String.raw`Write a Window class with a title defaulting to untitled, a width of 640, a height of 480 and a visible flag set to true. Give each setting a method named title, width, height or visible that sets it and returns the window so calls can be chained. Its method str returns the title, the width and height joined by x, and the word shown or hidden, all separated by spaces. Print the str of a window with height 900, title editor and visible false, then the str of a window with width 1280 only.`,
+  ex: String.raw`editor 640x900 hidden
+untitled 1280x480 shown`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Window {
+    std::string title_ = "untitled";
+    int w_ = 640, h_ = 480;
+    bool vis_ = true;
+public:
+    Window& title(std::string t) { title_ = std::move(t); return *this; }
+    Window& width(int w) { w_ = w; return *this; }
+    Window& height(int h) { h_ = h; return *this; }
+    Window& visible(bool v) { vis_ = v; return *this; }
+    std::string str() const {
+        return title_ + " " + std::to_string(w_) + "x" + std::to_string(h_) + (vis_ ? " shown" : " hidden");
+    }
+};
+
+int main() {
+    std::cout << Window().height(900).title("editor").visible(false).str() << '\n';
+    std::cout << Window().width(1280).str() << '\n';
+}`,
+  why: String.raw`Each setter names one option, so callers pick only the options they need and in any order. Defaults apply to everything left unset.` },
+
+{ n: 14, d: "easy", t: "Declare a type that can only be moved", idiom: "Non-copyable type",
+  p: String.raw`Define a class Connection with a default constructor and move operations, where copying is not allowed. Print true or false, for each of these in order: whether Connection can be copy constructed, whether it can be copy assigned, and whether it can be move constructed. Then create a Connection a and move it into a Connection b. Use std::boolalpha for the printed values.`,
+  ex: String.raw`false false true`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+class Connection {
+public:
+    Connection() = default;
+    Connection(const Connection&) = delete;
+    Connection& operator=(const Connection&) = delete;
+    Connection(Connection&&) noexcept = default;
+    Connection& operator=(Connection&&) noexcept = default;
+};
+
+int main() {
+    std::cout << std::boolalpha
+              << std::is_copy_constructible_v<Connection> << ' '
+              << std::is_copy_assignable_v<Connection> << ' '
+              << std::is_move_constructible_v<Connection> << '\n';
+    Connection a;
+    Connection b = std::move(a);
+    (void)b;
+}`,
+  why: String.raw`Deleting the copy operations while defaulting the move operations gives a type that owns something unique and can still be handed to another owner. The type traits show which operations the compiler accepts.` },
+
+{ n: 15, d: "easy", t: "Load settings once and share them", idiom: "Meyers singleton",
+  p: String.raw`Define a Settings class with a private constructor that prints init. It holds a level, starting at 1, with a setter and a getter. Its static function get returns a reference to one shared Settings object, created the first time get is called. In main, call get to set the level to 5, print the level through get, then print 1 if two calls to get return the same object and 0 otherwise.`,
+  ex: String.raw`init
+5
+1`,
+  code: String.raw`#include <iostream>
+
+class Settings {
+public:
+    static Settings& get() {
+        static Settings s;
+        return s;
+    }
+    int level() const { return level_; }
+    void set_level(int v) { level_ = v; }
+private:
+    Settings() { std::cout << "init\n"; }
+    int level_ = 1;
+};
+
+int main() {
+    Settings::get().set_level(5);
+    std::cout << Settings::get().level() << '\n';
+    std::cout << (&Settings::get() == &Settings::get()) << '\n';
+}`,
+  why: String.raw`A function-local static is constructed on first use and then reused, so the object is created lazily and only once. The private constructor keeps other code from making its own copies.` },
+
+{ n: 16, d: "easy", t: "Swap a stack's contents safely", idiom: "Copy-and-swap",
+  p: String.raw`Define a Stack class that holds a std::vector of ints. It has a constructor taking a vector, a push method, and a print method that writes its values separated by spaces. Its copy assignment operator takes its argument by value and swaps the contents with itself. Create a Stack a holding 1 and 2, and a Stack b holding 9. Assign a to b, push 3 onto b, then assign a to itself. Print a, then b.`,
+  ex: String.raw`1 2
+1 2 3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+class Stack {
+    std::vector<int> v_;
+public:
+    Stack(std::vector<int> v) : v_(std::move(v)) {}
+    Stack(const Stack&) = default;
+    Stack(Stack&&) noexcept = default;
+    friend void swap(Stack& a, Stack& b) noexcept { std::swap(a.v_, b.v_); }
+    Stack& operator=(Stack o) {
+        swap(*this, o);
+        return *this;
+    }
+    void push(int x) { v_.push_back(x); }
+    void print() const {
+        for (int x : v_) std::cout << x << ' ';
+        std::cout << '\n';
+    }
+};
+
+int main() {
+    Stack a({1, 2});
+    Stack b({9});
+    b = a;
+    b.push(3);
+    a = a;
+    a.print();
+    b.print();
+}`,
+  why: String.raw`The by-value parameter makes the copy first, and the swap is noexcept, so the target is only changed once the copy is complete. Self-assignment works without a special check.` },
+
+{ n: 17, d: "easy", t: "Destroy a derived object held by a base pointer", idiom: "Virtual destructor for a polymorphic base",
+  p: String.raw`Define Base with a destructor that prints ~Base. Define Mid deriving from Base, and Leaf deriving from Mid, each with a destructor that prints its own name with a tilde. Put a Leaf and then a plain Base into a vector of unique_ptr to Base. Remove the last element, print popped, then let main finish.`,
+  ex: String.raw`~Base
+popped
+~Leaf
+~Mid
+~Base`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Base {
+    virtual ~Base() { std::cout << "~Base\n"; }
+};
+
+struct Mid : Base {
+    ~Mid() override { std::cout << "~Mid\n"; }
+};
+
+struct Leaf : Mid {
+    ~Leaf() override { std::cout << "~Leaf\n"; }
+};
+
+int main() {
+    std::vector<std::unique_ptr<Base>> v;
+    v.push_back(std::make_unique<Leaf>());
+    v.push_back(std::make_unique<Base>());
+    v.pop_back();
+    std::cout << "popped\n";
+}`,
+  why: String.raw`With a virtual destructor, deleting through a base pointer runs the destructors of the whole chain from the most derived class upwards. Without it, the Mid and Leaf parts would never be cleaned up.` },
+
+// ---------- Medium ----------
+{ n: 18, d: "medium", t: "Hide a counter's implementation", idiom: "Pimpl idiom",
+  p: String.raw`Define a Widget whose data is kept in a private implementation struct, held through a unique pointer, so the header does not expose that struct. Widget has a function bump that adds 1 to a counter, and a function value that returns the counter. Call bump twice and print value.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> p;
+public:
+    Widget();
+    ~Widget();
+    void bump();
+    int value() const;
+};
+
+struct Widget::Impl {
+    int count = 0;
+};
+
+Widget::Widget() : p(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;
+void Widget::bump() { ++p->count; }
+int Widget::value() const { return p->count; }
+
+int main() {
+    Widget w;
+    w.bump();
+    w.bump();
+    std::cout << w.value() << '\n';
+}`,
+  why: String.raw`Keeping the data in a separate struct behind a pointer lets the implementation change without forcing every file that includes the header to be rebuilt.` },
+
+{ n: 19, d: "medium", t: "Unsubscribe when a handle ends", idiom: "RAII subscription (scoped observer handle)",
+  p: String.raw`Define a Subscription class that runs a stored function when it is destroyed, and that can be moved. Inside a block, start with a counter at 0, increment it, create a Subscription whose function decrements the counter, and print the counter. After the block, print the counter. Separate the two printed values with a space.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+
+class Subscription {
+    std::function<void()> on_end;
+public:
+    explicit Subscription(std::function<void()> f) : on_end(std::move(f)) {}
+    Subscription(Subscription&& o) noexcept : on_end(std::exchange(o.on_end, nullptr)) {}
+    ~Subscription() {
+        if (on_end) on_end();
+    }
+};
+
+int main() {
+    int count = 0;
+    {
+        ++count;
+        Subscription s([&] { --count; });
+        std::cout << count << ' ';
+    }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Tying a registration to an object's lifetime means the listener is removed automatically when the object goes away, so nothing is left behind.` },
+
+{ n: 20, d: "medium", t: "Take a string by value and move it", idiom: "Sink parameter (pass by value, then move)",
+  p: String.raw`Define a Person with a public string name, whose constructor takes a string by value and moves it into the member. Create a string holding alice. Construct one Person by passing that string, and another Person by moving that string. Print the length of each Person's name, separated by a space.`,
+  ex: String.raw`5 5`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Person {
+public:
+    std::string name;
+    explicit Person(std::string n) : name(std::move(n)) {}
+};
+
+int main() {
+    std::string s = "alice";
+    Person a(s);
+    Person b(std::move(s));
+    std::cout << a.name.size() << ' ' << b.name.size() << '\n';
+}`,
+  why: String.raw`Taking a parameter by value and moving it into the member accepts both lvalues and rvalues with one constructor and only one move for rvalues.` },
+
+{ n: 21, d: "medium", t: "Remove records that fail a rule", idiom: "Erase-remove idiom",
+  p: String.raw`Given the people Ann aged 30, Bo aged 12, Cy aged 40 and Di aged 9, remove everyone under 18 from the collection in place. Print the remaining names separated by spaces.`,
+  ex: String.raw`Ann Cy`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct Person {
+    std::string name;
+    int age;
+};
+
+int main() {
+    std::vector<Person> ps{{"Ann", 30}, {"Bo", 12}, {"Cy", 40}, {"Di", 9}};
+    ps.erase(std::remove_if(ps.begin(), ps.end(),
+                            [](const Person& p) { return p.age < 18; }),
+             ps.end());
+    for (std::size_t i = 0; i < ps.size(); ++i)
+        std::cout << ps[i].name << (i + 1 < ps.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Removing records by a predicate keeps the survivors in their original order and reclaims the space they used in one pass.` },
+
+{ n: 22, d: "medium", t: "Remove entries while iterating a map", idiom: "Iterator-based erase",
+  p: String.raw`A map holds the keys 1, 2, 3 and 4, with values 10, 20, 30 and 40. Remove every entry whose key is odd, doing the removal while walking through the map. Print the remaining keys separated by spaces.`,
+  ex: String.raw`2 4`,
+  code: String.raw`#include <iostream>
+#include <map>
+
+int main() {
+    std::map<int, int> m{{1, 10}, {2, 20}, {3, 30}, {4, 40}};
+    for (auto it = m.begin(); it != m.end();) {
+        if (it->first % 2 == 1)
+            it = m.erase(it);
+        else
+            ++it;
+    }
+    bool first = true;
+    for (const auto& [k, v] : m) {
+        std::cout << (first ? "" : " ") << k;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Erasing through an iterator returns the next valid position, so a walk can remove entries safely without invalidating the iteration.` },
+
+{ n: 23, d: "medium", t: "Handle messages by their type", idiom: "Visitor with std::visit and overloaded lambdas",
+  p: String.raw`Messages are stored in variants. One message is a Move with a step count of 3, and another is a Say with the text hi. Print each message, one per line, using a separate branch of code for each kind of message: a Move prints moved followed by its step count, and a Say prints said followed by its text.`,
+  ex: String.raw`moved 3
+said hi`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+struct Move { int steps; };
+struct Say { std::string text; };
+
+template <class... Ts>
+struct Overloaded : Ts... {
+    using Ts::operator()...;
+};
+
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
+int main() {
+    std::variant<Move, Say> msgs[] = {Move{3}, Say{"hi"}};
+    for (const auto& m : msgs)
+        std::visit(Overloaded{
+            [](const Move& x) { std::cout << "moved " << x.steps << '\n'; },
+            [](const Say& x) { std::cout << "said " << x.text << '\n'; }}, m);
+}`,
+  why: String.raw`Visiting a variant with one callable per alternative makes the compiler check that every kind of message is handled.` },
+
+{ n: 24, d: "medium", t: "Fixed report outline with custom body", idiom: "Non-virtual interface (NVI)",
+  p: String.raw`A Report base class has a public function print that prints the line H, then calls a body function. The body is supplied by derived classes and is not public. Derive Sales, whose body prints body on its own line, and print a Sales report.`,
+  ex: String.raw`H
+body`,
+  code: String.raw`#include <iostream>
+
+class Report {
+public:
+    void print() const {
+        header();
+        body();
+    }
+    virtual ~Report() = default;
+private:
+    void header() const { std::cout << "H\n"; }
+    virtual void body() const = 0;
+};
+
+class Sales : public Report {
+    void body() const override { std::cout << "body\n"; }
+};
+
+int main() {
+    Sales s;
+    s.print();
+}`,
+  why: String.raw`A public function that fixes the order of steps, with private hooks for derived classes to fill in, stops subclasses from skipping or reordering the steps.` },
+
+{ n: 25, d: "medium", t: "Create objects by name", idiom: "Factory method",
+  p: String.raw`Write a function make_shape that returns a unique pointer to a shape chosen by name. The name square gives a square of side 4, and the name rect gives a rectangle of width 2 and height 3. Print the area of the square, then the area of the rectangle, separated by a space.`,
+  ex: String.raw`16 6`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+
+struct Shape {
+    virtual ~Shape() = default;
+    virtual int area() const = 0;
+};
+
+struct Square : Shape {
+    int s;
+    explicit Square(int x) : s(x) {}
+    int area() const override { return s * s; }
+};
+
+struct Rect : Shape {
+    int w;
+    int h;
+    Rect(int a, int b) : w(a), h(b) {}
+    int area() const override { return w * h; }
+};
+
+std::unique_ptr<Shape> make_shape(const std::string& kind) {
+    if (kind == "square") return std::make_unique<Square>(4);
+    if (kind == "rect") return std::make_unique<Rect>(2, 3);
+    return nullptr;
+}
+
+int main() {
+    auto s = make_shape("square");
+    auto r = make_shape("rect");
+    std::cout << s->area() << ' ' << r->area() << '\n';
+}`,
+  why: String.raw`A factory hides which concrete type it creates, so callers depend only on the base type and new shapes can be added inside the factory.` },
+
+{ n: 26, d: "medium", t: "Load a resource once across threads", idiom: "Call once (std::call_once)",
+  p: String.raw`Four threads each call a function ensure_loaded. Make sure the loading step runs exactly once no matter how many threads call the function at the same time. Join all four threads, then print how many times the step ran.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int loads = 0;
+std::once_flag flag;
+
+void ensure_loaded() {
+    std::call_once(flag, [] { ++loads; });
+}
+
+int main() {
+    std::vector<std::thread> ts;
+    for (int i = 0; i < 4; ++i) ts.emplace_back(ensure_loaded);
+    for (auto& t : ts) t.join();
+    std::cout << loads << '\n';
+}`,
+  why: String.raw`Running one-time setup through a once flag lets many threads share lazy initialisation safely, with only one of them doing the work.` },
+
+{ n: 27, d: "medium", t: "Release the old value on move assignment", idiom: "Move assignment with release of the old value",
+  p: String.raw`A class Res holds a string name. Its move assignment first prints release followed by the old name, then takes the name from the source and leaves the source empty. Create Res A with name A and Res B with name B, move B into A, then print A's name and whether B's name is empty, separated by a space.`,
+  ex: String.raw`release A
+B true`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Res {
+public:
+    std::string name;
+    explicit Res(std::string n) : name(std::move(n)) {}
+    Res(Res&& o) noexcept : name(std::exchange(o.name, "")) {}
+    Res& operator=(Res&& o) noexcept {
+        if (this != &o) {
+            std::cout << "release " << name << '\n';
+            name = std::exchange(o.name, "");
+        }
+        return *this;
+    }
+};
+
+int main() {
+    Res a("A");
+    Res b("B");
+    a = std::move(b);
+    std::cout << a.name << ' ' << std::boolalpha << b.name.empty() << '\n';
+}`,
+  why: String.raw`Move assignment must free what the target held before taking the source's value, and it must leave the source in a valid empty state.` },
+
+{ n: 28, d: "medium", t: "Own a buffer with all five special members", idiom: "Rule of five",
+  p: String.raw`Define a class Buffer that owns a heap array of ints. Its constructor takes a size and prints make. Its destructor prints free. Its copy constructor prints copy, its move constructor prints move, its copy assignment prints copy=, and its move assignment prints move=. A copy duplicates the array. A move leaves the source with no array and size 0, and move assignment frees the target's old array first. In main: create a of size 2; construct b as a copy of a; construct c by moving from a; assign b to c by copy assignment; assign b to a by move assignment. Print a=, then the sizes of a, b and c as a=N b=N c=N, then print done.`,
+  ex: String.raw`make
+copy
+move
+copy=
+move=
+a=2 b=0 c=2
+done
+free
+free
+free`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <utility>
+
+class Buffer {
+    int* data_;
+    std::size_t size_;
+public:
+    explicit Buffer(std::size_t n) : data_(new int[n]()), size_(n) { std::cout << "make\n"; }
+    ~Buffer() { delete[] data_; std::cout << "free\n"; }
+    Buffer(const Buffer& o) : data_(new int[o.size_]()), size_(o.size_) { std::cout << "copy\n"; }
+    Buffer(Buffer&& o) noexcept
+        : data_(std::exchange(o.data_, nullptr)), size_(std::exchange(o.size_, 0)) {
+        std::cout << "move\n";
+    }
+    Buffer& operator=(const Buffer& o) {
+        if (this != &o) {
+            int* fresh = new int[o.size_]();
+            delete[] data_;
+            data_ = fresh;
+            size_ = o.size_;
+        }
+        std::cout << "copy=\n";
+        return *this;
+    }
+    Buffer& operator=(Buffer&& o) noexcept {
+        if (this != &o) {
+            delete[] data_;
+            data_ = std::exchange(o.data_, nullptr);
+            size_ = std::exchange(o.size_, 0);
+        }
+        std::cout << "move=\n";
+        return *this;
+    }
+    std::size_t size() const { return size_; }
+};
+
+int main() {
+    Buffer a(2);
+    Buffer b = a;
+    Buffer c = std::move(a);
+    c = b;
+    a = std::move(b);
+    std::cout << "a=" << a.size() << " b=" << b.size() << " c=" << c.size() << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`A class that manages a resource directly must define all five special members together, or the compiler's defaults copy the pointer and free it twice. Each special member here is written to keep ownership correct.` },
+
+{ n: 29, d: "medium", t: "Share a greeting through a template base", idiom: "CRTP (curiously recurring template pattern)",
+  p: String.raw`Write a class template Greeter whose greet() member prints hello followed by the name() of the object it is called on. Define Alice and Bob, each deriving from Greeter, and each with its own name(). Call greet() on an Alice, then on a Bob, then print done.`,
+  ex: String.raw`hello alice
+hello bob
+done`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+template <typename Derived>
+struct Greeter {
+    void greet() const {
+        std::cout << "hello " << static_cast<const Derived&>(*this).name() << "\n";
+    }
+};
+
+struct Alice : Greeter<Alice> {
+    std::string name() const { return "alice"; }
+};
+
+struct Bob : Greeter<Bob> {
+    std::string name() const { return "bob"; }
+};
+
+int main() {
+    Alice a;
+    a.greet();
+    Bob b;
+    b.greet();
+    std::cout << "done\n";
+}`,
+  why: String.raw`The base class template is parameterised by the class that derives from it, so its member can call the derived type's function with no virtual dispatch. The cast is safe because the object really is a Derived.` },
+
+{ n: 30, d: "medium", t: "Notify attached listeners in order", idiom: "Observer pattern",
+  p: String.raw`Write a class Subject that keeps a list of listener functions, each taking an int. attach adds a listener. notify calls every listener with the value, in the order they were attached. Attach one listener that prints a followed by the value, then one that prints b followed by twice the value. Call notify with 5, then print done.`,
+  ex: String.raw`a5
+b10
+done`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+class Subject {
+    std::vector<std::function<void(int)>> listeners_;
+public:
+    void attach(std::function<void(int)> f) { listeners_.push_back(std::move(f)); }
+    void notify(int v) const {
+        for (const auto& f : listeners_) f(v);
+    }
+};
+
+int main() {
+    Subject s;
+    s.attach([](int v) { std::cout << "a" << v << "\n"; });
+    s.attach([](int v) { std::cout << "b" << v * 2 << "\n"; });
+    s.notify(5);
+    std::cout << "done\n";
+}`,
+  why: String.raw`The subject stores callbacks and calls each one when its state changes, without knowing what the listeners do. New listeners can be added without changing the subject.` },
+
+{ n: 31, d: "medium", t: "Walk a range with a custom iterator", idiom: "Iterator (begin and end pair)",
+  p: String.raw`Write a class Countdown built from a starting integer. It must support a range-for loop that yields the starting value, then one less, and so on down to 1, and stops before 0. Iterate over Countdown(3), printing each value on its own line, then print done.`,
+  ex: String.raw`3
+2
+1
+done`,
+  code: String.raw`#include <iostream>
+
+class Countdown {
+    int start_;
+public:
+    explicit Countdown(int n) : start_(n) {}
+
+    class iterator {
+        int v_;
+    public:
+        explicit iterator(int v) : v_(v) {}
+        int operator*() const { return v_; }
+        iterator& operator++() { --v_; return *this; }
+        bool operator!=(const iterator& o) const { return v_ != o.v_; }
+    };
+
+    iterator begin() const { return iterator(start_); }
+    iterator end() const { return iterator(0); }
+};
+
+int main() {
+    for (int v : Countdown(3)) std::cout << v << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`A type that provides begin and end returning iterators can be used in a range-for loop. The iterator only needs dereference, increment and inequality to drive the loop.` },
+
+{ n: 32, d: "medium", t: "Adapt a legacy printer to a new interface", idiom: "Adapter",
+  p: String.raw`A legacy class LegacyPrinter has a method print_text that takes a C string and prints it followed by a newline. Define an abstract class Sink with a virtual write(const std::string&) method. Define a class that implements Sink by forwarding to a LegacyPrinter, appending ! to the text first. Create a LegacyPrinter, wrap it, call write with hi through a Sink reference, then print done.`,
+  ex: String.raw`hi!
+done`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+struct LegacyPrinter {
+    void print_text(const char* s) { std::cout << s << "\n"; }
+};
+
+struct Sink {
+    virtual ~Sink() = default;
+    virtual void write(const std::string& s) = 0;
+};
+
+class PrinterAdapter : public Sink {
+    LegacyPrinter& p_;
+public:
+    explicit PrinterAdapter(LegacyPrinter& p) : p_(p) {}
+    void write(const std::string& s) override {
+        p_.print_text((s + "!").c_str());
+    }
+};
+
+int main() {
+    LegacyPrinter lp;
+    PrinterAdapter ad(lp);
+    Sink& s = ad;
+    s.write("hi");
+    std::cout << "done\n";
+}`,
+  why: String.raw`The adapter has the interface the caller expects and translates each call into the call the legacy class understands. Neither side has to change to work with the other.` },
+
+{ n: 33, d: "medium", t: "Load an image only when first used", idiom: "Proxy (lazy initialisation)",
+  p: String.raw`Write a class Image whose constructor prints loading, and whose pixel() returns 7. Write a class LazyImage with the same pixel() method. A LazyImage creates no Image until pixel() is first called, and creates one only then. Create a LazyImage, call pixel() and print the result, call it again and print the result, then print done.`,
+  ex: String.raw`loading
+7
+7
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+class Image {
+public:
+    Image() { std::cout << "loading\n"; }
+    int pixel() const { return 7; }
+};
+
+class LazyImage {
+    std::unique_ptr<Image> img_;
+public:
+    int pixel() {
+        if (!img_) img_ = std::make_unique<Image>();
+        return img_->pixel();
+    }
+};
+
+int main() {
+    LazyImage li;
+    std::cout << li.pixel() << "\n";
+    std::cout << li.pixel() << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`The proxy has the same interface as the real object and stands in for it. It delays the costly construction until the first real use, then reuses the same object.` },
+
+{ n: 34, d: "medium", t: "Choose an advance strategy by iterator category", idiom: "Tag dispatch",
+  p: String.raw`Write a function step_by(it, n) that moves an iterator forward by n positions. For a random-access iterator it moves in one operation and prints jumped. For any other iterator it moves one position at a time and prints walked. Use a std::vector<int> iterator and a std::forward_list<int> iterator. Step each by 2 and print the value it then points to, and print done at the end.`,
+  ex: String.raw`jumped
+30
+walked
+3
+done`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+template <typename It>
+void step_by(It& it, int n, std::forward_iterator_tag) {
+    for (int i = 0; i < n; ++i) ++it;
+    std::cout << "walked\n";
+}
+
+template <typename It>
+void step_by(It& it, int n, std::random_access_iterator_tag) {
+    it += n;
+    std::cout << "jumped\n";
+}
+
+template <typename It>
+void step_by(It& it, int n) {
+    step_by(it, n, typename std::iterator_traits<It>::iterator_category{});
+}
+
+int main() {
+    std::vector<int> v{10, 20, 30, 40};
+    auto vi = v.begin();
+    step_by(vi, 2);
+    std::cout << *vi << "\n";
+    std::forward_list<int> f{1, 2, 3};
+    auto fi = f.begin();
+    step_by(fi, 2);
+    std::cout << *fi << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`An empty tag object, whose type is the iterator category, selects the overload at compile time. Each category gets the fastest code it supports, with no runtime check.` },
+
+{ n: 35, d: "medium", t: "Find the right swap by argument lookup", idiom: "Idiomatic swap (ADL customisation point)",
+  p: String.raw`Define a struct Name holding a std::string, inside a namespace shop. Provide a swap for Name in that same namespace that prints custom swap and then swaps the two strings. Write a function exchange_values(a, b) that swaps two values of one type using an unqualified call to swap. Swap two Names holding x and y and print their text, then swap two ints holding 1 and 2 and print them, then print done.`,
+  ex: String.raw`custom swap
+yx
+21
+done`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+namespace shop {
+struct Name { std::string s; };
+
+void swap(Name& x, Name& y) {
+    std::cout << "custom swap\n";
+    std::swap(x.s, y.s);
+}
+}
+
+template <typename T>
+void exchange_values(T& a, T& b) {
+    using std::swap;
+    swap(a, b);
+}
+
+int main() {
+    shop::Name p{"x"}, q{"y"};
+    exchange_values(p, q);
+    std::cout << p.s << q.s << "\n";
+    int i = 1, j = 2;
+    exchange_values(i, j);
+    std::cout << i << j << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`An unqualified call with a using-declaration for std::swap lets argument-dependent lookup find a type's own swap, and falls back to the standard one for types without it.` },
+
+{ n: 36, d: "medium", t: "Hand out a shared pointer to self", idiom: "enable_shared_from_this",
+  p: String.raw`Define a struct Node that can give out a shared pointer to itself through a method self(). Create a Node held by a shared pointer n, get s from n->self(), then print 1 if s and n point to the same object and 0 otherwise, followed by the use count of n, then print done.`,
+  ex: String.raw`1 2
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node : std::enable_shared_from_this<Node> {
+    std::shared_ptr<Node> self() { return shared_from_this(); }
+};
+
+int main() {
+    auto n = std::make_shared<Node>();
+    auto s = n->self();
+    std::cout << (s == n) << " " << n.use_count() << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`A class that derives from enable_shared_from_this can produce shared pointers to itself that share ownership with the existing ones. Creating a new control block from a raw this pointer would double-delete the object.` },
+
+{ n: 37, d: "medium", t: "Open a session where a later resource fails", idiom: "RAII (exception-safe acquisition)",
+  p: String.raw`Define a Socket class whose constructor takes a name and a flag. If the flag is true it throws a runtime_error with the message cannot open followed by the name. Otherwise it prints open followed by the name. Its destructor prints close followed by the name. Define a Session class that owns a db Socket and then a cache Socket. Its constructor takes a flag that is passed to the cache socket only. In main, create a Session with the flag false inside a block, print ready, and let the block end. Then create a Session with the flag true inside a try block, and print the message of the exception when it is caught.`,
+  ex: String.raw`open db
+open cache
+ready
+close cache
+close db
+open db
+close db
+cannot open cache`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+
+struct Socket {
+    std::string name;
+    Socket(std::string n, bool fail) : name(std::move(n)) {
+        if (fail) throw std::runtime_error("cannot open " + name);
+        std::cout << "open " << name << "\n";
+    }
+    ~Socket() { std::cout << "close " << name << "\n"; }
+};
+
+class Session {
+    Socket db;
+    Socket cache;
+public:
+    explicit Session(bool failCache) : db("db", false), cache("cache", failCache) {}
+};
+
+int main() {
+    {
+        Session s(false);
+        std::cout << "ready\n";
+    }
+    try {
+        Session s(true);
+    } catch (const std::exception& e) {
+        std::cout << e.what() << "\n";
+    }
+}`,
+  why: String.raw`Members that were fully built are destroyed when a later member's constructor throws, in reverse order of declaration. Each resource is released by its own destructor, so a failed session does not leak the sockets that opened before the failure.` },
+
+{ n: 38, d: "medium", t: "Total shapes with a visitor over a variant", idiom: "Visitor with std::visit and overloaded lambdas",
+  p: String.raw`Define three shape types: Circle with an int radius, Rect with int width and height, and Tri with int base and height. Store the shapes in a std::variant. Compute each shape's value with a visitor built from overloaded lambdas: a circle's value is three times the radius squared, a rectangle's value is width times height and also counts that rectangle, and a triangle's value is base times height divided by two. Given the shapes Circle 2, Rect 3 4, Tri 5 2 and Rect 1 1, print the total of all values and then the number of rectangles, separated by a space.`,
+  ex: String.raw`30 2`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Circle { int radius; };
+struct Rect { int width; int height; };
+struct Tri { int base; int height; };
+
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+using Shape = std::variant<Circle, Rect, Tri>;
+
+int main() {
+    std::vector<Shape> shapes{Circle{2}, Rect{3, 4}, Tri{5, 2}, Rect{1, 1}};
+    int total = 0;
+    int rects = 0;
+    for (const Shape& s : shapes) {
+        total += std::visit(overloaded{
+            [](const Circle& c) { return 3 * c.radius * c.radius; },
+            [&](const Rect& r) { ++rects; return r.width * r.height; },
+            [](const Tri& t) { return t.base * t.height / 2; }
+        }, s);
+    }
+    std::cout << total << " " << rects << "\n";
+}`,
+  why: String.raw`std::visit calls the one lambda whose parameter matches the active alternative. Adding a shape type without a matching lambda is a compile error, so no alternative can be forgotten.` },
+
+{ n: 39, d: "medium", t: "Hide a widget's state behind a pointer", idiom: "Pimpl idiom",
+  p: String.raw`Define a Widget class whose name is kept in a hidden implementation struct owned through a unique_ptr. Its constructor takes a name. It has rename and name methods, a destructor, and move operations, but no copy operations. The implementation struct prints release followed by its name when it is destroyed. In main, create a Widget alpha, move it into b, and print b's name. Create a Widget gamma as c, move b into c, print c's name, then let main finish.`,
+  ex: String.raw`alpha
+release gamma
+beta
+release beta`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> p_;
+public:
+    explicit Widget(std::string name);
+    ~Widget();
+    Widget(Widget&&) noexcept;
+    Widget& operator=(Widget&&) noexcept;
+    void rename(std::string n);
+    std::string name() const;
+};
+
+struct Widget::Impl {
+    std::string name;
+    ~Impl() { std::cout << "release " << name << "\n"; }
+};
+
+Widget::Widget(std::string n) : p_(std::make_unique<Impl>()) { p_->name = std::move(n); }
+Widget::~Widget() = default;
+Widget::Widget(Widget&&) noexcept = default;
+Widget& Widget::operator=(Widget&&) noexcept = default;
+void Widget::rename(std::string n) { p_->name = std::move(n); }
+std::string Widget::name() const { return p_->name; }
+
+int main() {
+    Widget a("alpha");
+    Widget b = std::move(a);
+    std::cout << b.name() << "\n";
+    b.rename("beta");
+    Widget c("gamma");
+    c = std::move(b);
+    std::cout << c.name() << "\n";
+}`,
+  why: String.raw`Because the implementation type is complete only in the source file, the header never needs its members. Move operations are declared in the header and defaulted in the source, where the type is known to be complete.` },
+
+{ n: 40, d: "medium", t: "Unsubscribe automatically when a handle ends", idiom: "RAII subscription (scoped observer handle)",
+  p: String.raw`Write a Bus class whose method on takes a listener function taking an int, stores it under a new id, and returns a Subscription. Destroying the Subscription, or move-assigning over it, removes the listener and prints off followed by the id. Bus has emit, which calls every listener with the value. Subscribe a listener printing a and then the value, and subscribe another printing b. In main, call emit with 1 inside a block where a second subscription is made to a listener printing b. Let the block end, emit 2, replace the first subscription with an empty one, emit 3, and print end.`,
+  ex: String.raw`a 1
+b 1
+off 1
+a 2
+off 0
+end`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <utility>
+
+class Subscription {
+    std::function<void()> unsub_;
+public:
+    Subscription() = default;
+    explicit Subscription(std::function<void()> f) : unsub_(std::move(f)) {}
+    Subscription(Subscription&& o) noexcept : unsub_(std::exchange(o.unsub_, nullptr)) {}
+    Subscription& operator=(Subscription&& o) noexcept {
+        if (this != &o) {
+            if (unsub_) unsub_();
+            unsub_ = std::exchange(o.unsub_, nullptr);
+        }
+        return *this;
+    }
+    ~Subscription() { if (unsub_) unsub_(); }
+};
+
+class Bus {
+    std::map<int, std::function<void(int)>> h_;
+    int next_ = 0;
+public:
+    Subscription on(std::function<void(int)> f) {
+        int id = next_++;
+        h_[id] = std::move(f);
+        return Subscription([this, id] {
+            h_.erase(id);
+            std::cout << "off " << id << "\n";
+        });
+    }
+    void emit(int v) const {
+        for (const auto& [id, f] : h_) f(v);
+    }
+};
+
+int main() {
+    Bus bus;
+    Subscription a = bus.on([](int v) { std::cout << "a " << v << "\n"; });
+    {
+        Subscription b = bus.on([](int v) { std::cout << "b " << v << "\n"; });
+        bus.emit(1);
+    }
+    bus.emit(2);
+    a = Subscription();
+    bus.emit(3);
+    std::cout << "end\n";
+}`,
+  why: String.raw`A handle that unsubscribes in its destructor ties the listener's lifetime to a scope. The move operations transfer that responsibility, and move-assigning over a handle releases the old listener first.` },
+
+{ n: 41, d: "medium", t: "Count copies made when a function takes a value", idiom: "Sink parameter (pass by value, then move)",
+  p: String.raw`Define Text, which holds a std::string and has static copy and move counters. Its constructor takes a const char pointer, its copy constructor counts a copy and its move constructor counts a move. Define Log with a reserve method that reserves room for n lines, and an add method that takes a Text by value and stores it with a move. In main, reserve room for 4 lines, create a Text a holding x, add a, then add a temporary Text holding y. Print the copy count and the move count separated by a space.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Text {
+    std::string v;
+    static inline int copies = 0;
+    static inline int moves = 0;
+    Text(const char* s) : v(s) {}
+    Text(const Text& o) : v(o.v) { ++copies; }
+    Text(Text&& o) noexcept : v(std::move(o.v)) { ++moves; }
+};
+
+class Log {
+    std::vector<Text> lines_;
+public:
+    void reserve(std::size_t n) { lines_.reserve(n); }
+    void add(Text t) { lines_.push_back(std::move(t)); }
+};
+
+int main() {
+    Log log;
+    log.reserve(4);
+    Text a("x");
+    log.add(a);
+    log.add(Text("y"));
+    std::cout << Text::copies << ' ' << Text::moves << '\n';
+}`,
+  why: String.raw`A by-value parameter lets lvalues and rvalues both work with one function. The argument is copied only when it is an lvalue, and a prvalue is built directly in the parameter, so only the final store costs a move.` },
+
+{ n: 42, d: "medium", t: "Remove empty stock entries while walking a map", idiom: "Iterator-based erase",
+  p: String.raw`Create a std::map from product name to stock count, containing apple 0, pear 3, fig 0 and kiwi 5. Walk the map with an iterator. For each entry with a count of 0, print drop followed by the name and erase it, moving the iterator to the element erase returns. Otherwise move to the next element. Then print each remaining name and count as name=count, in map order.`,
+  ex: String.raw`drop apple
+drop fig
+kiwi=5
+pear=3`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, int> stock{{"apple", 0}, {"pear", 3}, {"fig", 0}, {"kiwi", 5}};
+    for (auto it = stock.begin(); it != stock.end();) {
+        if (it->second == 0) {
+            std::cout << "drop " << it->first << "\n";
+            it = stock.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (const auto& [name, count] : stock) std::cout << name << '=' << count << "\n";
+}`,
+  why: String.raw`Erasing through an iterator returns the next valid position, so a walk can remove entries without skipping one or using an invalidated iterator. Only the erased element is invalidated.` },
+
+{ n: 43, d: "medium", t: "Fix the steps of an export and let subclasses fill them", idiom: "Non-virtual interface (NVI)",
+  p: String.raw`Define an Exporter class with a public method run that takes a count. If the count is negative, run throws an invalid_argument. Otherwise it calls begin, then write once for each number from 0 up to the count minus one, then end. The begin, write and end steps are private virtual functions. begin and end print begin and end by default, and write is pure virtual. Define Csv, which overrides begin to print header only, and overrides write to print row followed by the number. In main, run a Csv with count 2, then run it with count -1 inside a try block, printing bad followed by the message when caught.`,
+  ex: String.raw`header
+row 0
+row 1
+end
+bad n`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+
+class Exporter {
+public:
+    virtual ~Exporter() = default;
+    void run(int count) {
+        if (count < 0) throw std::invalid_argument("n");
+        begin();
+        for (int i = 0; i < count; ++i) write(i);
+        end();
+    }
+private:
+    virtual void begin() { std::cout << "begin\n"; }
+    virtual void write(int i) = 0;
+    virtual void end() { std::cout << "end\n"; }
+};
+
+class Csv : public Exporter {
+    void begin() override { std::cout << "header\n"; }
+    void write(int i) override { std::cout << "row " << i << "\n"; }
+};
+
+int main() {
+    Csv c;
+    c.run(2);
+    try {
+        c.run(-1);
+    } catch (const std::invalid_argument& e) {
+        std::cout << "bad " << e.what() << "\n";
+    }
+}`,
+  why: String.raw`The public method fixes the order of the steps and checks the arguments once. Subclasses supply only the varying pieces, so they cannot skip or reorder the steps.` },
+
+{ n: 44, d: "medium", t: "Create dialog-specific buttons through a virtual factory", idiom: "Factory method",
+  p: String.raw`Define an abstract Button with a draw method returning a string. WinButton draws [win] and MacButton draws (mac). Define an abstract Dialog with a public render method that returns the draw result of a button made by a protected virtual make method, followed by ok. WinDialog and MacDialog each override make to return their button. In main, put a WinDialog and a MacDialog into an array of unique_ptr to Dialog and print the render result of each.`,
+  ex: String.raw`[win] ok
+(mac) ok`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+
+struct Button {
+    virtual ~Button() = default;
+    virtual std::string draw() const = 0;
+};
+
+struct WinButton : Button {
+    std::string draw() const override { return "[win]"; }
+};
+
+struct MacButton : Button {
+    std::string draw() const override { return "(mac)"; }
+};
+
+class Dialog {
+public:
+    virtual ~Dialog() = default;
+    std::string render() const { return make()->draw() + " ok"; }
+protected:
+    virtual std::unique_ptr<Button> make() const = 0;
+};
+
+class WinDialog : public Dialog {
+protected:
+    std::unique_ptr<Button> make() const override { return std::make_unique<WinButton>(); }
+};
+
+class MacDialog : public Dialog {
+protected:
+    std::unique_ptr<Button> make() const override { return std::make_unique<MacButton>(); }
+};
+
+int main() {
+    std::unique_ptr<Dialog> ds[] = {std::make_unique<WinDialog>(), std::make_unique<MacDialog>()};
+    for (const auto& d : ds) std::cout << d->render() << "\n";
+}`,
+  why: String.raw`The base class's code calls a virtual method that each subclass answers with its own product. The caller works with the abstract types only and never names the concrete button.` },
+
+{ n: 45, d: "medium", t: "Keep the old resource when assigning over it", idiom: "Move assignment with release of the old value",
+  p: String.raw`Define Res, which owns a heap int. Its constructor takes a value and prints acquire followed by it. Its destructor deletes the int and, if it still owns one, prints release followed by its value. Its move constructor takes ownership and leaves the source empty. Its move assignment deletes the target's int, takes the source's, and does nothing when assigning an object to itself. Its method value returns the owned int, or -1 if it owns nothing. In main, create a Res holding 1 named a and a Res holding 2 named b. Move a into b, print the value of b and the value of a separated by a space. Then move b into itself through a reference, print the value of b, and let main finish.`,
+  ex: String.raw`acquire 1
+acquire 2
+1 -1
+1
+release 1`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+class Res {
+    int* p_;
+public:
+    explicit Res(int v) : p_(new int(v)) { std::cout << "acquire " << v << "\n"; }
+    ~Res() {
+        if (p_) {
+            std::cout << "release " << *p_ << "\n";
+            delete p_;
+        }
+    }
+    Res(Res&& o) noexcept : p_(std::exchange(o.p_, nullptr)) {}
+    Res& operator=(Res&& o) noexcept {
+        if (this != &o) {
+            delete p_;
+            p_ = std::exchange(o.p_, nullptr);
+        }
+        return *this;
+    }
+    int value() const { return p_ ? *p_ : -1; }
+};
+
+int main() {
+    Res a(1);
+    Res b(2);
+    b = std::move(a);
+    std::cout << b.value() << ' ' << a.value() << '\n';
+    Res& alias = b;
+    b = std::move(alias);
+    std::cout << b.value() << '\n';
+}`,
+  why: String.raw`Move assignment must free what the target held before taking the source's value, or that memory leaks. The self-check stops the move from freeing the object's own resource before it is taken.` },
+
+{ n: 46, d: "medium", t: "Compare versions using only less-than", idiom: "CRTP (curiously recurring template pattern)",
+  p: String.raw`Define a template class Ordered with friend functions for greater than, less than or equal, and greater than or equal, each written only in terms of operator less than on the derived type. Define Version deriving from Ordered of Version. It has a major and minor number, a constructor, an equality operator, and a less than operator that compares major then minor. Compare the versions 1.9, 2.0 and 2.0 and print the results of b greater than a, a greater than or equal to b, b less than or equal to c, and a less than or equal to c, separated by spaces, where 1 means true and 0 means false.`,
+  ex: String.raw`1 0 1 1`,
+  code: String.raw`#include <iostream>
+
+template <typename D>
+struct Ordered {
+    friend bool operator>(const D& a, const D& b) { return b < a; }
+    friend bool operator<=(const D& a, const D& b) { return !(b < a); }
+    friend bool operator>=(const D& a, const D& b) { return !(a < b); }
+};
+
+struct Version : Ordered<Version> {
+    int major, minor;
+    Version(int a, int b) : major(a), minor(b) {}
+    friend bool operator<(const Version& a, const Version& b) {
+        return a.major < b.major || (a.major == b.major && a.minor < b.minor);
+    }
+    friend bool operator==(const Version& a, const Version& b) {
+        return a.major == b.major && a.minor == b.minor;
+    }
+};
+
+int main() {
+    Version a(1, 9), b(2, 0), c(2, 0);
+    std::cout << (b > a) << ' ' << (a >= b) << ' ' << (b <= c) << ' ' << (a <= c) << '\n';
+}`,
+  why: String.raw`The base template supplies the other comparison operators by calling back into the derived type's single operator, and the derived type is known at compile time, so there is no virtual dispatch.` },
+
+{ n: 47, d: "medium", t: "Notify only listeners that are still alive", idiom: "Observer pattern",
+  p: String.raw`Define a Listener struct with an int id and a method on that prints listener followed by the id and got followed by the value. Define a Source class with an attach method that takes a shared_ptr to a Listener and keeps only a weak reference to it, and a publish method that calls on for every listener still alive. Listeners that have been destroyed are removed during publish. In main, attach a listener with id 2 inside a block so it is destroyed when the block ends. Then attach a listener with id 1 that stays alive. Publish 10, then print the number of remaining listeners.`,
+  ex: String.raw`listener 1 got 10
+1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Listener {
+    int id;
+    void on(int v) const { std::cout << "listener " << id << " got " << v << "\n"; }
+};
+
+class Source {
+    std::vector<std::weak_ptr<Listener>> ls_;
+public:
+    void attach(const std::shared_ptr<Listener>& l) { ls_.push_back(l); }
+    void publish(int v) {
+        std::erase_if(ls_, [&](const std::weak_ptr<Listener>& w) {
+            auto p = w.lock();
+            if (!p) return true;
+            p->on(v);
+            return false;
+        });
+    }
+    std::size_t count() const { return ls_.size(); }
+};
+
+int main() {
+    Source s;
+    auto a = std::make_shared<Listener>(Listener{1});
+    {
+        auto b = std::make_shared<Listener>(Listener{2});
+        s.attach(b);
+    }
+    s.attach(a);
+    s.publish(10);
+    std::cout << s.count() << "\n";
+}`,
+  why: String.raw`A weak reference lets the subject observe a listener without keeping it alive. Locking the weak pointer during publish tells the subject whether the listener still exists.` },
+
+{ n: 48, d: "medium", t: "Walk a linked list in a range-for loop", idiom: "Iterator (begin and end pair)",
+  p: String.raw`Define a List class that owns its nodes through unique_ptr, with a push method that adds a value at the front. Its nested class It is an iterator that dereferences to the value of the node it points to, moves to the next node on increment, and compares by node pointer. The List methods begin and end return It objects. In main, push 1, 2 and 3, print the values in a range-for loop each followed by a space, then a newline. Then iterate over an empty list and print the number of elements visited.`,
+  ex: String.raw`3 2 1 
+0`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Node {
+    int v;
+    std::unique_ptr<Node> next;
+};
+
+class List {
+    std::unique_ptr<Node> head_;
+public:
+    void push(int v) { head_ = std::make_unique<Node>(Node{v, std::move(head_)}); }
+
+    class It {
+        const Node* n_;
+    public:
+        explicit It(const Node* n) : n_(n) {}
+        const int& operator*() const { return n_->v; }
+        It& operator++() { n_ = n_->next.get(); return *this; }
+        bool operator!=(const It& o) const { return n_ != o.n_; }
+    };
+
+    It begin() const { return It(head_.get()); }
+    It end() const { return It(nullptr); }
+};
+
+int main() {
+    List l;
+    for (int i = 1; i <= 3; ++i) l.push(i);
+    for (int x : l) std::cout << x << ' ';
+    std::cout << '\n';
+    List e;
+    int count = 0;
+    for (int x : e) { (void)x; ++count; }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`A class with begin and end that return an iterator can be used in a range-for loop. The iterator only needs dereference, increment and inequality, and the list stays a plain owner of its nodes.` },
+
+{ n: 49, d: "medium", t: "Expose a legacy callback API as a std::function", idiom: "Adapter",
+  p: String.raw`A legacy function legacy_fire takes a C function pointer that takes an int and a void pointer, and calls it with 1, 2 and 3 using the same void pointer. Define an Adapter class that stores a std::function taking an int. Its run method calls legacy_fire with a static trampoline and the adapter itself as the context. The trampoline multiplies the value by 10 and calls the stored function. In main, create an Adapter whose function prints got followed by the value and adds the value to a sum. Run it, then print sum followed by the sum.`,
+  ex: String.raw`got 10
+got 20
+got 30
+sum 60`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <utility>
+
+using LegacyCb = void (*)(int, void*);
+
+void legacy_fire(LegacyCb cb, void* ctx) {
+    for (int i = 1; i <= 3; ++i) cb(i, ctx);
+}
+
+class Adapter {
+    std::function<void(int)> f_;
+public:
+    explicit Adapter(std::function<void(int)> f) : f_(std::move(f)) {}
+    void run() { legacy_fire(&Adapter::trampoline, this); }
+private:
+    static void trampoline(int v, void* ctx) {
+        static_cast<Adapter*>(ctx)->f_(v * 10);
+    }
+};
+
+int main() {
+    int sum = 0;
+    Adapter a([&](int v) {
+        sum += v;
+        std::cout << "got " << v << "\n";
+    });
+    a.run();
+    std::cout << "sum " << sum << "\n";
+}`,
+  why: String.raw`The legacy API needs a plain function pointer and an untyped context. The adapter passes itself as the context and forwards each call to a modern callable, so callers never see the void pointer.` },
+
+{ n: 50, d: "medium", t: "Compute an expensive value once, on first use", idiom: "Proxy (lazy initialisation)",
+  p: String.raw`Define a LazyValue class that holds a function returning an int and an optional result. Its get method runs the function only if no result is stored yet, stores the result, and returns it. In main, create a LazyValue whose function prints computing and returns six times seven. Print the result of get, then print it again.`,
+  ex: String.raw`computing
+42
+42`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <optional>
+#include <utility>
+
+class LazyValue {
+    std::function<int()> make_;
+    std::optional<int> v_;
+public:
+    explicit LazyValue(std::function<int()> f) : make_(std::move(f)) {}
+    int get() {
+        if (!v_) v_ = make_();
+        return *v_;
+    }
+};
+
+int main() {
+    LazyValue total([] {
+        std::cout << "computing\n";
+        return 6 * 7;
+    });
+    std::cout << total.get() << '\n';
+    std::cout << total.get() << '\n';
+}`,
+  why: String.raw`The proxy stands in for the real value and defers the costly work until the first real use. Later calls reuse the stored result, so the work happens once.` },
+
+{ n: 51, d: "medium", t: "Pick an implementation from a type trait tag", idiom: "Tag dispatch",
+  p: String.raw`Write describe, a template that returns integer when its argument has an integral type and other otherwise. Implement it by passing a tag object to a helper overloaded on the two boolean tag types. Print describe applied to 3, to 2.5, to a std::string holding x, and to the character c, separated by spaces.`,
+  ex: String.raw`integer other other integer`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+
+template <typename T>
+std::string describe_impl(const T&, std::true_type) { return "integer"; }
+
+template <typename T>
+std::string describe_impl(const T&, std::false_type) { return "other"; }
+
+template <typename T>
+std::string describe(const T& v) {
+    return describe_impl(v, std::is_integral<T>{});
+}
+
+int main() {
+    std::cout << describe(3) << ' ' << describe(2.5) << ' '
+              << describe(std::string("x")) << ' ' << describe('c') << '\n';
+}`,
+  why: String.raw`The trait's type is a true_type or false_type, and that type selects the matching overload at compile time. The dispatch costs nothing at runtime.` },
+
+{ n: 52, d: "medium", t: "Swap a wrapped value through argument lookup", idiom: "Idiomatic swap (ADL customisation point)",
+  p: String.raw`Inside a namespace lib, define a template class Box that holds a value and has a get method returning a reference to it. Give Box a friend swap that prints lib::swap and then swaps the held values using an unqualified call with a using-declaration for std::swap. In the global scope, create two Box objects of int, holding 5 and 2. Call swap on them without any qualification, then print the two values with a space between them.`,
+  ex: String.raw`lib::swap
+2 5`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+namespace lib {
+template <typename T>
+class Box {
+    T v_;
+public:
+    explicit Box(T v) : v_(std::move(v)) {}
+    T& get() { return v_; }
+    friend void swap(Box& a, Box& b) {
+        std::cout << "lib::swap\n";
+        using std::swap;
+        swap(a.v_, b.v_);
+    }
+};
+}
+
+int main() {
+    lib::Box<int> x(5), y(2);
+    swap(x, y);
+    std::cout << x.get() << ' ' << y.get() << '\n';
+}`,
+  why: String.raw`An unqualified call lets argument-dependent lookup find the swap that lives beside the type. The using-declaration keeps std::swap as the fallback for the held value.` },
+
+{ n: 53, d: "medium", t: "Hand out a shared pointer to a session", idiom: "enable_shared_from_this",
+  p: String.raw`Define a Session class that derives from enable_shared_from_this of Session. It has an id, a start method that adds weak_from_this to a vector of weak pointers passed in, and a destructor that prints end followed by the id. In main, inside a block, create session 1 and session 2 as shared pointers, and start each one with the same vector. Let the block end. Then print the size of the vector and 1 if the first entry has expired, or 0 otherwise, separated by a space.`,
+  ex: String.raw`end 2
+end 1
+2 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+class Session : public std::enable_shared_from_this<Session> {
+    int id_;
+public:
+    explicit Session(int id) : id_(id) {}
+    void start(std::vector<std::weak_ptr<Session>>& reg) { reg.push_back(weak_from_this()); }
+    ~Session() { std::cout << "end " << id_ << "\n"; }
+};
+
+int main() {
+    std::vector<std::weak_ptr<Session>> reg;
+    {
+        auto s = std::make_shared<Session>(1);
+        s->start(reg);
+        auto t = std::make_shared<Session>(2);
+        t->start(reg);
+    }
+    std::cout << reg.size() << ' ' << reg[0].expired() << '\n';
+}`,
+  why: String.raw`A class that derives from enable_shared_from_this can give out pointers that share ownership with the existing shared_ptr. Creating a new control block from this would make two owners that each delete the object.` },
+
+{ n: 54, d: "medium", t: "Run an initialiser once per object", idiom: "Call once (std::call_once)",
+  p: String.raw`Define a Cache class with a mutable std::once_flag and a mutable int value. Its get method calls std::call_once with a lambda that prints loading and sets the value to 99, then returns the value. Create two Cache objects, a and b. Print the result of a.get twice, then the result of b.get once.`,
+  ex: String.raw`loading
+99
+99
+loading
+99`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+
+class Cache {
+    mutable std::once_flag f_;
+    mutable int value_ = 0;
+public:
+    int get() const {
+        std::call_once(f_, [this] {
+            std::cout << "loading\n";
+            value_ = 99;
+        });
+        return value_;
+    }
+};
+
+int main() {
+    Cache a, b;
+    std::cout << a.get() << '\n';
+    std::cout << a.get() << '\n';
+    std::cout << b.get() << '\n';
+}`,
+  why: String.raw`Each object has its own flag, so each cache runs its loader exactly once. A later call that finds the flag set skips the loader and returns the stored value.` },
+
+{ n: 55, d: "medium", t: "Make a string class that copies, moves and assigns safely", idiom: "Rule of five",
+  p: String.raw`Define Str, which owns a heap copy of a C string. Its constructor takes a const char pointer. It has a copy constructor, a move constructor that leaves the source owning nothing, a copy-and-move assignment operator that takes its argument by value and swaps with it, and a destructor. Its c_str method returns the owned text. In main, create Str a holding hi and Str b holding there. Move a into c. Assign c to b, then move b into a. Print a's text, c's text, then 1 if b owns nothing and 0 otherwise, separated by spaces.`,
+  ex: String.raw`hi hi 1`,
+  code: String.raw`#include <cstring>
+#include <iostream>
+#include <utility>
+
+class Str {
+    char* s_;
+public:
+    Str(const char* t) : s_(new char[std::strlen(t) + 1]) { std::strcpy(s_, t); }
+    Str(const Str& o) : s_(new char[std::strlen(o.s_) + 1]) { std::strcpy(s_, o.s_); }
+    Str(Str&& o) noexcept : s_(std::exchange(o.s_, nullptr)) {}
+    Str& operator=(Str o) noexcept {
+        std::swap(s_, o.s_);
+        return *this;
+    }
+    ~Str() { delete[] s_; }
+    const char* c_str() const { return s_; }
+};
+
+int main() {
+    Str a("hi");
+    Str b("there");
+    Str c(std::move(a));
+    b = c;
+    a = std::move(b);
+    std::cout << a.c_str() << ' ' << c.c_str() << ' ' << (b.c_str() == nullptr) << '\n';
+}`,
+  why: String.raw`A class that manages memory directly must handle copy, move, assignment and destruction together. The move leaves the source owning nothing, so its destructor is safe, and the by-value assignment reuses the copy and move constructors.` },
+
+// ---------- Hard ----------
+{ n: 56, d: "hard", t: "Transfer between accounts without deadlock", idiom: "Deadlock-free locking with std::scoped_lock",
+  p: String.raw`Two accounts each start with a balance of 100 and each has its own mutex. Two threads run at the same time: one makes 100 transfers of 1 from a to b, and the other makes 100 transfers of 1 from b to a. Each transfer must lock both accounts together. Join both threads and print the total of both balances.`,
+  ex: String.raw`200`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+struct Account {
+    std::mutex m;
+    int balance = 100;
+};
+
+void transfer(Account& from, Account& to, int amount) {
+    std::scoped_lock lock(from.m, to.m);
+    from.balance -= amount;
+    to.balance += amount;
+}
+
+int main() {
+    Account a;
+    Account b;
+    std::thread t1([&] { for (int i = 0; i < 100; ++i) transfer(a, b, 1); });
+    std::thread t2([&] { for (int i = 0; i < 100; ++i) transfer(b, a, 1); });
+    t1.join();
+    t2.join();
+    std::cout << a.balance + b.balance << '\n';
+}`,
+  why: String.raw`Locking several mutexes in one call lets the library choose a safe order, so two threads locking the same pair in opposite directions cannot deadlock.` },
+
+{ n: 57, d: "hard", t: "Create a secret only through a friend", idiom: "Attorney-client (friend-restricted construction)",
+  p: String.raw`A class Secret holds a private int and has a private constructor that takes it. Only a class Attorney is allowed to construct a Secret. Attorney has a static function make that creates a Secret holding 42. In main, create a Secret through Attorney and print its value through a public function.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+
+class Attorney;
+
+class Secret {
+    int value;
+    explicit Secret(int v) : value(v) {}
+    friend class Attorney;
+public:
+    int reveal() const { return value; }
+};
+
+class Attorney {
+public:
+    static Secret make(int v) { return Secret(v); }
+};
+
+int main() {
+    auto s = Attorney::make(42);
+    std::cout << s.reveal() << '\n';
+}`,
+  why: String.raw`Granting one named class friend access to a constructor keeps creation rules in one place without making the constructor public.` },
+
+{ n: 58, d: "hard", t: "Parse with a result that is value or error", idiom: "Result type (value or error)",
+  p: String.raw`Write a function that parses a string as a whole number and returns either the number or an error message. An empty string gives the error empty. A string containing a non-digit gives the error bad followed by a space and the string. Call it on the strings 12 and x. For a success print ok followed by the number, and for a failure print error followed by the message, one per line.`,
+  ex: String.raw`ok 12
+error bad x`,
+  code: String.raw`#include <cctype>
+#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> parse_positive(const std::string& s) {
+    if (s.empty()) return std::unexpected(std::string("empty"));
+    for (char c : s)
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+            return std::unexpected(std::string("bad ") + s);
+    return std::stoi(s);
+}
+
+int main() {
+    for (const std::string& in : {std::string("12"), std::string("x")}) {
+        auto r = parse_positive(in);
+        if (r)
+            std::cout << "ok " << *r << '\n';
+        else
+            std::cout << "error " << r.error() << '\n';
+    }
+}`,
+  why: String.raw`Returning either a value or an error from one type lets callers handle failure explicitly at the call site without using exceptions.` },
+
+{ n: 59, d: "hard", t: "Undo the last append", idiom: "Command with undo log",
+  p: String.raw`An editor holds a text string. Appending adds text and records how to undo that append. Undo removes the most recent append. Append ab, then append cd, undo once, and print the text.`,
+  ex: String.raw`ab`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <string>
+#include <vector>
+
+class Editor {
+    std::string text;
+    std::vector<std::function<void()>> undo;
+public:
+    void append(const std::string& s) {
+        text += s;
+        undo.push_back([this, s] { text.erase(text.size() - s.size()); });
+    }
+    void undo_last() {
+        if (!undo.empty()) {
+            undo.back()();
+            undo.pop_back();
+        }
+    }
+    const std::string& str() const { return text; }
+};
+
+int main() {
+    Editor e;
+    e.append("ab");
+    e.append("cd");
+    e.undo_last();
+    std::cout << e.str() << '\n';
+}`,
+  why: String.raw`Recording a reversal alongside each change lets an application undo edits in reverse order without storing whole copies of the document.` },
+
+{ n: 60, d: "hard", t: "Assign a holder to itself", idiom: "Self-assignment check",
+  p: String.raw`A Holder class holds a string and has a copy assignment operator. Create a Holder holding abc, make a reference to it, and assign the reference back to the holder itself. Print the holder's string.`,
+  ex: String.raw`abc`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Holder {
+    std::string s;
+public:
+    explicit Holder(std::string v) : s(std::move(v)) {}
+    Holder& operator=(const Holder& o) {
+        if (this != &o) s = o.s;
+        return *this;
+    }
+    const std::string& str() const { return s; }
+};
+
+int main() {
+    Holder h("abc");
+    Holder& alias = h;
+    h = alias;
+    std::cout << h.str() << '\n';
+}`,
+  why: String.raw`A copy assignment that checks for self-assignment before it releases anything keeps an object's contents intact when it is assigned to itself.` },
+
+{ n: 61, d: "hard", t: "Close a C handle automatically", idiom: "Custom deleter for C handles",
+  p: String.raw`A C-style API has a function open_handle that returns a pointer to a handle with an id, and a function close_handle that closes it. Wrap the pointer so that close_handle runs automatically when leaving a block. Inside a block, open handle 1 and print using. Leave the block, then print done.`,
+  ex: String.raw`open 1
+using
+closed 1
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Handle {
+    int id;
+};
+
+Handle* open_handle(int id) {
+    std::cout << "open " << id << '\n';
+    return new Handle{id};
+}
+
+void close_handle(Handle* h) {
+    std::cout << "closed " << h->id << '\n';
+    delete h;
+}
+
+int main() {
+    {
+        std::unique_ptr<Handle, void (*)(Handle*)> h(open_handle(1), close_handle);
+        std::cout << "using\n";
+    }
+    std::cout << "done\n";
+}`,
+  why: String.raw`A smart pointer with a custom deleter can own a resource that comes from a C API, so cleanup runs on every path out of the block.` },
+
+{ n: 62, d: "hard", t: "Pass a dependency in from outside", idiom: "Dependency injection",
+  p: String.raw`A Sender interface has a function send that takes a string. A ConsoleSender prints sent followed by the message. A Notifier stores a reference to a Sender that is passed to it at construction, and never creates its own sender. Create a ConsoleSender, give it to a Notifier, and call notify with bob, which sends bob through the sender.`,
+  ex: String.raw`sent bob`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+struct Sender {
+    virtual ~Sender() = default;
+    virtual void send(const std::string& m) = 0;
+};
+
+struct ConsoleSender : Sender {
+    void send(const std::string& m) override { std::cout << "sent " << m << '\n'; }
+};
+
+class Notifier {
+    Sender& sender_;
+public:
+    explicit Notifier(Sender& s) : sender_(s) {}
+    void notify(const std::string& who) { sender_.send(who); }
+};
+
+int main() {
+    ConsoleSender cs;
+    Notifier n(cs);
+    n.notify("bob");
+}`,
+  why: String.raw`Receiving collaborators through the constructor makes a class easy to test with a fake and lets the caller decide which implementation is used.` },
+
+{ n: 63, d: "hard", t: "Restore a value when a scope ends", idiom: "Scope guard (restore value on exit)",
+  p: String.raw`A Restore object holds a reference to an int and the int's value at the time it was created, and puts that old value back when it is destroyed. Start with level equal to 1. Inside a block, create a Restore for level, set level to 2, and print level followed by a space. After the block, print level.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+
+struct Restore {
+    int& ref;
+    int old;
+    ~Restore() { ref = old; }
+};
+
+int main() {
+    int level = 1;
+    {
+        Restore r{level, level};
+        level = 2;
+        std::cout << level << ' ';
+    }
+    std::cout << level << '\n';
+}`,
+  why: String.raw`Saving a value and restoring it from a destructor makes temporary changes safe, because the original value comes back however the scope is left.` },
+
+{ n: 64, d: "hard", t: "Store different shapes behind one type", idiom: "Type erasure",
+  p: String.raw`Write a class Shape that can hold any value that has an area() method returning a double and a name() method returning a std::string. Callers must not need to name the held type. Shape must be copyable. Objects of unrelated types must work without a common base class. Store a Square with side 2 and a Circle with radius 1 in a std::vector<Shape>. Then print each name followed by its area with two decimals, and print done.`,
+  ex: String.raw`square 4.00
+circle 3.14
+done`,
+  code: String.raw`#include <concepts>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+class Shape {
+    struct Concept {
+        virtual ~Concept() = default;
+        virtual std::unique_ptr<Concept> clone() const = 0;
+        virtual double area() const = 0;
+        virtual std::string name() const = 0;
+    };
+    template <typename T>
+    struct Model : Concept {
+        T obj;
+        explicit Model(T o) : obj(std::move(o)) {}
+        std::unique_ptr<Concept> clone() const override { return std::make_unique<Model>(obj); }
+        double area() const override { return obj.area(); }
+        std::string name() const override { return obj.name(); }
+    };
+    std::unique_ptr<Concept> impl_;
+public:
+    template <typename T>
+        requires (!std::same_as<std::decay_t<T>, Shape>)
+    Shape(T obj) : impl_(std::make_unique<Model<T>>(std::move(obj))) {}
+    Shape(const Shape& o) : impl_(o.impl_->clone()) {}
+    Shape& operator=(const Shape& o) { impl_ = o.impl_->clone(); return *this; }
+    Shape(Shape&&) noexcept = default;
+    Shape& operator=(Shape&&) noexcept = default;
+    double area() const { return impl_->area(); }
+    std::string name() const { return impl_->name(); }
+};
+
+struct Square {
+    double side;
+    double area() const { return side * side; }
+    std::string name() const { return "square"; }
+};
+
+struct Circle {
+    double radius;
+    double area() const { return 3.14159265358979 * radius * radius; }
+    std::string name() const { return "circle"; }
+};
+
+int main() {
+    std::vector<Shape> shapes;
+    shapes.push_back(Square{2});
+    shapes.push_back(Circle{1});
+    for (const Shape& s : shapes) {
+        std::cout << s.name() << " " << std::fixed << std::setprecision(2) << s.area() << "\n";
+    }
+    std::cout << "done\n";
+}`,
+  why: String.raw`A class template stores each concrete object behind a private abstract interface, so the outer type can hold any object without inheriting from anything. Copying works because each stored object knows how to clone itself.` },
+
+{ n: 65, d: "hard", t: "Share text until one copy changes", idiom: "Copy-on-write",
+  p: String.raw`Write a class Text that holds its characters in a shared buffer, so copying a Text does not copy the characters. Before a Text changes its characters, it must make its own private copy of the buffer if another Text still shares it, and it must print detach when it does so. Create a Text t holding abc, copy it into u, append d to u, print t and then u each on its own line, and print done.`,
+  ex: String.raw`detach
+abc
+abcd
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+class Text {
+    std::shared_ptr<std::string> data_;
+    void detach() {
+        if (data_.use_count() > 1) {
+            data_ = std::make_shared<std::string>(*data_);
+            std::cout << "detach\n";
+        }
+    }
+public:
+    explicit Text(std::string s) : data_(std::make_shared<std::string>(std::move(s))) {}
+    void append(char c) {
+        detach();
+        data_->push_back(c);
+    }
+    const std::string& str() const { return *data_; }
+};
+
+int main() {
+    Text t("abc");
+    Text u = t;
+    u.append('d');
+    std::cout << t.str() << "\n" << u.str() << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`Copies share one buffer, so copying is cheap. The buffer is duplicated only at the moment a write would otherwise be visible to another copy, which keeps values independent.` },
+
+{ n: 66, d: "hard", t: "Close handles in the right order after a move", idiom: "Custom deleter with ownership moved between containers",
+  p: String.raw`Define a Handle struct with an int id. open_handle prints open followed by the id and returns a new Handle with that id. close_handle prints close followed by the id and deletes the handle. Create a unique_ptr to a Handle with id 1, using close_handle as its deleter. Move it into a vector of such pointers. Emplace a pointer to a handle with id 2 into the vector. Then reset the original pointer to a handle with id 3. Erase the first element of the vector, print end, and let main finish.`,
+  ex: String.raw`open 1
+open 2
+open 3
+close 1
+end
+close 2
+close 3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Handle { int id; };
+
+Handle* open_handle(int id) {
+    std::cout << "open " << id << "\n";
+    return new Handle{id};
+}
+
+void close_handle(Handle* h) {
+    std::cout << "close " << h->id << "\n";
+    delete h;
+}
+
+int main() {
+    using Ptr = std::unique_ptr<Handle, void (*)(Handle*)>;
+    Ptr a(open_handle(1), close_handle);
+    std::vector<Ptr> v;
+    v.push_back(std::move(a));
+    v.emplace_back(open_handle(2), close_handle);
+    a.reset(open_handle(3));
+    v.erase(v.begin());
+    std::cout << "end\n";
+}`,
+  why: String.raw`A unique_ptr keeps its deleter when it is moved, so a moved handle is still closed by the right function. Destruction runs in reverse declaration order, so the vector's contents are closed before the original pointer.` },
+
+{ n: 67, d: "hard", t: "Retry an initialiser after it throws", idiom: "Call once (retry after exception)",
+  p: String.raw`A function init increments a counter. The first time it is called it throws a runtime_error with the message boom. Otherwise it prints init followed by the counter. Write a function run that calls std::call_once with a std::once_flag and init. It prints the message of the exception if the call throws, and prints ok if the call returns. Call run twice, then call std::call_once once more directly from main with the same flag and function, then print done followed by the counter.`,
+  ex: String.raw`error boom
+init 2
+ok
+done 2`,
+  code: String.raw`#include <exception>
+#include <iostream>
+#include <mutex>
+#include <stdexcept>
+
+std::once_flag flag;
+int attempts = 0;
+
+void init() {
+    ++attempts;
+    if (attempts == 1) throw std::runtime_error("boom");
+    std::cout << "init " << attempts << "\n";
+}
+
+void run() {
+    try {
+        std::call_once(flag, init);
+        std::cout << "ok\n";
+    } catch (const std::exception& e) {
+        std::cout << "error " << e.what() << "\n";
+    }
+}
+
+int main() {
+    run();
+    run();
+    std::call_once(flag, init);
+    std::cout << "done " << attempts << "\n";
+}`,
+  why: String.raw`If the function passed to call_once throws, the flag is left unset, so a later call runs it again. Once it returns normally, the flag is set and no further call runs it.` },
+
+{ n: 68, d: "hard", t: "Keep the old value when a copy throws", idiom: "Copy-and-swap (strong exception guarantee)",
+  p: String.raw`Define an Item holding a name. Copying an Item whose name is bad throws a runtime_error with the message copy failed. Define a Box that holds a vector of Items and has a copy assignment operator that takes its argument by value and swaps it with itself. Create a Box a holding x and y, and a Box b holding ok and bad. Assign b to a inside a try block, print the message of any exception caught, then print the items of a on one line and the items of b on another.`,
+  ex: String.raw`copy failed
+x y
+ok bad`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Item {
+    std::string name;
+    explicit Item(std::string n) : name(std::move(n)) {}
+    Item(Item&&) noexcept = default;
+    Item(const Item& o) : name(o.name) {
+        if (o.name == "bad") throw std::runtime_error("copy failed");
+    }
+    Item& operator=(const Item&) = delete;
+    Item& operator=(Item&&) = delete;
+};
+
+class Box {
+    std::vector<Item> items;
+public:
+    explicit Box(std::vector<Item> v) : items(std::move(v)) {}
+    Box(const Box&) = default;
+    Box(Box&&) noexcept = default;
+    friend void swap(Box& a, Box& b) noexcept { std::swap(a.items, b.items); }
+    Box& operator=(Box other) {
+        swap(*this, other);
+        return *this;
+    }
+    void show() const {
+        for (const Item& i : items) std::cout << i.name << ' ';
+        std::cout << '\n';
+    }
+};
+
+int main() {
+    std::vector<Item> va;
+    va.push_back(Item{"x"});
+    va.push_back(Item{"y"});
+    Box a(std::move(va));
+    std::vector<Item> vb;
+    vb.push_back(Item{"ok"});
+    vb.push_back(Item{"bad"});
+    Box b(std::move(vb));
+    try {
+        a = b;
+    } catch (const std::exception& e) {
+        std::cout << e.what() << "\n";
+    }
+    a.show();
+    b.show();
+}`,
+  why: String.raw`The by-value parameter is built first, so the throw happens before anything is swapped in. The object keeps its old contents when an operation fails, which is the strong guarantee.` },
+
+{ n: 69, d: "hard", t: "Parse and halve numbers as one chain", idiom: "Result type (monadic chaining)",
+  p: String.raw`Write a parse function that turns a string into an int. It returns an error message of trailing followed by the string if the whole string is not consumed, and bad followed by the string if the text is not a number. Write a half function that returns an error message of odd followed by the number if the number is odd, and otherwise returns half of it. Chain parse with two calls to half for each of the inputs 12, 6x, abc and 6. Print ok followed by the value, or err followed by the message, for each input on its own line.`,
+  ex: String.raw`ok 3
+err trailing 6x
+err bad abc
+err odd 3`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> parse(const std::string& s) {
+    try {
+        std::size_t used = 0;
+        int v = std::stoi(s, &used);
+        if (used != s.size()) return std::unexpected("trailing " + s);
+        return v;
+    } catch (const std::exception&) {
+        return std::unexpected("bad " + s);
+    }
+}
+
+std::expected<int, std::string> half(int v) {
+    if (v % 2 != 0) return std::unexpected("odd " + std::to_string(v));
+    return v / 2;
+}
+
+int main() {
+    for (std::string s : {"12", "6x", "abc", "6"}) {
+        auto r = parse(s).and_then(half).and_then(half);
+        if (r) std::cout << "ok " << *r << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Each step returns either a value or an error, and and_then runs the next step only on a value. A failure at any point flows through unchanged, so the error handling is written once at the end.` },
+
+{ n: 70, d: "hard", t: "Undo edits in reverse order", idiom: "Command with undo log",
+  p: String.raw`Keep a document as a string. Define a Command with apply and undo operations that act on the document. Define Append, which adds its text to the end, and Trim, which removes the last character and remembers it for undo. Run Append with hello, then Append with the text " world" including its leading space, then Trim, keeping every command in a history. Print the document. Then undo the last two commands in reverse order and print the document. Then undo the last remaining command, print the document in square brackets, and print the size of the history.`,
+  ex: String.raw`hello worl
+hello
+[] 0`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+struct Command {
+    virtual ~Command() = default;
+    virtual void apply(std::string& d) = 0;
+    virtual void undo(std::string& d) = 0;
+};
+
+struct Append : Command {
+    std::string text;
+    explicit Append(std::string s) : text(std::move(s)) {}
+    void apply(std::string& d) override { d += text; }
+    void undo(std::string& d) override { d.erase(d.size() - text.size()); }
+};
+
+struct Trim : Command {
+    std::string removed;
+    void apply(std::string& d) override {
+        removed = d.substr(d.size() - 1);
+        d.pop_back();
+    }
+    void undo(std::string& d) override { d += removed; }
+};
+
+int main() {
+    std::string doc;
+    std::vector<std::unique_ptr<Command>> history;
+    auto run = [&](std::unique_ptr<Command> c) {
+        c->apply(doc);
+        history.push_back(std::move(c));
+    };
+    run(std::make_unique<Append>("hello"));
+    run(std::make_unique<Append>(" world"));
+    run(std::make_unique<Trim>());
+    std::cout << doc << "\n";
+    for (int i = 0; i < 2; ++i) {
+        history.back()->undo(doc);
+        history.pop_back();
+    }
+    std::cout << doc << "\n";
+    history.back()->undo(doc);
+    history.pop_back();
+    std::cout << "[" << doc << "] " << history.size() << "\n";
+}`,
+  why: String.raw`Each command knows how to reverse itself, so the history only needs to store commands, not copies of the document. Undoing in last-in, first-out order returns the document to each earlier state.` },
+
+{ n: 71, d: "hard", t: "Watch which moves a vector really uses", idiom: "noexcept move for vector growth",
+  p: String.raw`Define a template class Obj with an int id, a static copy counter and a static move counter. Its copy constructor increments the copy counter. Its move constructor increments the move counter and is noexcept only when the template argument is true. Write a function run that takes a name and a bool template argument, builds a std::vector of three Obj values with emplace_back in a loop, and then prints the name, the word copies, the copy count, the word moves and the move count, separated by spaces. Call run with true and the name nothrow, then with false and the name throwing.`,
+  ex: String.raw`nothrow copies 0 moves 3
+throwing copies 3 moves 0`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+template <bool NothrowMove>
+struct Obj {
+    int id;
+    static inline int copies = 0;
+    static inline int moves = 0;
+    explicit Obj(int i) : id(i) {}
+    Obj(const Obj& o) : id(o.id) { ++copies; }
+    Obj(Obj&& o) noexcept(NothrowMove) : id(o.id) { ++moves; }
+};
+
+template <bool NT>
+void run(const char* name) {
+    std::vector<Obj<NT>> v;
+    for (int i = 0; i < 3; ++i) v.emplace_back(i);
+    std::cout << name << " copies " << Obj<NT>::copies << " moves " << Obj<NT>::moves << "\n";
+}
+
+int main() {
+    run<true>("nothrow");
+    run<false>("throwing");
+}`,
+  why: String.raw`When a vector grows it moves its elements only if the move cannot throw. Otherwise it copies them, so a throwing move makes every reallocation pay for copies instead.` },
+
+{ n: 72, d: "hard", t: "Transfer money between accounts from two threads", idiom: "Deadlock-free locking with std::scoped_lock",
+  p: String.raw`Define an Account with a std::mutex and an int balance. Write transfer, which takes two accounts and an amount, and moves the amount from the first to the second while holding both mutexes. Start two threads: one makes 1000 transfers of 1 from a to b, and the other makes 1000 transfers of 2 from b to a. Join both threads, then print a's balance, b's balance and their sum separated by spaces. Both accounts start with 1000.`,
+  ex: String.raw`2000 0 2000`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+struct Account {
+    std::mutex m;
+    int balance;
+};
+
+void transfer(Account& from, Account& to, int amt) {
+    std::scoped_lock lk(from.m, to.m);
+    from.balance -= amt;
+    to.balance += amt;
+}
+
+int main() {
+    Account a{{}, 1000};
+    Account b{{}, 1000};
+    std::thread t1([&] { for (int i = 0; i < 1000; ++i) transfer(a, b, 1); });
+    std::thread t2([&] { for (int i = 0; i < 1000; ++i) transfer(b, a, 2); });
+    t1.join();
+    t2.join();
+    std::cout << a.balance << ' ' << b.balance << ' ' << a.balance + b.balance << '\n';
+}`,
+  why: String.raw`std::scoped_lock locks several mutexes with a deadlock-avoidance algorithm, so the two threads cannot each hold one lock while waiting for the other. The total is preserved because every transfer is atomic.` },
+
+{ n: 73, d: "hard", t: "Let only a designated class change the engine", idiom: "Attorney-client (friend-restricted construction)",
+  p: String.raw`Define an Engine with a private ignite method that takes an rpm and records it, and increments a start count. Engine exposes public getters for rpm and the start count. Define a Mechanic class that is the only class allowed to call ignite, and has a static tune method that takes an Engine and an rpm, and calls ignite only if the rpm is greater than 0. In main, tune an engine to 0, then to 800, then to 1200. Print the rpm and the start count, separated by a space.`,
+  ex: String.raw`1200 2`,
+  code: String.raw`#include <iostream>
+
+class Engine {
+    int rpm_ = 0;
+    int starts_ = 0;
+    void ignite(int rpm) { rpm_ = rpm; ++starts_; }
+    friend class Mechanic;
+public:
+    int rpm() const { return rpm_; }
+    int starts() const { return starts_; }
+};
+
+class Mechanic {
+public:
+    static void tune(Engine& e, int rpm) {
+        if (rpm > 0) e.ignite(rpm);
+    }
+};
+
+int main() {
+    Engine e;
+    Mechanic::tune(e, 0);
+    Mechanic::tune(e, 800);
+    Mechanic::tune(e, 1200);
+    std::cout << e.rpm() << ' ' << e.starts() << '\n';
+}`,
+  why: String.raw`A friend declaration lets one named class reach private members without making them public. Other code cannot call ignite, and the rule for when it runs stays in one place.` },
+
+{ n: 74, d: "hard", t: "Report a port that is not a number or is out of range", idiom: "Result type (value or error)",
+  p: String.raw`Define Error with a string message. Define parse_port, which returns either an int or an Error. It returns the error empty if the string is empty. It returns the error not a number: followed by the string if any character is not a digit. It returns the error out of range: followed by the string if the number is above 65535. Otherwise it returns the number. For each of the inputs 8080, empty, 80x and 70000, print port followed by the number, or error followed by the message.`,
+  ex: String.raw`port 8080
+error empty
+error not a number: 80x
+error out of range: 70000`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+struct Error { std::string msg; };
+using Result = std::variant<int, Error>;
+
+Result parse_port(const std::string& s) {
+    if (s.empty()) return Error{"empty"};
+    int v = 0;
+    for (char c : s) {
+        if (c < '0' || c > '9') return Error{"not a number: " + s};
+        v = v * 10 + (c - '0');
+    }
+    if (v > 65535) return Error{"out of range: " + s};
+    return v;
+}
+
+int main() {
+    for (const char* in : {"8080", "", "80x", "70000"}) {
+        Result r = parse_port(in);
+        if (std::holds_alternative<int>(r))
+            std::cout << "port " << std::get<int>(r) << '\n';
+        else
+            std::cout << "error " << std::get<Error>(r).msg << '\n';
+    }
+}`,
+  why: String.raw`The return type states that a call yields a value or an error, so callers must check which one they have before using it. No exception is thrown for an expected bad input.` },
+
+{ n: 75, d: "hard", t: "Ignore assignment of an object to itself", idiom: "Self-assignment check",
+  p: String.raw`Define Text, which owns a heap std::string through a pointer. Its constructor takes a std::string and its destructor frees it. Copy construction is not allowed. Its copy assignment operator returns early and prints self when assigning an object to itself. Otherwise it frees its own string and copies the other's. Create a Text a holding one and a Text b holding two. Assign b to a, assign a to itself, then print a's string.`,
+  ex: String.raw`self
+two`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Text {
+    std::string* p_;
+public:
+    explicit Text(std::string s) : p_(new std::string(std::move(s))) {}
+    ~Text() { delete p_; }
+    Text(const Text&) = delete;
+    Text& operator=(const Text& o) {
+        if (this == &o) {
+            std::cout << "self\n";
+            return *this;
+        }
+        delete p_;
+        p_ = new std::string(*o.p_);
+        return *this;
+    }
+    const std::string& get() const { return *p_; }
+};
+
+int main() {
+    Text a("one");
+    Text b("two");
+    a = b;
+    a = a;
+    std::cout << a.get() << '\n';
+}`,
+  why: String.raw`Freeing the old string before copying from the source would destroy the source too when both are the same object. The self-check keeps the object valid in that case.` },
+
+{ n: 76, d: "hard", t: "Close a C-style database handle through a unique_ptr", idiom: "Custom deleter for C handles",
+  p: String.raw`Define a CDb struct with an int id. Define db_open, which prints open followed by the id and returns a new CDb, and db_close, which prints close followed by the id and deletes the CDb. Define a functor DbCloser whose call operator calls db_close. Define DbPtr as a unique_ptr to CDb with DbCloser as its deleter, and connect, which returns a DbPtr from db_open. In main, connect 1 and keep it. In a block, connect 2, reset that pointer, and print after reset. Then connect 3, print c ready if the pointer is not null, and let main finish.`,
+  ex: String.raw`open 1
+open 2
+close 2
+after reset
+open 3
+c ready
+close 3
+close 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct CDb { int id; };
+
+CDb* db_open(int id) {
+    std::cout << "open " << id << "\n";
+    return new CDb{id};
+}
+
+void db_close(CDb* d) {
+    std::cout << "close " << d->id << "\n";
+    delete d;
+}
+
+struct DbCloser {
+    void operator()(CDb* d) const { db_close(d); }
+};
+
+using DbPtr = std::unique_ptr<CDb, DbCloser>;
+
+DbPtr connect(int id) { return DbPtr(db_open(id)); }
+
+int main() {
+    DbPtr a = connect(1);
+    {
+        DbPtr b = connect(2);
+        b.reset();
+        std::cout << "after reset\n";
+    }
+    DbPtr c = connect(3);
+    if (c) std::cout << "c ready\n";
+}`,
+  why: String.raw`A unique_ptr with a deleter that calls the C close function releases the handle on every exit path, and reset closes it early. The functor makes the close call part of the type, so no caller can forget it.` },
+
+{ n: 77, d: "hard", t: "Pass in collaborators instead of creating them", idiom: "Dependency injection",
+  p: String.raw`Define an abstract Clock with a now method returning an int. RealClock returns 1000. FakeClock holds an int that it returns. Define a Logger that takes a shared_ptr to a Clock in its constructor, has a log method that stores the current time, a space and the message, and a lines method returning the stored lines. In main, create a FakeClock holding 42 and a Logger using it. Log start. Change the fake clock to 50 and log stop. Create a second Logger using a RealClock and log boot. Print every line of the first logger, then every line of the second.`,
+  ex: String.raw`42 start
+50 stop
+1000 boot`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+struct Clock {
+    virtual ~Clock() = default;
+    virtual int now() const = 0;
+};
+
+struct RealClock : Clock {
+    int now() const override { return 1000; }
+};
+
+struct FakeClock : Clock {
+    int t;
+    explicit FakeClock(int v) : t(v) {}
+    int now() const override { return t; }
+};
+
+class Logger {
+    std::shared_ptr<Clock> clock_;
+    std::vector<std::string> lines_;
+public:
+    explicit Logger(std::shared_ptr<Clock> c) : clock_(std::move(c)) {}
+    void log(const std::string& m) { lines_.push_back(std::to_string(clock_->now()) + ' ' + m); }
+    const std::vector<std::string>& lines() const { return lines_; }
+};
+
+int main() {
+    auto fake = std::make_shared<FakeClock>(42);
+    Logger a(fake);
+    a.log("start");
+    fake->t = 50;
+    a.log("stop");
+    Logger b(std::make_shared<RealClock>());
+    b.log("boot");
+    for (const auto& s : a.lines()) std::cout << s << '\n';
+    for (const auto& s : b.lines()) std::cout << s << '\n';
+}`,
+  why: String.raw`The logger receives its clock from outside, so a test can supply a fake whose time it controls. The class does not decide which clock it uses, and it works with any implementation of the interface.` },
+
+{ n: 78, d: "hard", t: "Restore a global mode when nested calls end", idiom: "Scope guard (restore value on exit)",
+  p: String.raw`A global string mode starts as normal. Define ModeGuard, whose constructor saves the current mode and sets it to the given value, and whose destructor puts the saved value back. Define inner, which sets the mode to debug for its scope and prints inner followed by the mode. Define outer, which sets the mode to quiet for its scope, prints outer followed by the mode, calls inner, then prints after inner followed by the mode. In main, call outer, then print main followed by the mode.`,
+  ex: String.raw`outer quiet
+inner debug
+after inner quiet
+main normal`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+std::string mode = "normal";
+
+class ModeGuard {
+    std::string saved_;
+public:
+    explicit ModeGuard(std::string m) : saved_(mode) { mode = std::move(m); }
+    ~ModeGuard() { mode = saved_; }
+};
+
+void inner() {
+    ModeGuard g("debug");
+    std::cout << "inner " << mode << '\n';
+}
+
+void outer() {
+    ModeGuard g("quiet");
+    std::cout << "outer " << mode << '\n';
+    inner();
+    std::cout << "after inner " << mode << '\n';
+}
+
+int main() {
+    outer();
+    std::cout << "main " << mode << '\n';
+}`,
+  why: String.raw`Each guard remembers the value it replaced, so nested changes unwind in reverse order and leave the global as it was before the outermost call.` },
+
+{ n: 79, d: "hard", t: "Route writes to any sink through one type", idiom: "Type erasure",
+  p: String.raw`Write a class AnyWriter that can hold any callable taking a const string reference, without being a template itself. Copying an AnyWriter shares the held callable. Its write method forwards the string to the held callable. Create writer a that appends its text to an ostringstream buf, and writer b that increments a count and prints the text in square brackets. Write ab through a, cd through b, copy b into c, and write ef through c. Print the content of buf, then a space, then count.`,
+  ex: String.raw`[cd]
+[ef]
+ab 2`,
+  code: String.raw`#include <concepts>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+class AnyWriter {
+    struct Base {
+        virtual ~Base() = default;
+        virtual void write(const std::string&) = 0;
+    };
+    template <typename W>
+    struct Impl : Base {
+        W w;
+        explicit Impl(W x) : w(std::move(x)) {}
+        void write(const std::string& s) override { w(s); }
+    };
+    std::shared_ptr<Base> p_;
+public:
+    template <typename W>
+        requires (!std::same_as<std::decay_t<W>, AnyWriter>)
+    AnyWriter(W w) : p_(std::make_shared<Impl<W>>(std::move(w))) {}
+    void write(const std::string& s) { p_->write(s); }
+};
+
+int main() {
+    std::ostringstream buf;
+    int count = 0;
+    AnyWriter a([&](const std::string& s) { buf << s; });
+    AnyWriter b([&](const std::string& s) {
+        ++count;
+        std::cout << "[" << s << "]\n";
+    });
+    a.write("ab");
+    b.write("cd");
+    AnyWriter c = b;
+    c.write("ef");
+    std::cout << buf.str() << ' ' << count << '\n';
+}`,
+  why: String.raw`The outer class stores a pointer to an abstract base, and each template instance inherits from that base. Callers see one non-template type, while any callable can be held behind it.` },
+
+{ n: 80, d: "hard", t: "Copy a shared vector only when it is written", idiom: "Copy-on-write",
+  p: String.raw`Define CowVec, which holds a vector of ints through a shared_ptr. Before a push, if the vector is shared with another CowVec, it makes its own copy and prints copy. Give it a size method and an at method. In main, create a CowVec a with values 1 and 2. Copy a into b, copy b into c. Push 3 onto c, then push 4 onto b. Print the sizes of a, b and c and the value at index 1 of b, separated by spaces.`,
+  ex: String.raw`copy
+copy
+2 3 3 2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+class CowVec {
+    std::shared_ptr<std::vector<int>> d_;
+    void detach() {
+        if (d_.use_count() > 1) {
+            d_ = std::make_shared<std::vector<int>>(*d_);
+            std::cout << "copy\n";
+        }
+    }
+public:
+    CowVec() : d_(std::make_shared<std::vector<int>>()) {}
+    void push(int v) {
+        detach();
+        d_->push_back(v);
+    }
+    int at(std::size_t i) const { return (*d_)[i]; }
+    std::size_t size() const { return d_->size(); }
+};
+
+int main() {
+    CowVec a;
+    a.push(1);
+    a.push(2);
+    CowVec b = a;
+    CowVec c = b;
+    c.push(3);
+    b.push(4);
+    std::cout << a.size() << ' ' << b.size() << ' ' << c.size() << ' ' << b.at(1) << '\n';
+}`,
+  why: String.raw`Copies share one buffer, so copying is cheap. The buffer is duplicated only when a write would otherwise be visible through another copy, which keeps the values independent.` },
+
+{ n: 81, d: "hard", t: "Release resources in reverse on failure", idiom: "RAII (exception-safe acquisition)",
+  p: String.raw`Define Lock with a name and a flag. Its constructor throws a runtime_error with the message busy followed by the name if the flag is true. Otherwise it prints lock followed by the name. Its destructor prints unlock followed by the name. Define move_money, which takes a flag, creates a Lock named accounts with no failure, then a Lock named ledger with the flag, and prints transfer. In main, call move_money with false, then with true inside a try block, printing the message when it is caught.`,
+  ex: String.raw`lock accounts
+lock ledger
+transfer
+unlock ledger
+unlock accounts
+lock accounts
+unlock accounts
+busy ledger`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+
+class Lock {
+    std::string n_;
+public:
+    Lock(std::string n, bool fail) : n_(std::move(n)) {
+        if (fail) throw std::runtime_error("busy " + n_);
+        std::cout << "lock " << n_ << "\n";
+    }
+    ~Lock() { std::cout << "unlock " << n_ << "\n"; }
+};
+
+void move_money(bool fail_second) {
+    Lock a("accounts", false);
+    Lock b("ledger", fail_second);
+    std::cout << "transfer\n";
+}
+
+int main() {
+    move_money(false);
+    try {
+        move_money(true);
+    } catch (const std::runtime_error& e) {
+        std::cout << e.what() << "\n";
+    }
+}`,
+  why: String.raw`When the second constructor throws, the first lock is already held and must be released. Its destructor runs during unwinding, so the cleanup needs no catch block.` },
+
+{ n: 82, d: "hard", t: "Retry an initialiser that fails at first", idiom: "Call once (retry after exception)",
+  p: String.raw`Define connect, which increments a counter and throws a runtime_error with the message try while the counter is below 3. Once the counter reaches 3 it prints connected after followed by the counter. Define run, which calls std::call_once with a shared std::once_flag and connect inside a try block. It prints attempt followed by its number and done if the call returns, or failed if it throws. In main, call run for numbers 0 to 3 in a loop.`,
+  ex: String.raw`attempt 0 failed
+attempt 1 failed
+connected after 3
+attempt 2 done
+attempt 3 done`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <stdexcept>
+
+std::once_flag flag;
+int tries = 0;
+
+void connect() {
+    ++tries;
+    if (tries < 3) throw std::runtime_error("try");
+    std::cout << "connected after " << tries << "\n";
+}
+
+void run(int i) {
+    try {
+        std::call_once(flag, connect);
+        std::cout << "attempt " << i << " done\n";
+    } catch (const std::exception&) {
+        std::cout << "attempt " << i << " failed\n";
+    }
+}
+
+int main() {
+    for (int i = 0; i < 4; ++i) run(i);
+}`,
+  why: String.raw`A call_once that throws leaves its flag unset, so the next caller tries again. Once one call succeeds, later calls return at once without running the function.` },
+
+{ n: 83, d: "hard", t: "Keep a pool's items when copying one fails", idiom: "Copy-and-swap (strong exception guarantee)",
+  p: String.raw`Define Risky holding an int. Its copy constructor throws a runtime_error with the message negative if the value is below zero. Define Pool holding a vector of Risky values, with a copy constructor that copies the vector, a friend swap, a copy assignment that takes its argument by value and swaps with it, and a sum method. In main, create Pool a from the values 1 and 2, and Pool b from the values 10 and -1. Assign b to a inside a try block, printing the message if it throws. Then print the sums of a and b separated by a space.`,
+  ex: String.raw`negative
+3 9`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+struct Risky {
+    int v;
+    Risky(int x) : v(x) {}
+    Risky(const Risky& o) : v(o.v) {
+        if (v < 0) throw std::runtime_error("negative");
+    }
+    Risky(Risky&&) noexcept = default;
+    Risky& operator=(const Risky&) = delete;
+    Risky& operator=(Risky&&) = delete;
+};
+
+class Pool {
+    std::vector<Risky> items_;
+public:
+    explicit Pool(std::vector<Risky> v) : items_(std::move(v)) {}
+    Pool(const Pool&) = default;
+    friend void swap(Pool& a, Pool& b) noexcept { std::swap(a.items_, b.items_); }
+    Pool& operator=(Pool o) {
+        swap(*this, o);
+        return *this;
+    }
+    int sum() const {
+        int s = 0;
+        for (const Risky& r : items_) s += r.v;
+        return s;
+    }
+};
+
+int main() {
+    std::vector<Risky> x;
+    x.emplace_back(1);
+    x.emplace_back(2);
+    Pool a(std::move(x));
+    std::vector<Risky> y;
+    y.emplace_back(10);
+    y.emplace_back(-1);
+    Pool b(std::move(y));
+    try {
+        a = b;
+    } catch (const std::exception& e) {
+        std::cout << e.what() << "\n";
+    }
+    std::cout << a.sum() << ' ' << b.sum() << '\n';
+}`,
+  why: String.raw`The by-value parameter makes the copy before anything is swapped. A failure while copying leaves the target unchanged, and the swap is noexcept, so the commit cannot fail.` },
+
+{ n: 84, d: "hard", t: "Chain parsing and transforms over expected values", idiom: "Result type (monadic chaining)",
+  p: String.raw`Define an enum Err with the values Missing and Invalid. find takes a key and returns an expected string with an Err error: for user it returns two spaces, ann, and two spaces; for age it returns x31; for any other key it returns Missing. number takes a string and returns an expected int: if the string is empty or does not start with x it returns Invalid, otherwise the number formed by the rest of the string. For each key age, user and zip, chain find, then number, then a transform that doubles the value. Print the key, a colon and a space, then the doubled value, or invalid, or missing, depending on the error.`,
+  ex: String.raw`age: 62
+user: invalid
+zip: missing`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+enum class Err { Missing, Invalid };
+
+std::expected<std::string, Err> find(const std::string& key) {
+    if (key == "user") return std::string("  ann  ");
+    if (key == "age") return std::string("x31");
+    return std::unexpected(Err::Missing);
+}
+
+std::expected<int, Err> number(const std::string& s) {
+    if (s.empty() || s[0] != 'x') return std::unexpected(Err::Invalid);
+    return std::stoi(s.substr(1));
+}
+
+int main() {
+    for (const char* k : {"age", "user", "zip"}) {
+        auto r = find(k).and_then(number).transform([](int v) { return v * 2; });
+        std::cout << k << ": ";
+        if (r) std::cout << *r << '\n';
+        else std::cout << (r.error() == Err::Missing ? "missing" : "invalid") << '\n';
+    }
+}`,
+  why: String.raw`Each step either passes a value to the next step or forwards its error unchanged. The chain reads top to bottom, and the error is handled once at the end.` },
+
+{ n: 85, d: "hard", t: "Close connections in the order they leave a map", idiom: "Custom deleter with ownership moved between containers",
+  p: String.raw`Define Conn with an int id. Define a functor CloseCounter whose call operator prints close followed by the id and deletes the Conn. Define ConnPtr as a unique_ptr to Conn with CloseCounter as its deleter. In main, create a std::map from int to ConnPtr, and insert connections 1 and 2 under keys 1 and 2. Assign a new connection 3 to key 1. Print closed followed by the number of closes so far, which is kept in a global counter. Extract the entry for key 2 into a node, print extracted followed by its key, and let main finish.`,
+  ex: String.raw`close 1
+closed 1
+extracted 2
+close 2
+close 3`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+
+struct Conn { int id; };
+
+int closed = 0;
+
+struct CloseCounter {
+    void operator()(Conn* c) const {
+        ++closed;
+        std::cout << "close " << c->id << "\n";
+        delete c;
+    }
+};
+
+using ConnPtr = std::unique_ptr<Conn, CloseCounter>;
+
+int main() {
+    std::map<int, ConnPtr> pool;
+    pool.emplace(1, ConnPtr(new Conn{1}));
+    pool.emplace(2, ConnPtr(new Conn{2}));
+    pool[1] = ConnPtr(new Conn{3});
+    std::cout << "closed " << closed << "\n";
+    auto node = pool.extract(2);
+    std::cout << "extracted " << node.key() << "\n";
+}`,
+  why: String.raw`A unique_ptr carries its deleter with it, so an entry closes correctly no matter which container it is moved into or out of. Replacing a value closes the old one, and the extracted node keeps its own pointer until it goes out of scope.` },
+
+// ---------- Extension ----------
+{ n: 86, d: "extension", t: "Only a factory creates a token", idiom: "Passkey idiom",
+  p: String.raw`A Token can only be created by a class Factory, but any code may pass a Token to Service. Service has a function use that takes a Token by value and prints ok. Create a Service and pass it a Token obtained from Factory.`,
+  ex: String.raw`ok`,
+  code: String.raw`#include <iostream>
+
+class Token {
+    Token() = default;
+    friend class Factory;
+};
+
+class Service {
+public:
+    void use(Token) const { std::cout << "ok\n"; }
+};
+
+class Factory {
+public:
+    static Token make() { return Token{}; }
+};
+
+int main() {
+    Service s;
+    s.use(Factory::make());
+}`,
+  why: String.raw`A key class that only a chosen friend can construct lets one class control who may obtain a capability while others can still pass it along.` },
+
+{ n: 87, d: "extension", t: "Hand-written dispatch table", idiom: "Hand-rolled function table (vtable)",
+  p: String.raw`A Shape is a plain struct holding a function pointer and a pointer to data, acting as an interface written by hand. A Circle struct has an int radius. Create a Circle with radius 3, make a Shape whose function prints circle followed by the radius, and call the Shape's function through the struct.`,
+  ex: String.raw`circle 3`,
+  code: String.raw`#include <iostream>
+
+struct Shape {
+    void (*draw)(const void* self);
+    const void* data;
+};
+
+struct Circle {
+    int r;
+};
+
+void draw_circle(const void* self) {
+    std::cout << "circle " << static_cast<const Circle*>(self)->r << '\n';
+}
+
+int main() {
+    Circle c{3};
+    Shape s{draw_circle, &c};
+    s.draw(s.data);
+}`,
+  why: String.raw`A table of function pointers next to a data pointer is how virtual dispatch works underneath, and it is used where a language feature is not available.` },
+
+{ n: 88, d: "extension", t: "Return an object that cannot be moved", idiom: "Guaranteed copy elision (return a prvalue)",
+  p: String.raw`A type NoMove can be neither copied nor moved. Write a function that returns a NoMove built from the value 7. Store the result in a variable and print its value.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+
+struct NoMove {
+    int v;
+    explicit NoMove(int x) : v(x) {}
+    NoMove(const NoMove&) = delete;
+    NoMove(NoMove&&) = delete;
+};
+
+NoMove make() {
+    return NoMove(7);
+}
+
+int main() {
+    NoMove n = make();
+    std::cout << n.v << '\n';
+}`,
+  why: String.raw`Returning a value that is constructed directly where it is needed lets a type that cannot be moved still be returned from a function.` },
+
+{ n: 89, d: "extension", t: "Block a conversion with a deleted template", idiom: "Deleted template overload",
+  p: String.raw`Write a function template f that is declared deleted, and a non-template overload of f that takes an int and prints int followed by its value. Call f with the int 3.`,
+  ex: String.raw`int 3`,
+  code: String.raw`#include <iostream>
+
+template <typename T>
+void f(T) = delete;
+
+void f(int x) {
+    std::cout << "int " << x << '\n';
+}
+
+int main() {
+    f(3);
+}`,
+  why: String.raw`A deleted template catches argument types that should not be accepted, such as a double, while the exact non-template overload handles the type that is allowed.` },
+
+{ n: 90, d: "extension", t: "Observe values without owning them", idiom: "Non-owning reference (std::reference_wrapper)",
+  p: String.raw`Two ints a and b hold 3 and 4. Store references to them in a vector, so the vector observes them without owning them. Print the values through the vector, separated by a space.`,
+  ex: String.raw`3 4`,
+  code: String.raw`#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <vector>
+
+int main() {
+    int a = 3;
+    int b = 4;
+    std::vector<std::reference_wrapper<int>> refs{a, b};
+    for (std::size_t i = 0; i < refs.size(); ++i)
+        std::cout << refs[i].get() << (i + 1 < refs.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A reference wrapper can live in a container like a value while still referring to an object owned elsewhere.` },
+
+{ n: 91, d: "extension", t: "Move-only values in a growing vector", idiom: "noexcept move for vector growth",
+  p: String.raw`A Handle type holds an int id. It can be moved but not copied, and its move operations do not throw. Put handles with ids 1, 2 and 3 into a vector, one after another, so the vector grows as it goes, and print the ids separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <vector>
+
+struct Handle {
+    int id;
+    explicit Handle(int i) : id(i) {}
+    Handle(Handle&&) noexcept = default;
+    Handle& operator=(Handle&&) noexcept = default;
+    Handle(const Handle&) = delete;
+    Handle& operator=(const Handle&) = delete;
+};
+
+int main() {
+    std::vector<Handle> v;
+    v.emplace_back(1);
+    v.emplace_back(2);
+    v.emplace_back(3);
+    for (std::size_t i = 0; i < v.size(); ++i)
+        std::cout << v[i].id << (i + 1 < v.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Marking move operations as not throwing lets a vector move its elements to new storage when it grows, instead of copying them.` },
+
+{ n: 92, d: "extension", t: "Share one style object per name", idiom: "Flyweight (shared immutable objects)",
+  p: String.raw`Write a function style(name) that returns a shared pointer to a read-only Style object for that font name. A Style is created only the first time its name is requested, and at that moment the function prints created followed by the name. Call style with serif, then sans, then serif again. Print 1 if the first and third results are the same object and 0 otherwise, then a space, then the same check for the first and second results. Then print done.`,
+  ex: String.raw`created serif
+created sans
+1 0
+done`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+
+struct Style {
+    std::string font;
+};
+
+std::shared_ptr<const Style> style(const std::string& name) {
+    static std::map<std::string, std::shared_ptr<const Style>> cache;
+    auto it = cache.find(name);
+    if (it != cache.end()) return it->second;
+    std::cout << "created " << name << "\n";
+    auto s = std::make_shared<Style>(Style{name});
+    cache.emplace(name, s);
+    return s;
+}
+
+int main() {
+    auto a = style("serif");
+    auto b = style("sans");
+    auto c = style("serif");
+    std::cout << (a == c) << " " << (a == b) << "\n";
+    std::cout << "done\n";
+}`,
+  why: String.raw`Objects that are shared and never change can be reused by anyone who asks for the same key. The cache keeps one instance per key, so many users do not each store a copy of the same data.` },
+
+{ n: 93, d: "extension", t: "Count constructions through a chain of returns", idiom: "Guaranteed copy elision (return a prvalue)",
+  p: String.raw`Define Counter, whose default constructor increments a static count, and whose copy and move constructors are deleted. Define make, which returns Counter{}, and wrap, which returns the result of make(). In main, declare a Counter c initialised from wrap(), then print the count.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+
+struct Counter {
+    static inline int made = 0;
+    Counter() { ++made; }
+    Counter(const Counter&) = delete;
+    Counter(Counter&&) = delete;
+};
+
+Counter make() { return Counter{}; }
+Counter wrap() { return make(); }
+
+int main() {
+    Counter c = wrap();
+    (void)c;
+    std::cout << Counter::made << "\n";
+}`,
+  why: String.raw`A function that returns a prvalue does not create a temporary to move from, so a type with no move constructor can still be returned through several layers.` },
+
+{ n: 94, d: "extension", t: "Sort references without moving the objects", idiom: "Non-owning reference (std::reference_wrapper)",
+  p: String.raw`Define Person with a name and an age. Create a vector of three people: ann aged 31, bo aged 19 and cy aged 25. Create a vector of std::reference_wrapper to Person that refers to them, and sort those references by age, ascending. Print each name followed by a space, then a newline. Then set the first person's age to 99 in the original vector, and print the age of the last reference.`,
+  ex: String.raw`bo cy ann 
+99`,
+  code: String.raw`#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct Person {
+    std::string name;
+    int age;
+};
+
+int main() {
+    std::vector<Person> people{{"ann", 31}, {"bo", 19}, {"cy", 25}};
+    std::vector<std::reference_wrapper<Person>> refs(people.begin(), people.end());
+    std::sort(refs.begin(), refs.end(),
+              [](const std::reference_wrapper<Person>& a, const std::reference_wrapper<Person>& b) {
+                  return a.get().age < b.get().age;
+              });
+    for (const auto& r : refs) std::cout << r.get().name << ' ';
+    std::cout << '\n';
+    people[0].age = 99;
+    std::cout << refs.back().get().age << '\n';
+}`,
+  why: String.raw`A reference_wrapper stores a reference, so a container of them can be sorted and copied cheaply while the people stay in one place. A change made through the original vector is visible through every reference.` },
+
+{ n: 95, d: "extension", t: "Make a token only the ledger can create", idiom: "Passkey idiom",
+  p: String.raw`Define a Passkey class whose default constructor is private, and make Ledger its only friend. Ledger has a total, a public commit method that takes an int and a Passkey and adds the int to the total, and a public add_twice method that adds a value twice, each time through commit with a Passkey it creates itself. In main, create a Ledger, call add_twice with 3, and print the total. Then print 1 if a Passkey can be default constructed from outside, or 0 otherwise.`,
+  ex: String.raw`6 0`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+
+class Ledger;
+
+class Passkey {
+    Passkey() = default;
+    friend class Ledger;
+};
+
+class Ledger {
+    int total_ = 0;
+public:
+    void commit(int v, Passkey) { total_ += v; }
+    void add_twice(int v) {
+        commit(v, Passkey{});
+        commit(v, Passkey{});
+    }
+    int total() const { return total_; }
+};
+
+int main() {
+    Ledger l;
+    l.add_twice(3);
+    std::cout << l.total() << ' ' << std::is_default_constructible_v<Passkey> << '\n';
+}`,
+  why: String.raw`The key's constructor is private, so only the class that befriends it can make a key, and only that class can call the method that asks for one. The key does not need to store anything.` },
+
+{ n: 96, d: "extension", t: "Dispatch through a hand-written table of functions", idiom: "Hand-rolled function table (vtable)",
+  p: String.raw`Define an Ops struct holding three function pointers: draw takes a void pointer, area takes a void pointer and returns an int, and destroy takes a void pointer. Define Square with an int side. Implement sq_draw, which prints square followed by the side, sq_area, which returns the side squared, and sq_destroy, which prints freed and deletes the square. Define Obj with a pointer to an Ops table and a void pointer to the data. In main, make a static Ops table for the square functions, create an Obj holding a Square of side 4, call draw, print area, then call destroy.`,
+  ex: String.raw`square 4
+16
+freed`,
+  code: String.raw`#include <iostream>
+
+struct Ops {
+    void (*draw)(void*);
+    int (*area)(void*);
+    void (*destroy)(void*);
+};
+
+struct Square { int s; };
+
+void sq_draw(void* p) { std::cout << "square " << static_cast<Square*>(p)->s << "\n"; }
+int sq_area(void* p) { int s = static_cast<Square*>(p)->s; return s * s; }
+void sq_destroy(void* p) {
+    delete static_cast<Square*>(p);
+    std::cout << "freed\n";
+}
+
+struct Obj {
+    const Ops* ops;
+    void* data;
+};
+
+int main() {
+    static const Ops square_ops{sq_draw, sq_area, sq_destroy};
+    Obj o{&square_ops, new Square{4}};
+    o.ops->draw(o.data);
+    std::cout << o.ops->area(o.data) << "\n";
+    o.ops->destroy(o.data);
+}`,
+  why: String.raw`A struct of function pointers, plus a data pointer, is how dynamic dispatch works underneath. Each object carries the table that matches its type, so the caller needs no inheritance.` },
+
+{ n: 97, d: "extension", t: "Check at compile time which overload a call selects", idiom: "Deleted template overload",
+  p: String.raw`Define a function take that takes a double and prints double followed by the value. Also declare a template take that accepts any type and is deleted. Define a template callable that takes a pack of argument types and is true when a call to take with those arguments compiles, and false otherwise. In main, call take with 2.5. Then print true or false for whether take can be called with a double, with an int, and with a std::string, separated by spaces, using std::boolalpha.`,
+  ex: String.raw`double 2.5
+true false false`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+void take(double d) { std::cout << "double " << d << "\n"; }
+
+template <class T>
+void take(T) = delete;
+
+template <class... A>
+auto check(int) -> decltype(take(std::declval<A>()...), std::true_type{});
+
+template <class...>
+std::false_type check(...);
+
+template <class... A>
+constexpr bool callable = decltype(check<A...>(0))::value;
+
+int main() {
+    take(2.5);
+    std::cout << std::boolalpha << callable<double> << ' ' << callable<int> << ' '
+              << callable<std::string> << '\n';
+}`,
+  why: String.raw`The deleted template is an exact match for any type, so it beats the conversion to double for an int and rejects it. A deleted function still takes part in overload resolution, and a call to it is ill-formed, which the trait detects without a compile error.` },
+
+{ n: 98, d: "extension", t: "Share one style object for each font name", idiom: "Flyweight (shared immutable objects)",
+  p: String.raw`Define Glyph with a character and a font name. Define GlyphFactory, which returns a shared pointer to a Glyph for a character and font. It keeps a pool keyed by the pair, creates a Glyph only when the pair is new, and reports its pool size. Define Placed holding a shared pointer to a Glyph and a position. In main, lay out the text abcab in font mono, one Placed per character with its index as the position. Print the pool size, then 1 if the first and fourth glyphs are the same object and 0 otherwise, then 1 if the first and second are the same object and 0 otherwise, separated by spaces.`,
+  ex: String.raw`3 1 0`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Glyph {
+    char ch;
+    std::string font;
+};
+
+class GlyphFactory {
+    std::map<std::pair<char, std::string>, std::shared_ptr<const Glyph>> pool_;
+public:
+    std::shared_ptr<const Glyph> get(char c, const std::string& f) {
+        auto key = std::make_pair(c, f);
+        auto it = pool_.find(key);
+        if (it != pool_.end()) return it->second;
+        auto g = std::make_shared<Glyph>(Glyph{c, f});
+        pool_.emplace(key, g);
+        return g;
+    }
+    std::size_t size() const { return pool_.size(); }
+};
+
+struct Placed {
+    std::shared_ptr<const Glyph> g;
+    int x;
+};
+
+int main() {
+    GlyphFactory gf;
+    std::vector<Placed> line;
+    const std::string text = "abcab";
+    for (std::size_t i = 0; i < text.size(); ++i)
+        line.push_back({gf.get(text[i], "mono"), static_cast<int>(i)});
+    std::cout << gf.size() << ' ' << (line[0].g == line[3].g) << ' '
+              << (line[0].g == line[1].g) << '\n';
+}`,
+  why: String.raw`Each distinct glyph is stored once and shared by every position that uses it. Positions hold only the shared pointer and their own coordinates, so a long text needs far fewer glyph objects.` },
+
+// ---------- Applications ----------
+{ n: 99, d: "applications", t: "Flush collected log text on destruction", idiom: "RAII (flush on destruction)",
+  p: String.raw`A Logger collects words written to it, separated by single spaces. When the Logger is destroyed it prints flush followed by a colon, a space, and the collected text. Create a Logger, write hello and then world, and let the Logger end.`,
+  ex: String.raw`flush: hello world`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+class Logger {
+    std::string buffer;
+public:
+    void write(const std::string& s) {
+        if (!buffer.empty()) buffer += ' ';
+        buffer += s;
+    }
+    ~Logger() { std::cout << "flush: " << buffer << '\n'; }
+};
+
+int main() {
+    Logger log;
+    log.write("hello");
+    log.write("world");
+}`,
+  why: String.raw`Writing the buffered output from a destructor means partial output is still emitted when a program leaves a scope early.` },
+
+{ n: 100, d: "applications", t: "Parse configuration lines into values or errors", idiom: "Result type (value or error per line)",
+  p: String.raw`Write a function that parses a line of the form key=value, where the value must be a whole number. If there is no equals sign, it returns the error missing =. If the value contains a non-digit, it returns the error not a number. Otherwise it returns the key and the number. Parse the lines a=1 and b=x. For a success print the key, an equals sign, and the number. For a failure print error followed by the message.`,
+  ex: String.raw`a=1
+error not a number`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+#include <utility>
+
+std::expected<std::pair<std::string, int>, std::string> parse_line(const std::string& line) {
+    auto eq = line.find('=');
+    if (eq == std::string::npos) return std::unexpected(std::string("missing ="));
+    std::string key = line.substr(0, eq);
+    std::string val = line.substr(eq + 1);
+    for (char c : val)
+        if (c < '0' || c > '9') return std::unexpected(std::string("not a number"));
+    return std::pair{key, std::stoi(val)};
+}
+
+int main() {
+    for (const char* l : {"a=1", "b=x"}) {
+        auto r = parse_line(l);
+        if (r)
+            std::cout << r->first << '=' << r->second << '\n';
+        else
+            std::cout << "error " << r.error() << '\n';
+    }
+}`,
+  why: String.raw`Returning each line's result or error as a value lets a loader report every bad line instead of stopping at the first one.` },
+
+{ n: 101, d: "applications", t: "Roll back unless committed", idiom: "Scope guard (rollback unless committed)",
+  p: String.raw`A Transaction object prints committed when its commit function is called, and prints rollback when it is destroyed unless it was committed. Run one transaction that is committed, and one that is not, each in its own block, committing only the first.`,
+  ex: String.raw`committed
+rollback`,
+  code: String.raw`#include <iostream>
+
+class Transaction {
+    bool committed = false;
+public:
+    Transaction() = default;
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+    void commit() {
+        committed = true;
+        std::cout << "committed\n";
+    }
+    ~Transaction() {
+        if (!committed) std::cout << "rollback\n";
+    }
+};
+
+int main() {
+    {
+        Transaction t1;
+        t1.commit();
+    }
+    {
+        Transaction t2;
+    }
+}`,
+  why: String.raw`Making the default action on scope exit a rollback means a forgotten commit cannot leave changes half applied.` },
+
+{ n: 102, d: "applications", t: "Build a request with validation", idiom: "Builder",
+  p: String.raw`A Req builder sets a path and a timeout through chained calls. Its build function returns the request as GET, a space, the path, a space and the timeout, or an error. The error is no path when the path is empty, or bad timeout when the timeout is not positive. Build a request for /a with timeout 30 and print its result. Then build a request for /b with no timeout and print its error.`,
+  ex: String.raw`GET /a 30
+bad timeout`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+#include <utility>
+
+class Req {
+    std::string path_;
+    int timeout_ = 0;
+public:
+    Req& to(std::string p) { path_ = std::move(p); return *this; }
+    Req& within(int s) { timeout_ = s; return *this; }
+    std::expected<std::string, std::string> build() const {
+        if (path_.empty()) return std::unexpected(std::string("no path"));
+        if (timeout_ <= 0) return std::unexpected(std::string("bad timeout"));
+        return "GET " + path_ + " " + std::to_string(timeout_);
+    }
+};
+
+int main() {
+    auto ok = Req().to("/a").within(30).build();
+    if (ok) std::cout << *ok << '\n';
+    auto bad = Req().to("/b").build();
+    if (!bad) std::cout << bad.error() << '\n';
+}`,
+  why: String.raw`Collecting settings through chained calls and checking them once at build time lets the request be validated as a whole, with a clear error when something is missing.` },
+
+{ n: 103, d: "applications", t: "Register plugins by name", idiom: "Registry (factory map keyed by name)",
+  p: String.raw`A Registry maps plugin names to factory functions that create new plugins. Plugins have a function run that returns text: Upper returns UPPER, and Lower returns lower. Register up for Upper and low for Lower, then print the result of run for up, then for low, separated by a space.`,
+  ex: String.raw`UPPER lower`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+
+struct Plugin {
+    virtual ~Plugin() = default;
+    virtual std::string run() const = 0;
+};
+
+struct Upper : Plugin {
+    std::string run() const override { return "UPPER"; }
+};
+
+struct Lower : Plugin {
+    std::string run() const override { return "lower"; }
+};
+
+class Registry {
+    std::map<std::string, std::function<std::unique_ptr<Plugin>()>> factories;
+public:
+    void add(const std::string& name, std::function<std::unique_ptr<Plugin>()> f) {
+        factories[name] = std::move(f);
+    }
+    std::unique_ptr<Plugin> create(const std::string& name) const {
+        return factories.at(name)();
+    }
+};
+
+int main() {
+    Registry r;
+    r.add("up", [] { return std::make_unique<Upper>(); });
+    r.add("low", [] { return std::make_unique<Lower>(); });
+    std::cout << r.create("up")->run() << ' ' << r.create("low")->run() << '\n';
+}`,
+  why: String.raw`Keeping factories in a table keyed by name lets new plugin types be added at run time without changing the code that creates them.` },
+
+{ n: 104, d: "applications", t: "Pricing rules as functions in a map", idiom: "Strategy via function table",
+  p: String.raw`A map holds pricing rules, each a function from a price to a new price. Register the rule none, which returns the price unchanged, and the rule half, which halves it. For a price of 80, print the result of half, then the result of none, separated by a space.`,
+  ex: String.raw`40 80`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, double (*)(double)> rules;
+    rules["none"] = [](double p) { return p; };
+    rules["half"] = [](double p) { return p * 0.5; };
+    double price = 80;
+    std::cout << rules.at("half")(price) << ' ' << rules.at("none")(price) << '\n';
+}`,
+  why: String.raw`Storing behaviour as values in a table lets a program choose and extend pricing rules by name without branching on the rule type.` },
+
+{ n: 105, d: "applications", t: "Named event handlers", idiom: "Named callback table (dispatch by name)",
+  p: String.raw`A map holds named handlers, each taking an int. Register print, which prints value followed by the number, and double, which prints twice the number. Call print with 5, then double with 5, printing one result per line.`,
+  ex: String.raw`value 5
+10`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, std::function<void(int)>> handlers;
+    handlers["print"] = [](int x) { std::cout << "value " << x << '\n'; };
+    handlers["double"] = [](int x) { std::cout << x * 2 << '\n'; };
+    for (const std::string& name : {std::string("print"), std::string("double")})
+        handlers.at(name)(5);
+}`,
+  why: String.raw`A table of callbacks keyed by name lets an application dispatch events by name without hard-coding each branch.` },
+
+{ n: 106, d: "applications", t: "Cache lookup that may find nothing", idiom: "Optional return (std::optional)",
+  p: String.raw`A cache returns an optional value for a key. Look up key 1 in an empty cache and print hit or miss. Then store x under key 1 and look it up again, printing hit or miss. Separate the two answers with a space.`,
+  ex: String.raw`miss hit`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+
+class Cache {
+    std::map<int, std::string> store;
+public:
+    std::optional<std::string> get(int k) const {
+        auto it = store.find(k);
+        if (it == store.end()) return std::nullopt;
+        return it->second;
+    }
+    void put(int k, std::string v) { store[k] = std::move(v); }
+};
+
+int main() {
+    Cache c;
+    std::cout << (c.get(1) ? "hit" : "miss") << ' ';
+    c.put(1, "x");
+    std::cout << (c.get(1) ? "hit" : "miss") << '\n';
+}`,
+  why: String.raw`Returning an optional makes a miss explicit in the type, so callers cannot forget to check for a value that is not there.` },
+
+{ n: 107, d: "applications", t: "Pass a request through a chain of handlers", idiom: "Chain of responsibility",
+  p: String.raw`Build a chain of three handlers, where each either handles a request and returns true, or passes it to the next handler. The first handler handles requests from an empty user name by printing denied. The second handles requests with more than three items by printing throttled. The third handles every remaining request by printing served. Connect them in that order and submit three requests in order: empty user with 1 item, user bob with 5 items, user amy with 2 items. Then print done.`,
+  ex: String.raw`denied
+throttled
+served
+done`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+struct Request {
+    std::string user;
+    int items;
+};
+
+class Handler {
+    std::shared_ptr<Handler> next_;
+protected:
+    virtual bool try_handle(const Request& r) = 0;
+public:
+    virtual ~Handler() = default;
+    void set_next(std::shared_ptr<Handler> n) { next_ = std::move(n); }
+    bool handle(const Request& r) {
+        if (try_handle(r)) return true;
+        return next_ ? next_->handle(r) : false;
+    }
+};
+
+class Auth : public Handler {
+protected:
+    bool try_handle(const Request& r) override {
+        if (r.user.empty()) { std::cout << "denied\n"; return true; }
+        return false;
+    }
+};
+
+class Rate : public Handler {
+protected:
+    bool try_handle(const Request& r) override {
+        if (r.items > 3) { std::cout << "throttled\n"; return true; }
+        return false;
+    }
+};
+
+class Serve : public Handler {
+protected:
+    bool try_handle(const Request&) override {
+        std::cout << "served\n";
+        return true;
+    }
+};
+
+int main() {
+    auto a = std::make_shared<Auth>();
+    auto r = std::make_shared<Rate>();
+    auto s = std::make_shared<Serve>();
+    a->set_next(r);
+    r->set_next(s);
+    a->handle(Request{"", 1});
+    a->handle(Request{"bob", 5});
+    a->handle(Request{"amy", 2});
+    std::cout << "done\n";
+}`,
+  why: String.raw`Each handler gets a chance at the request and decides whether to stop it or pass it on. The sender knows only the first handler, so handlers can be added or reordered without changing the code that submits requests.` },
+
+{ n: 108, d: "applications", t: "Brew through one simple entry point", idiom: "Facade",
+  p: String.raw`A coffee maker contains a grinder, a heater and a pump. Each part has its own method that prints its action: grind, heat, pump. Provide a CoffeeMaker class with one method brew() that runs the three parts in order, so the caller never touches the parts directly. Call brew once, then print done.`,
+  ex: String.raw`grind
+heat
+pump
+done`,
+  code: String.raw`#include <iostream>
+
+class Grinder {
+public:
+    void grind() { std::cout << "grind\n"; }
+};
+
+class Heater {
+public:
+    void heat() { std::cout << "heat\n"; }
+};
+
+class Pump {
+public:
+    void pump() { std::cout << "pump\n"; }
+};
+
+class CoffeeMaker {
+    Grinder g_;
+    Heater h_;
+    Pump p_;
+public:
+    void brew() {
+        g_.grind();
+        h_.heat();
+        p_.pump();
+    }
+};
+
+int main() {
+    CoffeeMaker m;
+    m.brew();
+    std::cout << "done\n";
+}`,
+  why: String.raw`A facade offers one simple method over several subsystems and hides the order and details of their calls. Callers depend on the facade alone, so the parts can change behind it.` },
+
+{ n: 109, d: "applications", t: "Roll back a failed transfer in reverse order", idiom: "Scope guard (transaction rollback)",
+  p: String.raw`A Txn object records an undo action before each step runs. A step runs its action and then prints did followed by the step name. If the Txn is destroyed without being committed, it runs the recorded undo actions in reverse order. Start with balance 100 and entries 0. In a try block, create a Txn and run three steps: debit subtracts 30 from balance; log adds 1 to entries; fee subtracts 60 from balance and throws a runtime_error with the message insufficient if the balance is then below 20. Each undo reverts its own step. Commit after the three steps. Catch the exception and print failed followed by its message. Then print balance and entries separated by a space.`,
+  ex: String.raw`did debit
+did log
+failed: insufficient
+100 0`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+class Txn {
+    std::vector<std::function<void()>> undo_;
+    bool committed_ = false;
+public:
+    template <typename F, typename U>
+    void step(const char* name, F action, U undo) {
+        undo_.push_back(std::move(undo));
+        action();
+        std::cout << "did " << name << "\n";
+    }
+    void commit() { committed_ = true; }
+    ~Txn() {
+        if (!committed_)
+            for (auto it = undo_.rbegin(); it != undo_.rend(); ++it) (*it)();
+    }
+};
+
+int main() {
+    int balance = 100;
+    int entries = 0;
+    try {
+        Txn t;
+        t.step("debit", [&] { balance -= 30; }, [&] { balance += 30; });
+        t.step("log", [&] { ++entries; }, [&] { --entries; });
+        t.step("fee", [&] {
+            balance -= 60;
+            if (balance < 20) throw std::runtime_error("insufficient");
+        }, [&] { balance += 60; });
+        t.commit();
+    } catch (const std::exception& e) {
+        std::cout << "failed: " << e.what() << "\n";
+    }
+    std::cout << balance << " " << entries << "\n";
+}`,
+  why: String.raw`Registering the undo before the action means a step that fails part-way is still reverted. Undoing in reverse order restores each value that later steps depended on, and the commit call turns the guard off on success.` },
+
+{ n: 110, d: "applications", t: "Flush buffered log lines when the logger ends", idiom: "RAII (flush on destruction)",
+  p: String.raw`Define BufferedLog, which stores lines in a vector. Its write method adds a line. Its flush method prints each stored line, then prints the text -- flushed followed by the number of lines flushed, and clears the vector. Its destructor calls flush if any lines remain. Define job, which takes a count n and creates a BufferedLog. It writes the text step followed by each number from 0 to n-1. If n is greater than 1 it flushes, then writes tail. In main, call job with 1, then job with 3.`,
+  ex: String.raw`step 0
+-- flushed 1
+step 0
+step 1
+step 2
+-- flushed 3
+tail
+-- flushed 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+class BufferedLog {
+    std::vector<std::string> buf_;
+public:
+    void write(std::string s) { buf_.push_back(std::move(s)); }
+    void flush() {
+        for (const auto& s : buf_) std::cout << s << '\n';
+        std::cout << "-- flushed " << buf_.size() << '\n';
+        buf_.clear();
+    }
+    ~BufferedLog() { if (!buf_.empty()) flush(); }
+};
+
+void job(int n) {
+    BufferedLog log;
+    for (int i = 0; i < n; ++i) log.write("step " + std::to_string(i));
+    if (n > 1) {
+        log.flush();
+        log.write("tail");
+    }
+}
+
+int main() {
+    job(1);
+    job(3);
+}`,
+  why: String.raw`A log that writes out its remaining lines in its destructor means nothing buffered is lost when the job ends, whether it finishes normally or leaves early. An explicit flush can still happen earlier.` },
+
+{ n: 111, d: "applications", t: "Collect valid lines and report the bad ones", idiom: "Result type (value or error per line)",
+  p: String.raw`Define Err with a line number and a reason. Define parse_line, which takes a line number and text and returns either an int or an Err. If the text has no equals sign, the reason is no =. If the part after the equals sign is not a number, the reason is bad value. Otherwise it returns the number. In main, parse the lines a=1, b 2, c=x and d=40, numbering them from 1. Add each int to a total, and for each error print line followed by the line number, a colon, a space and the reason. Finally print total followed by the total.`,
+  ex: String.raw`line 2: no =
+line 3: bad value
+total 41`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+struct Err {
+    int line;
+    std::string why;
+};
+
+std::variant<int, Err> parse_line(int no, const std::string& s) {
+    auto eq = s.find('=');
+    if (eq == std::string::npos) return Err{no, "no ="};
+    try {
+        return std::stoi(s.substr(eq + 1));
+    } catch (...) {
+        return Err{no, "bad value"};
+    }
+}
+
+int main() {
+    std::vector<std::string> lines{"a=1", "b 2", "c=x", "d=40"};
+    int total = 0;
+    int n = 0;
+    for (const auto& l : lines) {
+        ++n;
+        auto r = parse_line(n, l);
+        if (auto* v = std::get_if<int>(&r)) {
+            total += *v;
+        } else {
+            const Err& e = std::get<Err>(r);
+            std::cout << "line " << e.line << ": " << e.why << '\n';
+        }
+    }
+    std::cout << "total " << total << '\n';
+}`,
+  why: String.raw`Each line yields its own value or error, so one bad line does not stop the rest from loading. The caller decides how to report each failure and can keep the good results.` },
+
+{ n: 112, d: "applications", t: "Undo config changes unless the update commits", idiom: "Scope guard (rollback unless committed)",
+  p: String.raw`Define Apply, which takes a reference to a std::map from string to int and saves a copy of it. Its commit method marks it as done. Its destructor restores the saved copy and prints rolled back if commit was not called. Define update, which takes the map and a bool. It creates an Apply, sets threads to 8 and retries to 3 in the map, and returns early if the bool is false. Otherwise it commits. In main, start with a map holding threads 2. Call update with false, then print the threads value and the count of retries, separated by a space. Call update with true, then print the threads and retries values, separated by a space.`,
+  ex: String.raw`rolled back
+2 0
+8 3`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+
+class Apply {
+    std::map<std::string, int>& cfg_;
+    std::map<std::string, int> saved_;
+    bool done_ = false;
+public:
+    explicit Apply(std::map<std::string, int>& c) : cfg_(c), saved_(c) {}
+    std::map<std::string, int>& cfg() { return cfg_; }
+    void commit() { done_ = true; }
+    ~Apply() {
+        if (!done_) {
+            cfg_ = saved_;
+            std::cout << "rolled back\n";
+        }
+    }
+};
+
+void update(std::map<std::string, int>& cfg, bool ok) {
+    Apply a(cfg);
+    a.cfg()["threads"] = 8;
+    a.cfg()["retries"] = 3;
+    if (!ok) return;
+    a.commit();
+}
+
+int main() {
+    std::map<std::string, int> cfg{{"threads", 2}};
+    update(cfg, false);
+    std::cout << cfg["threads"] << ' ' << cfg.count("retries") << '\n';
+    update(cfg, true);
+    std::cout << cfg["threads"] << ' ' << cfg["retries"] << '\n';
+}`,
+  why: String.raw`The guard starts in the rolled-back state and only the commit call turns the undo off. An early return therefore reverts every change made so far, and the success path keeps them.` },
+
+{ n: 113, d: "applications", t: "Build a URL, rejecting missing parts at build time", idiom: "Builder",
+  p: String.raw`Define UrlBuilder with optional scheme and host, an int port that defaults to 0, and a path that defaults to a single slash. Give it setter methods scheme, host, port and path, each returning the builder. Its build method throws an invalid_argument with the message scheme required if no scheme was set, host required if no host was set, and otherwise returns scheme followed by ://, the host, then a colon and the port if the port is not 0, then the path. In main, print the URL built with scheme https, host ex.com, port 8443 and path /api. Then build with scheme http only inside a try block and print the message. Then print the URL built with host a and scheme ftp.`,
+  ex: String.raw`https://ex.com:8443/api
+host required
+ftp://a/`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+class UrlBuilder {
+    std::optional<std::string> scheme_, host_;
+    int port_ = 0;
+    std::string path_ = "/";
+public:
+    UrlBuilder& scheme(std::string s) { scheme_ = std::move(s); return *this; }
+    UrlBuilder& host(std::string h) { host_ = std::move(h); return *this; }
+    UrlBuilder& port(int p) { port_ = p; return *this; }
+    UrlBuilder& path(std::string p) { path_ = std::move(p); return *this; }
+    std::string build() const {
+        if (!scheme_) throw std::invalid_argument("scheme required");
+        if (!host_) throw std::invalid_argument("host required");
+        std::string out = *scheme_ + "://" + *host_;
+        if (port_ != 0) out += ":" + std::to_string(port_);
+        return out + path_;
+    }
+};
+
+int main() {
+    std::cout << UrlBuilder().scheme("https").host("ex.com").port(8443).path("/api").build() << '\n';
+    try {
+        UrlBuilder().scheme("http").build();
+    } catch (const std::invalid_argument& e) {
+        std::cout << e.what() << '\n';
+    }
+    std::cout << UrlBuilder().host("a").scheme("ftp").build() << '\n';
+}`,
+  why: String.raw`Setters record what the caller asked for in any order, and the build step checks the whole request at once. A missing required part produces one clear error instead of a half-built object.` },
+
+{ n: 114, d: "applications", t: "Create plugins by name and reject duplicates", idiom: "Registry (factory map keyed by name)",
+  p: String.raw`Define an abstract Plugin with a run method returning a string. Define Upper, which runs to UPPER, and Count, which runs to COUNT. Define Registry, which maps names to functions that create a unique_ptr to Plugin. Its add method throws a logic_error with the message duplicate followed by the name if the name is already registered. Its make method returns the created plugin, or a null pointer for an unknown name. In main, register upper and count. Register upper again inside a try block and print the message. Then, for each of the names count, nope and upper, print the name, a colon, a space, and the run result, or none if make returned null.`,
+  ex: String.raw`duplicate upper
+count: COUNT
+nope: none
+upper: UPPER`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
+struct Plugin {
+    virtual ~Plugin() = default;
+    virtual std::string run() const = 0;
+};
+
+struct Upper : Plugin {
+    std::string run() const override { return "UPPER"; }
+};
+
+struct Count : Plugin {
+    std::string run() const override { return "COUNT"; }
+};
+
+class Registry {
+    std::map<std::string, std::function<std::unique_ptr<Plugin>()>> f_;
+public:
+    void add(const std::string& n, std::function<std::unique_ptr<Plugin>()> f) {
+        if (f_.count(n)) throw std::logic_error("duplicate " + n);
+        f_.emplace(n, std::move(f));
+    }
+    std::unique_ptr<Plugin> make(const std::string& n) const {
+        auto it = f_.find(n);
+        if (it == f_.end()) return nullptr;
+        return it->second();
+    }
+};
+
+int main() {
+    Registry r;
+    r.add("upper", [] { return std::make_unique<Upper>(); });
+    r.add("count", [] { return std::make_unique<Count>(); });
+    try {
+        r.add("upper", [] { return std::make_unique<Upper>(); });
+    } catch (const std::logic_error& e) {
+        std::cout << e.what() << '\n';
+    }
+    for (const char* n : {"count", "nope", "upper"}) {
+        auto p = r.make(n);
+        std::cout << n << ": " << (p ? p->run() : std::string("none")) << '\n';
+    }
+}`,
+  why: String.raw`Plugins are looked up by name in a map of creation functions, so new plugin types are added by registering them without changing the code that creates them. Duplicate names are rejected so one name always maps to one factory.` },
+
+{ n: 115, d: "applications", t: "Price an item with a rule chosen by name", idiom: "Strategy via function table",
+  p: String.raw`Define Pricing as a std::function taking a double and returning a double. Create a std::map from name to Pricing with three rules: none returns the price unchanged, member returns nine tenths of it, and clearance halves it only when the price is at least 10. In main, with a price of 12, loop over the names member, clearance and coupon. For each, look the rule up, using the none rule if the name is not in the map, and print the name, a space, and the price after the rule.`,
+  ex: String.raw`member 10.8
+clearance 6
+coupon 12`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <string>
+
+using Pricing = std::function<double(double)>;
+
+int main() {
+    std::map<std::string, Pricing> rules{
+        {"none", [](double p) { return p; }},
+        {"member", [](double p) { return p * 0.9; }},
+        {"clearance", [](double p) { return p < 10 ? p : p * 0.5; }},
+    };
+    double price = 12;
+    for (const char* r : {"member", "clearance", "coupon"}) {
+        auto it = rules.find(r);
+        Pricing f = it != rules.end() ? it->second : rules["none"];
+        std::cout << r << ' ' << f(price) << '\n';
+    }
+}`,
+  why: String.raw`Each rule is a value stored under a name, so the rule can be chosen at run time and new rules are added as table entries. The caller does not branch on the kind of rule.` },
+
+{ n: 116, d: "applications", t: "Route events to named handlers and count them", idiom: "Named callback table (dispatch by name)",
+  p: String.raw`Define Dispatcher, which maps an event name to a list of handlers. Each handler takes a string payload. Its on method adds a handler to an event. Its emit method calls every handler for that event with the payload, and returns the number of handlers called, which is 0 for an event with no handlers. In main, subscribe two handlers to save. The first prints write followed by the payload. The second prints index followed by the payload's length. Emit save with doc1, then emit open with x, printing each returned count on its own line.`,
+  ex: String.raw`write doc1
+index 4
+2
+0`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+
+class Dispatcher {
+    std::map<std::string, std::vector<std::function<void(const std::string&)>>> h_;
+public:
+    void on(const std::string& ev, std::function<void(const std::string&)> f) {
+        h_[ev].push_back(std::move(f));
+    }
+    int emit(const std::string& ev, const std::string& payload) {
+        auto it = h_.find(ev);
+        if (it == h_.end()) return 0;
+        for (const auto& f : it->second) f(payload);
+        return static_cast<int>(it->second.size());
+    }
+};
+
+int main() {
+    Dispatcher d;
+    d.on("save", [](const std::string& p) { std::cout << "write " << p << '\n'; });
+    d.on("save", [](const std::string& p) { std::cout << "index " << p.size() << '\n'; });
+    std::cout << d.emit("save", "doc1") << '\n';
+    std::cout << d.emit("open", "x") << '\n';
+}`,
+  why: String.raw`Handlers are stored under their event names, so one emit reaches every handler registered for that name. An unknown event is simply absent from the table, which needs no special case in the sender.` },
+
+{ n: 117, d: "applications", t: "Look up a user's city, returning nothing when missing", idiom: "Optional return (std::optional)",
+  p: String.raw`Define city_of, which takes a map from user name to user id, a map from user id to city, and a user name. It returns an optional string. It returns nothing if the user is not in the first map, or if the user's id is not in the second map. Otherwise it returns the city. In main, using users ann mapped to u1 and bo mapped to u2, and cities with u1 mapped to Leeds, print each of the names ann, bo and cy, a colon, a space, and the city, or unknown if there is none.`,
+  ex: String.raw`ann: Leeds
+bo: unknown
+cy: unknown`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+std::optional<std::string> city_of(const std::map<std::string, std::string>& users,
+                                   const std::map<std::string, std::string>& cities,
+                                   const std::string& user) {
+    auto u = users.find(user);
+    if (u == users.end()) return std::nullopt;
+    auto c = cities.find(u->second);
+    if (c == cities.end()) return std::nullopt;
+    return c->second;
+}
+
+int main() {
+    std::map<std::string, std::string> users{{"ann", "u1"}, {"bo", "u2"}};
+    std::map<std::string, std::string> cities{{"u1", "Leeds"}};
+    for (const char* n : {"ann", "bo", "cy"}) {
+        auto c = city_of(users, cities, n);
+        std::cout << n << ": " << c.value_or("unknown") << '\n';
+    }
+}`,
+  why: String.raw`The return type states that a city may be absent, so callers must handle that case. Both lookups can miss, and each miss is reported the same way without throwing.` },
+
+{ n: 118, d: "applications", t: "Pass a request along until a handler accepts it", idiom: "Chain of responsibility",
+  p: String.raw`Define Handler as a std::function that takes an int and returns an optional string. In main, build a vector of two handlers: the first returns negative when the number is below 0, and the second returns even when the number is even, and otherwise each returns nothing. Define route, which tries each handler in order and returns the first string produced, or fallback if none produce one. For the numbers -3, 4 and 7, print the number, a space, and the route result.`,
+  ex: String.raw`-3 negative
+4 even
+7 fallback`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <vector>
+
+using Handler = std::function<std::optional<std::string>(int)>;
+
+std::string route(const std::vector<Handler>& chain, int n) {
+    for (const auto& h : chain) {
+        if (auto r = h(n)) return *r;
+    }
+    return "fallback";
+}
+
+int main() {
+    std::vector<Handler> chain{
+        [](int n) -> std::optional<std::string> {
+            if (n < 0) return "negative";
+            return std::nullopt;
+        },
+        [](int n) -> std::optional<std::string> {
+            if (n % 2 == 0) return "even";
+            return std::nullopt;
+        },
+    };
+    for (int n : {-3, 4, 7}) std::cout << n << ' ' << route(chain, n) << '\n';
+}`,
+  why: String.raw`Each handler either answers the request or returns nothing so the next handler can try. The caller only sees the chain's first answer, and handlers can be reordered or added without changing the caller.` },
+
+{ n: 119, d: "applications", t: "Send a welcome email through one simple call", idiom: "Facade",
+  p: String.raw`Define three helper classes. Templates has render, which takes a template name and a user name and returns the template name, a comma, a space and the user name. Mailer has send, which takes a recipient and a body and prints to followed by the recipient, a colon, a space and the body. Directory has email_of, which returns the user name followed by @corp.example. Define Notifier, which holds one of each helper and has a welcome method that takes a user name, looks up the email, renders the Welcome template for the user, and sends it. In main, call welcome for ann and then for bo.`,
+  ex: String.raw`to ann@corp.example: Welcome, ann
+to bo@corp.example: Welcome, bo`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+class Templates {
+public:
+    std::string render(const std::string& t, const std::string& name) const { return t + ", " + name; }
+};
+
+class Mailer {
+public:
+    void send(const std::string& to, const std::string& body) const {
+        std::cout << "to " << to << ": " << body << '\n';
+    }
+};
+
+class Directory {
+public:
+    std::string email_of(const std::string& n) const { return n + "@corp.example"; }
+};
+
+class Notifier {
+    Templates t_;
+    Mailer m_;
+    Directory d_;
+public:
+    void welcome(const std::string& user) const {
+        m_.send(d_.email_of(user), t_.render("Welcome", user));
+    }
+};
+
+int main() {
+    Notifier n;
+    n.welcome("ann");
+    n.welcome("bo");
+}`,
+  why: String.raw`Notifier offers one method that hides the lookup, rendering and sending steps. Callers depend only on that method, so the helpers can change behind it without affecting them.` },
+
+{ n: 120, d: "applications", t: "Write a file through a temporary and discard it on failure", idiom: "Scope guard (transaction rollback)",
+  p: String.raw`Define FileTxn with a target name. Its constructor prints tmp followed by the target and .tmp. Its commit method prints rename to followed by the target and records the commit. Its destructor prints delete followed by the target and .tmp if it was not committed. Define save, which takes an int, creates a FileTxn for data, throws an invalid_argument with the message negative if the int is below 0, prints wrote followed by the int, and commits. In main, call save with 5, then call save with -2 inside a try block, printing error followed by the message when caught.`,
+  ex: String.raw`tmp data.tmp
+wrote 5
+rename to data
+tmp data.tmp
+delete data.tmp
+error negative`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+class FileTxn {
+    std::string target_;
+    bool committed_ = false;
+public:
+    explicit FileTxn(std::string t) : target_(std::move(t)) {
+        std::cout << "tmp " << target_ << ".tmp\n";
+    }
+    void commit() {
+        std::cout << "rename to " << target_ << '\n';
+        committed_ = true;
+    }
+    ~FileTxn() {
+        if (!committed_) std::cout << "delete " << target_ << ".tmp\n";
+    }
+};
+
+void save(int v) {
+    FileTxn t("data");
+    if (v < 0) throw std::invalid_argument("negative");
+    std::cout << "wrote " << v << '\n';
+    t.commit();
+}
+
+int main() {
+    save(5);
+    try {
+        save(-2);
+    } catch (const std::invalid_argument& e) {
+        std::cout << "error " << e.what() << '\n';
+    }
+}`,
+  why: String.raw`The temporary file is removed by the destructor on every path that did not commit, so a failed save leaves no partial output behind. Only a successful commit makes the change visible.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-idioms-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 17, label: "Easy", range: "Problems 1–17", badge: "easy" },
+  { from: 18, to: 55, label: "Medium", range: "Problems 18–55", badge: "medium" },
+  { from: 56, to: 85, label: "Hard", range: "Problems 56–85", badge: "hard" },
+  { from: 86, to: 98, label: "Extension", range: "Problems 86–98", badge: null },
+  { from: 99, to: 120, label: "Applications", range: "Problems 99–120", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

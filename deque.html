@@ -1,0 +1,1193 @@
+<title>STL Deque Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Deque Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Push at both ends",
+  p: String.raw`Start with an empty deque. Push 2 at the back, push 1 at the front and push 3 at the back. Print the contents in order, separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d;
+    d.push_back(2);
+    d.push_front(1);
+    d.push_back(3);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A deque grows at both ends in amortised constant time, which is the main thing it offers over a vector.` },
+
+{ n: 2, d: "easy", t: "Size and checked access",
+  p: String.raw`Create the deque 10, 20, 30. Print its size, then the element at index 1 using at, separated by a space.`,
+  ex: String.raw`3 20`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{10, 20, 30};
+    std::cout << d.size() << ' ' << d.at(1) << '\n';
+}`,
+  why: String.raw`at checks the index and throws std::out_of_range when it is invalid, like the array and vector versions.` },
+
+{ n: 3, d: "easy", t: "Pop from both ends",
+  p: String.raw`Create the deque 1, 2, 3, 4. Remove the element at the front and the element at the back. Print the new front and back, separated by a space.`,
+  ex: String.raw`2 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4};
+    d.pop_front();
+    d.pop_back();
+    std::cout << d.front() << ' ' << d.back() << '\n';
+}`,
+  why: String.raw`Both pop operations run in constant time, which is why a deque works as a queue or a stack.` },
+
+{ n: 4, d: "easy", t: "Construct in place at the front",
+  p: String.raw`Create an empty deque of strings. Use emplace_front to construct a string of three x characters at the front, then print the front element.`,
+  ex: String.raw`xxx`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<std::string> d;
+    d.emplace_front(3, 'x');
+    std::cout << d.front() << '\n';
+}`,
+  why: String.raw`emplace_front passes its arguments straight to the element's constructor, so the string is built in its final location with no temporary.` },
+
+{ n: 5, d: "easy", t: "Index from both ends",
+  p: String.raw`Create the deque 5, 6, 7. Print the sum of its first element and its last element.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{5, 6, 7};
+    std::cout << d[0] + d[d.size() - 1] << '\n';
+}`,
+  why: String.raw`Deques support random access, so any element can be read with an index in constant time.` },
+
+{ n: 6, d: "easy", t: "Insert in the middle",
+  p: String.raw`Create the deque 1, 2, 4. Insert 3 so that it sits before the 4. Print all the elements separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 4};
+    d.insert(d.begin() + 2, 3);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`insert shifts the elements after the position. The shift is cheaper on the shorter side, so inserting near either end costs less than in the middle.` },
+
+{ n: 7, d: "easy", t: "Erase a range",
+  p: String.raw`Create the deque 1, 2, 3, 4, 5. Erase the first two elements. Print the rest separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4, 5};
+    d.erase(d.begin(), d.begin() + 2);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`erase takes a half-open range, so the first iterator is included and the second is excluded.` },
+
+{ n: 8, d: "easy", t: "resize fills with a value",
+  p: String.raw`Create an empty deque of ints. Resize it to three elements, each holding 9. Print the sum of the elements.`,
+  ex: String.raw`27`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    std::deque<int> d;
+    d.resize(3, 9);
+    std::cout << std::accumulate(d.begin(), d.end(), 0) << '\n';
+}`,
+  why: String.raw`resize with a value argument fills the new slots with copies of that value.` },
+
+{ n: 9, d: "easy", t: "Clear and check emptiness",
+  p: String.raw`Create the deque 1, 2. Clear it, then print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2};
+    d.clear();
+    std::cout << std::boolalpha << d.empty() << '\n';
+}`,
+  why: String.raw`clear destroys every element and leaves the size at zero.` },
+
+{ n: 10, d: "easy", t: "Iterate in reverse",
+  p: String.raw`Create the deque 1, 2, 3. Print its elements from last to first, separated by spaces.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{1, 2, 3};
+    bool first = true;
+    for (auto it = d.rbegin(); it != d.rend(); ++it) {
+        std::cout << (first ? "" : " ") << *it;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`rbegin and rend give a reverse iterator pair, so the loop walks the deque backwards without any index arithmetic.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "FIFO processing",
+  p: String.raw`Push the tasks 1, 2 and 3 into a deque in that order. Process the two oldest tasks, then print the task that is now at the front.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> tasks;
+    tasks.push_back(1);
+    tasks.push_back(2);
+    tasks.push_back(3);
+    tasks.pop_front();
+    tasks.pop_front();
+    std::cout << tasks.front() << '\n';
+}`,
+  why: String.raw`A queue takes items at the back and serves them from the front. Popping from the front keeps the oldest items first.` },
+
+{ n: 12, d: "medium", t: "Maximum of each sliding window",
+  p: String.raw`For the sequence 1, 3, -1, -3, 5, 3, 6, 7 and a window of size 3, print the maximum of each window, separated by spaces.`,
+  ex: String.raw`3 3 5 5 6 7`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{1, 3, -1, -3, 5, 3, 6, 7};
+    const std::size_t k = 3;
+    std::deque<std::size_t> window;   // indices, values decreasing
+    bool first = true;
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        while (!window.empty() && a[window.back()] <= a[i]) window.pop_back();
+        window.push_back(i);
+        if (window.front() + k <= i) window.pop_front();
+        if (i + 1 >= k) {
+            std::cout << (first ? "" : " ") << a[window.front()];
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The deque keeps indices whose values decrease from front to back, so the front is always the window maximum. Each index enters and leaves once, which makes the whole scan linear.` },
+
+{ n: 13, d: "medium", t: "Fewest 1-cost steps with 0-cost moves",
+  p: String.raw`Four nodes 0, 1, 2 and 3 are connected in a line. The edge 0 to 1 costs 0, the edge 1 to 2 costs 1 and the edge 2 to 3 costs 0. Print the cheapest total cost from node 0 to node 3. Edges can be used in either direction.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <limits>
+#include <utility>
+#include <vector>
+
+int main() {
+    // adjacency: (neighbour, cost)
+    const std::vector<std::vector<std::pair<int, int>>> g{
+        {{1, 0}}, {{0, 0}, {2, 1}}, {{1, 1}, {3, 0}}, {{2, 0}}};
+    std::vector<int> dist(g.size(), std::numeric_limits<int>::max());
+    std::deque<int> q{0};
+    dist[0] = 0;
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop_front();
+        for (const auto& [v, w] : g[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                if (w == 0) q.push_front(v);
+                else q.push_back(v);
+            }
+        }
+    }
+    std::cout << dist[3] << '\n';
+}`,
+  why: String.raw`Pushing zero-cost neighbours to the front and one-cost neighbours to the back keeps the deque sorted by distance, so the first time a node is popped its distance is final.` },
+
+{ n: 14, d: "medium", t: "References survive push_back",
+  p: String.raw`Create the deque 1, 2, 3. Keep a reference to the first element. Push 100 more ints onto the back, then print the value of the referenced element.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3};
+    int& first = d.front();
+    for (int i = 0; i < 100; ++i) d.push_back(i);
+    std::cout << first << '\n';
+}`,
+  why: String.raw`push_back on a deque invalidates iterators but not references to existing elements. The element itself never moves, so the reference still refers to it.` },
+
+{ n: 15, d: "medium", t: "Rotate right by one",
+  p: String.raw`Create the deque 1, 2, 3, 4. Rotate it right by one position so that 4 comes first. Print the elements separated by spaces.`,
+  ex: String.raw`4 1 2 3`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4};
+    std::rotate(d.begin(), d.end() - 1, d.end());
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`rotate makes the element at the given middle position the new first one. Choosing the last element as the middle moves it to the front.` },
+
+{ n: 16, d: "medium", t: "Sort a deque",
+  p: String.raw`Create the deque 4, 1, 3, 2. Sort it in ascending order and print the result separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{4, 1, 3, 2};
+    std::sort(d.begin(), d.end());
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A deque has random-access iterators, so the standard sort works on it directly. The elements are moved within the deque's blocks.` },
+
+{ n: 17, d: "medium", t: "Remove consecutive duplicates",
+  p: String.raw`Create the deque 1, 1, 2, 2, 2, 3. Remove consecutive duplicates so that each value appears once. Print the result separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 1, 2, 2, 2, 3};
+    d.erase(std::unique(d.begin(), d.end()), d.end());
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`unique moves each run's first element forward and returns the new end. Erasing from that end to the old end removes the leftover duplicates.` },
+
+{ n: 18, d: "medium", t: "Running sum over the last three values",
+  p: String.raw`Feed the numbers 1 to 5 into a deque that holds at most three values, discarding the oldest when it is full. After each number from the third onward, print the sum of the values held, separated by spaces.`,
+  ex: String.raw`6 9 12`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    std::deque<int> window;
+    bool first = true;
+    for (int v = 1; v <= 5; ++v) {
+        window.push_back(v);
+        if (window.size() > 3) window.pop_front();
+        if (window.size() == 3) {
+            std::cout << (first ? "" : " ") << std::accumulate(window.begin(), window.end(), 0);
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A deque of fixed capacity works as a sliding window. New values enter at the back and the oldest leaves from the front, both in constant time.` },
+
+{ n: 19, d: "medium", t: "Deque of vectors",
+  p: String.raw`Create a deque of three vectors of ints, all empty. Append 1 to the first vector and the two values 5 and 6 to the third. Print the total number of ints across all vectors.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::deque<std::vector<int>> buckets(3);
+    buckets[0].push_back(1);
+    buckets[2].push_back(5);
+    buckets[2].push_back(6);
+    std::size_t total = 0;
+    for (const auto& b : buckets) total += b.size();
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Each element of the deque is a vector with its own storage, so the outer deque only holds three small objects.` },
+
+{ n: 20, d: "medium", t: "Palindrome check from both ends",
+  p: String.raw`Load the characters of racecar into a deque. Repeatedly compare the front and back characters, removing both, until fewer than two remain. Print true if the word is a palindrome.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string word = "racecar";
+    std::deque<char> d(word.begin(), word.end());
+    bool ok = true;
+    while (d.size() >= 2) {
+        if (d.front() != d.back()) { ok = false; break; }
+        d.pop_front();
+        d.pop_back();
+    }
+    std::cout << std::boolalpha << ok << '\n';
+}`,
+  why: String.raw`Removing matching characters from both ends reduces the problem to the middle, and popping from either end is constant time.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Next greater element",
+  p: String.raw`For the sequence 2, 1, 2, 4, 3, print for each position the value of the first later element that is strictly greater, or -1 if there is none. Separate the values with spaces.`,
+  ex: String.raw`4 2 4 -1 -1`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{2, 1, 2, 4, 3};
+    std::vector<int> next(a.size(), -1);
+    std::deque<std::size_t> pending;   // indices still waiting for a larger value
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        while (!pending.empty() && a[pending.back()] < a[i]) {
+            next[pending.back()] = a[i];
+            pending.pop_back();
+        }
+        pending.push_back(i);
+    }
+    for (std::size_t i = 0; i < next.size(); ++i) std::cout << next[i] << (i + 1 < next.size() ? ' ' : '\n');
+}`,
+  why: String.raw`The deque holds indices whose values are still waiting for a larger element. Each new value resolves every waiting value smaller than it, so each index is pushed and popped once.` },
+
+{ n: 22, d: "hard", t: "Minimum of each pair window",
+  p: String.raw`For the sequence 4, 2, 12, 3, 8 and a window of size 2, print the minimum of each window, separated by spaces.`,
+  ex: String.raw`2 2 3 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{4, 2, 12, 3, 8};
+    const std::size_t k = 2;
+    std::deque<std::size_t> window;   // indices, values increasing
+    bool first = true;
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        while (!window.empty() && a[window.back()] >= a[i]) window.pop_back();
+        window.push_back(i);
+        if (window.front() + k <= i) window.pop_front();
+        if (i + 1 >= k) {
+            std::cout << (first ? "" : " ") << a[window.front()];
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`This is the mirror of the sliding maximum: the deque keeps increasing values, so the front is the smallest value still inside the window.` },
+
+{ n: 23, d: "hard", t: "Binary search with random access",
+  p: String.raw`The deque 1, 3, 5, 7, 9 is sorted. Print the number of elements less than 6, found with a standard binary search over its iterators.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{1, 3, 5, 7, 9};
+    const auto it = std::lower_bound(d.begin(), d.end(), 6);
+    std::cout << std::distance(d.begin(), it) << '\n';
+}`,
+  why: String.raw`lower_bound needs random-access iterators to halve the range in logarithmic steps, and a deque provides them. The distance is the count of elements before the insertion point.` },
+
+{ n: 24, d: "hard", t: "Josephus elimination with rotation",
+  p: String.raw`Five people stand in a circle numbered 1 to 5. Starting from person 1, every second person is removed going around the circle until one remains. Print the number of the survivor.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> circle{1, 2, 3, 4, 5};
+    while (circle.size() > 1) {
+        const int skipped = circle.front();
+        circle.pop_front();
+        circle.push_back(skipped);   // the person at the front is skipped
+        circle.pop_front();          // the next person is removed
+    }
+    std::cout << circle.front() << '\n';
+}`,
+  why: String.raw`Rotating the front to the back simulates moving around the circle, and removing from the front eliminates the person there. Each round removes exactly one person.` },
+
+{ n: 25, d: "hard", t: "Merge two sorted deques",
+  p: String.raw`Merge the sorted deques 1, 4, 6 and 2, 3, 7 into one sorted deque. Print it separated by spaces.`,
+  ex: String.raw`1 2 3 4 6 7`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <iterator>
+
+int main() {
+    const std::deque<int> a{1, 4, 6}, b{2, 3, 7};
+    std::deque<int> out;
+    std::merge(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(out));
+    for (std::size_t i = 0; i < out.size(); ++i) std::cout << out[i] << (i + 1 < out.size() ? ' ' : '\n');
+}`,
+  why: String.raw`merge takes the smaller front element of the two inputs at each step. A back inserter appends to the deque in order.` },
+
+{ n: 26, d: "hard", t: "Insert into a sorted deque",
+  p: String.raw`The deque 1, 2, 6, 9 is sorted. Insert 4 at the position that keeps the deque sorted, then print the elements separated by spaces.`,
+  ex: String.raw`1 2 4 6 9`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 6, 9};
+    d.insert(std::lower_bound(d.begin(), d.end(), 4), 4);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`lower_bound finds the first element not less than the new value, and inserting there keeps the order. The insert may shift elements towards either end, whichever is shorter.` },
+
+{ n: 27, d: "hard", t: "Remove all negatives in place",
+  p: String.raw`Create the deque 1, -2, 3, -4, 5. Remove every negative value, then print what remains separated by spaces.`,
+  ex: String.raw`1 3 5`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, -2, 3, -4, 5};
+    d.erase(std::remove_if(d.begin(), d.end(), [](int x) { return x < 0; }), d.end());
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`remove_if shifts the kept values forward, and erasing the tail removes the leftover slots. Together they remove every match in one linear pass.` },
+
+{ n: 28, d: "hard", t: "Visible buildings from the left",
+  p: String.raw`Buildings with heights 3, 1, 4, 2, 5 stand in a row. A building is visible from the left if it is taller than every building before it. Print how many are visible.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const int heights[] = {3, 1, 4, 2, 5};
+    std::deque<int> visible;   // heights of the visible buildings, increasing
+    for (int h : heights) {
+        if (visible.empty() || h > visible.back()) visible.push_back(h);
+    }
+    std::cout << visible.size() << '\n';
+}`,
+  why: String.raw`A building is visible exactly when it exceeds the running maximum. The deque records each new maximum as it appears.` },
+
+{ n: 29, d: "hard", t: "Reverse each block of three",
+  p: String.raw`Create the deque 1 to 7. Reverse each complete block of three consecutive elements, leaving the final partial block as it is. Print the result separated by spaces.`,
+  ex: String.raw`3 2 1 6 5 4 7`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    std::deque<int> d(7);
+    std::iota(d.begin(), d.end(), 1);
+    for (std::size_t start = 0; start + 3 <= d.size(); start += 3)
+        std::reverse(d.begin() + start, d.begin() + start + 3);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Iterator arithmetic on a deque selects each block as a subrange, and reverse works on that subrange in place.` },
+
+{ n: 30, d: "hard", t: "Pointers survive push_front",
+  p: String.raw`Create the deque 1, 2 and keep a pointer to its first element. Push 0 onto the front five times, then print the value the pointer refers to.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2};
+    int* p = &d.front();
+    for (int i = 0; i < 5; ++i) d.push_front(0);
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`Pushing at the front invalidates iterators but keeps pointers and references to existing elements valid. The old element was never moved, so the pointer still refers to 1.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "shrink_to_fit after popping",
+  p: String.raw`Create an empty deque and push 100 ints into it. Pop one element from the back, call shrink_to_fit, then print the size.`,
+  ex: String.raw`99`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d;
+    for (int i = 0; i < 100; ++i) d.push_back(i);
+    d.pop_back();
+    d.shrink_to_fit();
+    std::cout << d.size() << '\n';
+}`,
+  why: String.raw`shrink_to_fit is a request to release unused capacity. It does not change the size, which is still 99 after the pop.` },
+
+{ n: 32, d: "medium", t: "Moving a unique_ptr out of the front",
+  p: String.raw`Create a deque of one std::unique_ptr<int> holding 4. Move the front pointer into a local variable, then pop the empty slot from the front. Print the value held by the local variable.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <memory>
+
+int main() {
+    std::deque<std::unique_ptr<int>> d;
+    d.push_back(std::make_unique<int>(4));
+    auto p = std::move(d.front());
+    d.pop_front();
+    std::cout << *p << '\n';
+}`,
+  why: String.raw`unique_ptr can be moved but not copied. After the move the slot holds nullptr, which is safe to pop.` },
+
+{ n: 33, d: "easy", t: "Distance between iterators",
+  p: String.raw`Create the deque 1, 2, 3, 4, 5. Take an iterator to the element at index 3 and print the distance from it to end().`,
+  ex: String.raw`2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{1, 2, 3, 4, 5};
+    const auto it = d.begin() + 3;
+    std::cout << d.end() - it << '\n';
+}`,
+  why: String.raw`Random-access iterators support subtraction, which gives the number of elements between two positions.` },
+
+{ n: 34, d: "easy", t: "assign replaces the contents",
+  p: String.raw`Create the deque 1, 2, 3, 4, 5. Replace all of its contents with three copies of 7. Print the elements separated by spaces.`,
+  ex: String.raw`7 7 7`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4, 5};
+    d.assign(3, 7);
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`assign discards the old elements and fills the deque with the new ones, so the old size does not matter.` },
+
+{ n: 35, d: "easy", t: "Shrinking with resize",
+  p: String.raw`Create the deque 1, 2, 3, 4. Resize it to two elements and print the remaining elements separated by a space.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4};
+    d.resize(2);
+    std::cout << d[0] << ' ' << d[1] << '\n';
+}`,
+  why: String.raw`resize to a smaller size destroys the elements at the back beyond the new size.` },
+
+{ n: 36, d: "medium", t: "Insert a range at a position",
+  p: String.raw`Create the deque 1, 2. Insert the values 8 and 9 between them, then print the elements separated by spaces.`,
+  ex: String.raw`1 8 9 2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <initializer_list>
+
+int main() {
+    std::deque<int> d{1, 2};
+    d.insert(d.begin() + 1, {8, 9});
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`insert accepts a braced list of values and inserts them as a block at the given position.` },
+
+{ n: 37, d: "easy", t: "Lexicographic comparison",
+  p: String.raw`Compare the deque 1, 2 with the deque 1, 3 using less-than, and print the result as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> a{1, 2}, b{1, 3};
+    std::cout << std::boolalpha << (a < b) << '\n';
+}`,
+  why: String.raw`Deques compare element by element like arrays, and the first difference decides the result.` },
+
+{ n: 38, d: "easy", t: "swap exchanges the contents",
+  p: String.raw`Create the deque a = 1, 2, 3 and the deque b = 4. Swap them, then print the size of a and the size of b separated by a space.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> a{1, 2, 3}, b{4};
+    a.swap(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`swap exchanges the internal buffers of the two deques, so it does not move the individual elements.` },
+
+{ n: 39, d: "medium", t: "Reference stability on push_back",
+  p: String.raw`Create the deque 1, 2, 3 and keep a reference to its first element. Push 500 more values onto the back. Print true if the reference still refers to the same element as d[0].`,
+  ex: String.raw`true`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3};
+    int& r = d.front();
+    for (int i = 0; i < 500; ++i) d.push_back(i);
+    std::cout << std::boolalpha << (&r == &d[0]) << '\n';
+}`,
+  why: String.raw`Elements of a deque do not move when the deque grows at the back, so references and addresses stay valid.` },
+
+{ n: 40, d: "medium", t: "Jagged deque of deques",
+  p: String.raw`Create a deque of deques holding the rows {1}, {2, 3} and {4, 5, 6}. Print the sum of every value in every row.`,
+  ex: String.raw`21`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::deque<std::deque<int>> rows{{1}, {2, 3}, {4, 5, 6}};
+    int total = 0;
+    for (const auto& row : rows) total += std::accumulate(row.begin(), row.end(), 0);
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Each inner deque can have its own length, so the outer deque holds rows of different sizes without any padding.` },
+
+{ n: 41, d: "medium", t: "emplace_back returns a reference",
+  p: String.raw`Create an empty deque of ints. Use emplace_back to add the value 5 and keep the reference it returns. Add 1 to that reference and print the element.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d;
+    int& last = d.emplace_back(5);
+    last += 1;
+    std::cout << d.back() << '\n';
+}`,
+  why: String.raw`Since C++17, emplace_back returns a reference to the new element, which is handy for updating it immediately.` },
+
+{ n: 42, d: "medium", t: "Count the removed elements",
+  p: String.raw`Create the deque 1, 2, 3, 4, 5, 6. Remove the even values, then print how many values were removed.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4, 5, 6};
+    const std::size_t before = d.size();
+    d.erase(std::remove_if(d.begin(), d.end(), [](int x) { return x % 2 == 0; }), d.end());
+    std::cout << before - d.size() << '\n';
+}`,
+  why: String.raw`The count removed is the difference between the size before and after the erase, which is valid because erase shrinks the deque.` },
+
+{ n: 43, d: "medium", t: "Index of the last match",
+  p: String.raw`Create the deque 1, 2, 3, 2. Find the last element equal to 2 using reverse iterators, and print its index from the front.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> d{1, 2, 3, 2};
+    const auto found = std::find(d.rbegin(), d.rend(), 2);
+    std::cout << std::distance(d.begin(), std::prev(found.base())) << '\n';
+}`,
+  why: String.raw`A reverse iterator's base() points one position past the element it refers to. Stepping back once gives the matching forward iterator.` },
+
+{ n: 44, d: "medium", t: "Stable sort by key",
+  p: String.raw`Create the deque of pairs (2, a), (1, b), (2, c), (1, d). Sort it by the first member only, keeping equal keys in their original order. Print the second members separated by spaces.`,
+  ex: String.raw`b d a c`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <utility>
+
+int main() {
+    std::deque<std::pair<int, char>> d{{2, 'a'}, {1, 'b'}, {2, 'c'}, {1, 'd'}};
+    std::stable_sort(d.begin(), d.end(), [](const auto& x, const auto& y) { return x.first < y.first; });
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i].second << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`stable_sort keeps the relative order of elements with equal keys, so the two key-1 entries stay in their input order, and so do the key-2 entries.` },
+
+{ n: 45, d: "easy", t: "Compare a deque with a vector",
+  p: String.raw`Compare the deque 1, 2, 3 with the vector 1, 2, 3 using the standard equal algorithm. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::deque<int> d{1, 2, 3};
+    const std::vector<int> v{1, 2, 3};
+    std::cout << std::boolalpha << std::equal(d.begin(), d.end(), v.begin(), v.end()) << '\n';
+}`,
+  why: String.raw`Algorithms work on any iterator pairs, so a deque and a vector can be compared element by element without converting either one.` },
+
+{ n: 46, d: "medium", t: "Product modulo a prime",
+  p: String.raw`Multiply the values in the deque 2, 3, 4 together, keeping the result modulo 1000007 at each step, and print the result.`,
+  ex: String.raw`24`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<long long> d{2, 3, 4};
+    constexpr long long mod = 1000007;
+    long long product = 1;
+    for (long long x : d) product = product * x % mod;
+    std::cout << product << '\n';
+}`,
+  why: String.raw`Taking the modulus after each multiplication keeps intermediate values small. The deque only supplies the sequence of factors.` },
+
+{ n: 47, d: "hard", t: "Merge overlapping intervals",
+  p: String.raw`A sorted deque holds the intervals (1, 3), (2, 6) and (8, 10) as start and end pairs. Merge overlapping intervals and print the merged intervals as their start and end values, separated by spaces.`,
+  ex: String.raw`1 6 8 10`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <utility>
+
+int main() {
+    const std::deque<std::pair<int, int>> in{{1, 3}, {2, 6}, {8, 10}};
+    std::deque<std::pair<int, int>> out;
+    for (const auto& iv : in) {
+        if (!out.empty() && iv.first <= out.back().second)
+            out.back().second = std::max(out.back().second, iv.second);
+        else
+            out.push_back(iv);
+    }
+    bool first = true;
+    for (const auto& [s, e] : out) {
+        std::cout << (first ? "" : " ") << s << ' ' << e;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Because the intervals are sorted by start, an overlap can only involve the last merged interval. The deque's back is therefore the one to extend.` },
+
+{ n: 48, d: "medium", t: "Remove a value with a manual loop",
+  p: String.raw`Create the deque 2, 1, 2, 3. Remove every element equal to 2 by walking the deque with an iterator and using the iterator that erase returns. Print the remaining elements separated by spaces.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{2, 1, 2, 3};
+    for (auto it = d.begin(); it != d.end();) {
+        if (*it == 2) it = d.erase(it);
+        else ++it;
+    }
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`erase invalidates the iterator at the removed position, and it returns a valid iterator to the next element. Continuing from that iterator avoids skipping any values.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "medium", t: "Browser back and forward",
+  p: String.raw`Visit the pages a, b and c in order, recording each in a deque with the newest at the back. Then go back twice and forward once. Print the page now showing, which is the one at the cursor.`,
+  ex: String.raw`b`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<std::string> history{"a", "b", "c"};
+    std::size_t cursor = history.size() - 1;   // currently on c
+    cursor -= 2;                               // back twice: on a
+    cursor += 1;                               // forward once: on b
+    std::cout << history[cursor] << '\n';
+}`,
+  why: String.raw`Navigation history is a sequence with a current position. Back and forward move that position through the stored pages without changing the list.` },
+
+{ n: 50, d: "hard", t: "Round-robin scheduling",
+  p: String.raw`Three tasks A, B and C need 3, 1 and 2 time units. The scheduler runs each unfinished task for one unit in turn, in the order A, B, C, and removes a task when it finishes. Print the order in which the tasks finish, separated by spaces.`,
+  ex: String.raw`B C A`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <utility>
+
+int main() {
+    std::deque<std::pair<char, int>> ready{{'A', 3}, {'B', 1}, {'C', 2}};
+    bool first = true;
+    while (!ready.empty()) {
+        auto [name, left] = ready.front();
+        ready.pop_front();
+        --left;
+        if (left == 0) {
+            std::cout << (first ? "" : " ") << name;
+            first = false;
+        } else {
+            ready.push_back({name, left});
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A round-robin queue takes the next task from the front, runs it for one unit, and puts it back at the back if it is unfinished. The order of finishing falls out of that rotation.` },
+
+{ n: 51, d: "easy", t: "Keep only the three most recent items",
+  p: String.raw`A recent-items list keeps at most three entries. Add the items 1 to 5 in order, dropping the oldest when the list is full. Print the items that remain separated by spaces.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> recent;
+    for (int item = 1; item <= 5; ++item) {
+        recent.push_back(item);
+        if (recent.size() > 3) recent.pop_front();
+    }
+    for (std::size_t i = 0; i < recent.size(); ++i) std::cout << recent[i] << (i + 1 < recent.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Adding to the back and dropping from the front gives a bounded list that always holds the newest entries.` },
+
+{ n: 52, d: "medium", t: "Balanced brackets",
+  p: String.raw`Check whether the string ([]{}) has balanced brackets, meaning each closing bracket matches the most recent open bracket that is still unmatched. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "([]{})";
+    std::deque<char> open;
+    bool ok = true;
+    for (char c : s) {
+        if (c == '(' || c == '[' || c == '{') {
+            open.push_back(c);
+        } else {
+            const char want = c == ')' ? '(' : c == ']' ? '[' : '{';
+            if (open.empty() || open.back() != want) { ok = false; break; }
+            open.pop_back();
+        }
+    }
+    std::cout << std::boolalpha << (ok && open.empty()) << '\n';
+}`,
+  why: String.raw`The most recent unmatched opener is the one a closer must match, so the deque is used as a stack with its back as the top.` },
+
+{ n: 53, d: "medium", t: "Rolling average of four readings",
+  p: String.raw`Temperature readings 10, 20, 30, 40 and 50 arrive in order. After each reading from the fourth onward, print the average of the last four readings. Print the averages as integers separated by spaces.`,
+  ex: String.raw`25 35`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const int readings[] = {10, 20, 30, 40, 50};
+    std::deque<int> window;
+    bool first = true;
+    for (int r : readings) {
+        window.push_back(r);
+        if (window.size() > 4) window.pop_front();
+        if (window.size() == 4) {
+            std::cout << (first ? "" : " ") << std::accumulate(window.begin(), window.end(), 0) / 4;
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The window keeps the last four readings in order, so each new reading adds one value and removes the oldest. Averaging the window each step is then a simple sum.` },
+
+{ n: 54, d: "easy", t: "Rotate a playlist",
+  p: String.raw`A playlist holds the songs s1, s2 and s3. Move the first song to the end twice. Print the playlist separated by spaces.`,
+  ex: String.raw`s3 s1 s2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<std::string> playlist{"s1", "s2", "s3"};
+    for (int i = 0; i < 2; ++i) {
+        playlist.push_back(playlist.front());
+        playlist.pop_front();
+    }
+    for (std::size_t i = 0; i < playlist.size(); ++i) std::cout << playlist[i] << (i + 1 < playlist.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Moving the front item to the back is a constant-time rotation, and a deque does it without shifting the rest of the queue.` },
+
+{ n: 55, d: "medium", t: "Trim zeros from both ends",
+  p: String.raw`A deque of digits holds 0, 0, 4, 0, 5, 0, 0. Remove the zeros at both ends, keeping any zeros between the other digits. Print what remains separated by spaces.`,
+  ex: String.raw`4 0 5`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{0, 0, 4, 0, 5, 0, 0};
+    while (!d.empty() && d.front() == 0) d.pop_front();
+    while (!d.empty() && d.back() == 0) d.pop_back();
+    for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Popping from each end only removes what is at that end. The inner zero stays because the scan stops at the first non-zero value from each side.` },
+
+{ n: 56, d: "medium", t: "Count alerts in a sliding window",
+  p: String.raw`Sensor readings 5, 12, 7, 15, 20, 3 are checked in windows of three consecutive readings. For each window, count the readings above 10. Print the counts separated by spaces.`,
+  ex: String.raw`1 2 2 2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::vector<int> readings{5, 12, 7, 15, 20, 3};
+    std::deque<int> window;
+    int alerts = 0;
+    bool first = true;
+    for (int r : readings) {
+        window.push_back(r);
+        alerts += r > 10;
+        if (window.size() > 3) {
+            alerts -= window.front() > 10;
+            window.pop_front();
+        }
+        if (window.size() == 3) {
+            std::cout << (first ? "" : " ") << alerts;
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The window adds the new reading and removes the oldest. Keeping a running count updated on both sides avoids recounting the whole window each step.` },
+
+{ n: 57, d: "medium", t: "Best single buy and sell",
+  p: String.raw`Daily prices of a stock are 7, 1, 5, 3, 6, 4. You may buy on one day and sell on a later day. Print the largest profit you can make.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <algorithm>
+#include <deque>
+#include <iostream>
+
+int main() {
+    const std::deque<int> prices{7, 1, 5, 3, 6, 4};
+    int lowest = prices.front();
+    int best = 0;
+    for (std::size_t i = 1; i < prices.size(); ++i) {
+        best = std::max(best, prices[i] - lowest);
+        lowest = std::min(lowest, prices[i]);
+    }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`Walking the prices in order and tracking the lowest price seen so far gives the best profit for each selling day. The maximum over those profits is the answer.` },
+
+{ n: 58, d: "easy", t: "Insert at a text cursor",
+  p: String.raw`A text buffer starts empty. Type a and then b, so the cursor ends after b. Move the cursor one place left, then type x. Print the buffer as a string.`,
+  ex: String.raw`axb`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<char> text;
+    text.push_back('a');
+    text.push_back('b');
+    std::size_t cursor = text.size() - 1;   // before b
+    text.insert(text.begin() + cursor, 'x');
+    std::cout << std::string(text.begin(), text.end()) << '\n';
+}`,
+  why: String.raw`Insertion at an arbitrary position in a deque shifts the shorter side, so editing near the cursor stays cheap. Here the cursor sits between a and b, which puts x in the middle.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-deque-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 58, label: "Easy", range: "Problems 1–58", badge: "easy" },
+  { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
+  { from: 21, to: 50, label: "Hard", range: "Problems 21–50", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

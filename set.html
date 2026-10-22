@@ -1,0 +1,1263 @@
+<title>STL Set Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Set Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Duplicates are dropped",
+  p: String.raw`Add the values 3, 1, 3 and 2 to an empty set of ints. Print how many elements the set holds.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s;
+    for (int v : {3, 1, 3, 2}) s.insert(v);
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`A set holds each value at most once. Inserting a value that is already present changes nothing.` },
+
+{ n: 2, d: "easy", t: "Sorted by default",
+  p: String.raw`Add the values 5, 2, 8 and 2 to an empty set of ints. Print the elements in order, separated by spaces.`,
+  ex: String.raw`2 5 8`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s{5, 2, 8, 2};
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Elements are kept in ascending order at all times, so iterating always visits them sorted.` },
+
+{ n: 3, d: "easy", t: "Membership check",
+  p: String.raw`Create a set of ints containing only 4. Print whether it contains 4, then whether it contains 7, separated by a space. Print true or false.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{4};
+    std::cout << std::boolalpha << s.contains(4) << ' ' << s.contains(7) << '\n';
+}`,
+  why: String.raw`Membership is a logarithmic search in a balanced tree, so it stays fast as the set grows.` },
+
+{ n: 4, d: "easy", t: "Count is 0 or 1",
+  p: String.raw`Create a set of ints containing 1, 4 and 6. Print the number of times 4 occurs, then the number of times 9 occurs, separated by a space.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 4, 6};
+    std::cout << s.count(4) << ' ' << s.count(9) << '\n';
+}`,
+  why: String.raw`Because a set has no duplicates, counting a value always yields 0 or 1.` },
+
+{ n: 5, d: "easy", t: "Remove one value",
+  p: String.raw`Create a set of ints containing 1, 2, 3, 4 and 5. Remove the value 3, then print the remaining elements in order, separated by spaces.`,
+  ex: String.raw`1 2 4 5`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s{1, 2, 3, 4, 5};
+    s.erase(3);
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Removing by value takes one step per lookup and leaves the order of the remaining elements unchanged.` },
+
+{ n: 6, d: "easy", t: "Search for a value",
+  p: String.raw`Create a set of ints containing 2 and 7. Print found if 7 is in the set, and missing if 9 is in the set, separated by a space.`,
+  ex: String.raw`found missing`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{2, 7};
+    std::cout << (s.find(7) != s.end() ? "found" : "missing") << ' '
+              << (s.find(9) != s.end() ? "found" : "missing") << '\n';
+}`,
+  why: String.raw`Searching returns an iterator to the element, or the end marker when the value is absent.` },
+
+{ n: 7, d: "easy", t: "Insert reports success",
+  p: String.raw`Insert 5 into an empty set of ints, then insert 5 again. Print the success flag of the second insertion as true or false.`,
+  ex: String.raw`false`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s;
+    s.insert(5);
+    auto [it, inserted] = s.insert(5);
+    std::cout << std::boolalpha << inserted << '\n';
+}`,
+  why: String.raw`Insertion returns a pair: an iterator to the element and a flag saying whether anything was actually added.` },
+
+{ n: 8, d: "easy", t: "Build in place",
+  p: String.raw`Create an empty set of ints. Construct the value 6 directly inside the set, then print the first element.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s;
+    s.emplace(6);
+    std::cout << *s.begin() << '\n';
+}`,
+  why: String.raw`Constructing the element in place avoids a temporary copy, and the set still keeps it in sorted position.` },
+
+{ n: 9, d: "easy", t: "Smallest and largest",
+  p: String.raw`Add 9, 4 and 7 to an empty set of ints. Print the smallest element, then the largest, separated by a space.`,
+  ex: String.raw`4 9`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s{9, 4, 7};
+    std::cout << *s.begin() << ' ' << *s.rbegin() << '\n';
+}`,
+  why: String.raw`Because the elements are sorted, the smallest is at the front and the largest is at the back.` },
+
+{ n: 10, d: "easy", t: "Alphabetical strings",
+  p: String.raw`Add the words pear, apple and fig to an empty set of strings. Print the words in order, separated by spaces.`,
+  ex: String.raw`apple fig pear`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <string>
+
+int main() {
+    std::set<std::string> s{"pear", "apple", "fig"};
+    bool first = true;
+    for (const auto& w : s) {
+        std::cout << (first ? "" : " ") << w;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Strings compare lexicographically, so the set orders words alphabetically without any extra work.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Combined values",
+  p: String.raw`Set a holds 1, 2 and 3. Set b holds 3 and 4. Print the values that appear in either set, in order, separated by spaces.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> a{1, 2, 3}, b{3, 4};
+    std::set<int> out;
+    std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::inserter(out, out.end()));
+    bool first = true;
+    for (int v : out) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Two sorted ranges can be merged in a single pass, and a set's elements are already sorted.` },
+
+{ n: 12, d: "medium", t: "Shared values",
+  p: String.raw`Set a holds 1, 2, 3 and 4. Set b holds 2, 4 and 6. Print the values that appear in both sets, separated by spaces.`,
+  ex: String.raw`2 4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> a{1, 2, 3, 4}, b{2, 4, 6};
+    std::set<int> out;
+    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::inserter(out, out.end()));
+    bool first = true;
+    for (int v : out) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Walking two sorted sequences together finds the common values without comparing every pair.` },
+
+{ n: 13, d: "medium", t: "Only in the first",
+  p: String.raw`Set a holds 1, 2, 3 and 4. Set b holds 2, 4 and 6. Print the values that are in a but not in b, separated by spaces.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> a{1, 2, 3, 4}, b{2, 4, 6};
+    std::set<int> out;
+    std::set_difference(a.begin(), a.end(), b.begin(), b.end(), std::inserter(out, out.end()));
+    bool first = true;
+    for (int v : out) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Difference keeps the elements of the first sequence that the second one does not contain, in the same sorted order.` },
+
+{ n: 14, d: "medium", t: "First at or above a threshold",
+  p: String.raw`Create a set of ints containing 10, 20, 30 and 40. Print the smallest element that is at least 25.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{10, 20, 30, 40};
+    std::cout << *s.lower_bound(25) << '\n';
+}`,
+  why: String.raw`lower_bound returns the first element not less than the key, which is exactly a threshold lookup in a sorted set.` },
+
+{ n: 15, d: "medium", t: "First strictly above",
+  p: String.raw`Create a set of ints containing 10, 20 and 30. Print the smallest element strictly greater than 20.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{10, 20, 30};
+    std::cout << *s.upper_bound(20) << '\n';
+}`,
+  why: String.raw`upper_bound returns the first element that compares greater than the key, so an exact match is skipped.` },
+
+{ n: 16, d: "medium", t: "Count in a range",
+  p: String.raw`Create a set of ints containing 1, 5, 9, 14 and 20. Print how many of its elements lie between 5 and 15 inclusive.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 5, 9, 14, 20};
+    auto lo = s.lower_bound(5);
+    auto hi = s.upper_bound(15);
+    std::cout << std::distance(lo, hi) << '\n';
+}`,
+  why: String.raw`Two bounds delimit a contiguous run of sorted elements, and the distance between them is the count.` },
+
+{ n: 17, d: "medium", t: "Reverse order",
+  p: String.raw`Create a set of ints that keeps its elements in descending order. Add 3, 9 and 1, then print the elements in order, separated by spaces.`,
+  ex: String.raw`9 3 1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int, std::greater<>> s{3, 9, 1};
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The ordering is a template argument. Choosing a different comparison changes the order everywhere in the set.` },
+
+{ n: 18, d: "medium", t: "Pairs sorted by both parts",
+  p: String.raw`Add the pairs (2, b), (1, z) and (2, a) to a set of pairs of an int and a string. Print the second part of each pair in set order, separated by spaces.`,
+  ex: String.raw`z a b`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <string>
+#include <utility>
+
+int main() {
+    std::set<std::pair<int, std::string>> s{{2, "b"}, {1, "z"}, {2, "a"}};
+    bool first = true;
+    for (const auto& [num, word] : s) {
+        std::cout << (first ? "" : " ") << word;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Pairs compare by their first part, then by their second, so the set orders them lexicographically.` },
+
+{ n: 19, d: "medium", t: "Nearest value",
+  p: String.raw`Create a set of ints containing 1, 4, 9 and 16. Print the element closest to 10. If two are equally close, print the smaller.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <cstdlib>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 4, 9, 16};
+    const int x = 10;
+    auto hi = s.lower_bound(x);
+    auto lo = hi;
+    if (hi == s.begin()) {
+        std::cout << *hi << '\n';
+        return 0;
+    }
+    --lo;
+    if (hi == s.end() || x - *lo <= *hi - x) std::cout << *lo << '\n';
+    else std::cout << *hi << '\n';
+}`,
+  why: String.raw`The closest value is always either the last element below the target or the first element at or above it, so two neighbours are enough to decide.` },
+
+{ n: 20, d: "medium", t: "Merging sets",
+  p: String.raw`Set a holds 1, 3 and 5. Set b holds 2, 3 and 4. Move every element of b into a. Print the size of a, then the size of b, separated by a space. Elements already present in a stay where they are and are not moved.`,
+  ex: String.raw`5 1`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> a{1, 3, 5}, b{2, 3, 4};
+    a.merge(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`merge moves nodes rather than copying values. Duplicates cannot be moved, so they stay behind in the source set.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Smaller values to the right",
+  p: String.raw`For the array 3 1 2, look at each element and count how many elements after it are smaller than it. Print the three counts separated by spaces.`,
+  ex: String.raw`2 0 0`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <set>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{3, 1, 2};
+    std::vector<int> counts(a.size());
+    std::set<int> seen;   // values to the right of the current position
+    for (std::size_t i = a.size(); i-- > 0;) {
+        counts[i] = static_cast<int>(std::distance(seen.begin(), seen.lower_bound(a[i])));
+        seen.insert(a[i]);
+    }
+    for (std::size_t i = 0; i < counts.size(); ++i)
+        std::cout << counts[i] << (i + 1 < counts.size() ? " " : "\n");
+}`,
+  why: String.raw`Scanning from the right, the number of smaller values already seen is the position where the current value would land in the sorted set.` },
+
+{ n: 22, d: "hard", t: "Longest run of consecutive values",
+  p: String.raw`From the values 100, 4, 200, 1, 3 and 2, find the length of the longest run of consecutive integers. Print that length.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{100, 4, 200, 1, 3, 2};
+    std::size_t best = 0;
+    for (int x : s) {
+        if (s.contains(x - 1)) continue;   // only start counting at the beginning of a run
+        std::size_t len = 1;
+        while (s.contains(x + static_cast<int>(len))) ++len;
+        best = std::max(best, len);
+    }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`Starting a count only at the first value of each run keeps the total work proportional to the number of values.` },
+
+{ n: 23, d: "hard", t: "Merge overlapping intervals",
+  p: String.raw`Store the intervals [1,3], [2,6], [8,10] and [15,18] in a set ordered by start. Merge any intervals that overlap or touch, then print the merged intervals in order, each as [start,end], separated by spaces.`,
+  ex: String.raw`[1,6] [8,10] [15,18]`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <set>
+#include <utility>
+
+int main() {
+    const std::set<std::pair<int, int>> intervals{{1, 3}, {2, 6}, {8, 10}, {15, 18}};
+    std::pair<int, int> cur{-1, -1};
+    bool have = false, first = true;
+    auto flush = [&] {
+        std::cout << (first ? "" : " ") << '[' << cur.first << ',' << cur.second << ']';
+        first = false;
+    };
+    for (const auto& iv : intervals) {
+        if (!have) { cur = iv; have = true; }
+        else if (iv.first <= cur.second) cur.second = std::max(cur.second, iv.second);
+        else { flush(); cur = iv; }
+    }
+    if (have) flush();
+    std::cout << '\n';
+}`,
+  why: String.raw`Sorted by start, an interval can only overlap the one currently being built, so a single pass suffices.` },
+
+{ n: 24, d: "hard", t: "Next available value",
+  p: String.raw`Create a set of ints containing 5, 10 and 20. For each query 7, 20 and 25, print the smallest element that is at least the query value, or none if there is no such element. Separate the answers with spaces.`,
+  ex: String.raw`10 20 none`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{5, 10, 20};
+    bool first = true;
+    for (int q : {7, 20, 25}) {
+        auto it = s.lower_bound(q);
+        std::cout << (first ? "" : " ");
+        if (it == s.end()) std::cout << "none";
+        else std::cout << *it;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`lower_bound answers the successor query in logarithmic time, and the end marker signals that no successor exists.` },
+
+{ n: 25, d: "hard", t: "Smallest missing positive",
+  p: String.raw`Store the values 3, 4, -1 and 1 in a set of ints. Print the smallest positive integer that is not in the set.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{3, 4, -1, 1};
+    int x = 1;
+    while (s.contains(x)) ++x;
+    std::cout << x << '\n';
+}`,
+  why: String.raw`Membership tests let you walk upward from 1 and stop at the first gap. Negative values and zero are irrelevant to the answer.` },
+
+{ n: 26, d: "hard", t: "Booking calendar",
+  p: String.raw`A calendar holds bookings as half-open intervals [start, end), stored in a set ordered by start. Attempt three bookings in order: [10,20), then [15,25), then [20,30). A booking that overlaps an existing one is refused. Print ok or conflict for each attempt, separated by spaces.`,
+  ex: String.raw`ok conflict ok`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <utility>
+
+int main() {
+    std::set<std::pair<int, int>> booked;   // (start, end), sorted by start
+    bool first = true;
+    for (auto [start, end] : {std::pair{10, 20}, std::pair{15, 25}, std::pair{20, 30}}) {
+        bool clash = false;
+        auto next = booked.lower_bound({start, 0});
+        if (next != booked.end() && next->first < end) clash = true;
+        if (next != booked.begin() && std::prev(next)->second > start) clash = true;
+        if (!clash) booked.insert({start, end});
+        std::cout << (first ? "" : " ") << (clash ? "conflict" : "ok");
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Only the booking that starts just before and the one that starts just after a new request can overlap it, so two neighbour lookups are enough.` },
+
+{ n: 27, d: "hard", t: "Distinct values in each window",
+  p: String.raw`For the array 1 2 1 3 4 2 3, consider every window of 3 consecutive elements. For each window print how many different values it contains, separated by spaces.`,
+  ex: String.raw`2 3 3 3 3`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{1, 2, 1, 3, 4, 2, 3};
+    const std::size_t k = 3;
+    bool first = true;
+    for (std::size_t i = 0; i + k <= a.size(); ++i) {
+        std::set<int> window(a.begin() + i, a.begin() + i + k);
+        std::cout << (first ? "" : " ") << window.size();
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A set collapses repeats automatically, so its size is the number of distinct values in the window.` },
+
+{ n: 28, d: "hard", t: "Pairs with a fixed gap",
+  p: String.raw`Store 1, 4, 2, 7 and 5 in a set of ints. Count the pairs (x, y) of values from the set where y - x = 3. Print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 4, 2, 7, 5};
+    int count = 0;
+    for (int x : s)
+        if (s.contains(x + 3)) ++count;
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Since the values are unique and sorted, checking whether the partner exists is a single lookup for each element.` },
+
+{ n: 29, d: "hard", t: "Lookup by a view",
+  p: String.raw`Store the word hello in a set of strings. Check whether the set contains hello when the lookup key is a std::string_view of those same characters, without creating a std::string for the lookup. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <functional>
+#include <set>
+#include <string>
+#include <string_view>
+
+int main() {
+    // std::less<> is transparent, so lookups accept any type comparable with std::string
+    const std::set<std::string, std::less<>> s{"hello", "world"};
+    std::cout << std::boolalpha << (s.find(std::string_view("hello")) != s.end()) << '\n';
+}`,
+  why: String.raw`A transparent comparator lets a set be searched with a type other than its element type, avoiding a temporary std::string.` },
+
+{ n: 30, d: "hard", t: "Length of an increasing run",
+  p: String.raw`For the sequence 10 9 2 5 3 7 101 18, find the length of the longest strictly increasing subsequence, where the elements need not be adjacent. Print that length.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    // tails holds the smallest possible last value for each subsequence length
+    std::set<int> tails;
+    for (int x : {10, 9, 2, 5, 3, 7, 101, 18}) {
+        auto it = tails.lower_bound(x);
+        if (it == tails.end()) tails.insert(x);
+        else {
+            tails.erase(it);
+            tails.insert(x);
+        }
+    }
+    std::cout << tails.size() << '\n';
+}`,
+  why: String.raw`Replacing the first tail that is not smaller than x keeps the set as small as possible, so its size is the length of the longest increasing subsequence.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "extension", t: "Move a node between sets",
+  p: String.raw`Set a holds 1, 2 and 3. Take the element 2 out of a without copying it, and put it into an empty set b. Print the size of a, then whether b contains 2, separated by a space. Print true or false.`,
+  ex: String.raw`2 true`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> a{1, 2, 3}, b;
+    auto node = a.extract(2);
+    b.insert(std::move(node));
+    std::cout << a.size() << ' ' << std::boolalpha << b.contains(2) << '\n';
+}`,
+  why: String.raw`Node handles transfer the internal tree node itself, so the value is never copied or reallocated.` },
+
+{ n: 32, d: "extension", t: "Range of equal elements",
+  p: String.raw`Create a set of ints containing 1, 3 and 5. For the keys 3 and 4, print how many elements compare equal to the key, separated by a space.`,
+  ex: String.raw`1 0`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 3, 5};
+    auto [lo3, hi3] = s.equal_range(3);
+    auto [lo4, hi4] = s.equal_range(4);
+    std::cout << std::distance(lo3, hi3) << ' ' << std::distance(lo4, hi4) << '\n';
+}`,
+  why: String.raw`equal_range returns the half-open range of elements equal to the key. For a set this range has at most one element.` },
+
+{ n: 33, d: "extension", t: "Swap contents",
+  p: String.raw`Set a holds 1. Set b holds 2 and 3. Exchange their contents, then print the size of a and the size of b, separated by a space.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <utility>
+
+int main() {
+    std::set<int> a{1}, b{2, 3};
+    std::swap(a, b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`Swapping two sets exchanges their internal trees in constant time, without moving any elements.` },
+
+{ n: 34, d: "extension", t: "Erase a span",
+  p: String.raw`Create a set of ints containing 1 through 6. Remove the elements from 2 up to but not including 5, then print the remaining elements separated by spaces.`,
+  ex: String.raw`1 5 6`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s{1, 2, 3, 4, 5, 6};
+    s.erase(s.lower_bound(2), s.lower_bound(5));
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Erasing over a half-open pair of iterators removes a contiguous block of sorted elements in one call.` },
+
+{ n: 35, d: "extension", t: "Hinted insertion",
+  p: String.raw`Create an empty set of ints. Insert 1, 2 and 3 in that order, giving each insertion the end of the set as a position hint. Print the elements in order, separated by spaces.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s;
+    for (int v : {1, 2, 3}) s.emplace_hint(s.end(), v);
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A correct hint lets the set skip the search for the insertion point, so appending in order costs a constant amount of searching each time.` },
+
+{ n: 36, d: "extension", t: "Walk backwards",
+  p: String.raw`Create a set of ints containing 2, 6 and 9. Print its elements from largest to smallest, separated by spaces.`,
+  ex: String.raw`9 6 2`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> s{2, 6, 9};
+    bool first = true;
+    for (auto it = s.rbegin(); it != s.rend(); ++it) {
+        std::cout << (first ? "" : " ") << *it;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Reverse iterators traverse the same sorted sequence in the opposite direction, with no extra copying or sorting.` },
+
+{ n: 37, d: "extension", t: "Compare two sets",
+  p: String.raw`Set a holds 1 and 2. Set b holds 1, 2 and 3. Print whether a is less than b in lexicographic order, then whether a equals b, separated by a space. Print true or false.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    const std::set<int> a{1, 2}, b{1, 2, 3};
+    std::cout << std::boolalpha << (a < b) << ' ' << (a == b) << '\n';
+}`,
+  why: String.raw`Sets compare the way strings do: element by element in order, with a shorter prefix ranking before a longer sequence.` },
+
+{ n: 38, d: "extension", t: "Values in exactly one set",
+  p: String.raw`Set a holds 1, 2 and 3. Set b holds 2, 3 and 4. Print the values that belong to exactly one of the two sets, in order, separated by spaces.`,
+  ex: String.raw`1 4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> a{1, 2, 3}, b{2, 3, 4};
+    std::set<int> out;
+    std::set_symmetric_difference(a.begin(), a.end(), b.begin(), b.end(),
+                                  std::inserter(out, out.end()));
+    bool first = true;
+    for (int v : out) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The symmetric difference is what remains after removing the shared values from the union, computed in one ordered pass.` },
+
+{ n: 39, d: "extension", t: "Custom struct ordering",
+  p: String.raw`Store people, each with a name and an age, in a set that orders them by age from youngest to oldest. Add bob aged 30 and amy aged 25. Print the names in set order, separated by a space.`,
+  ex: String.raw`amy bob`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <string>
+
+struct Person {
+    std::string name;
+    int age;
+    bool operator<(const Person& other) const { return age < other.age; }
+};
+
+int main() {
+    std::set<Person> people;
+    people.insert({"bob", 30});
+    people.insert({"amy", 25});
+    bool first = true;
+    for (const auto& p : people) {
+        std::cout << (first ? "" : " ") << p.name;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Without an explicit comparator, a set uses operator< on its element type to decide position.` },
+
+{ n: 40, d: "extension", t: "Order by absolute value",
+  p: String.raw`Create a set of ints that orders its elements by their absolute value, smallest first. Add -3, 2 and -1, then print the elements in order, separated by spaces.`,
+  ex: String.raw`-1 2 -3`,
+  code: String.raw`#include <cstdlib>
+#include <iostream>
+#include <set>
+
+struct ByAbs {
+    bool operator()(int a, int b) const { return std::abs(a) < std::abs(b); }
+};
+
+int main() {
+    std::set<int, ByAbs> s{-3, 2, -1};
+    bool first = true;
+    for (int v : s) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Two values with different signs can compare equal under a custom rule. Whether they are kept as separate elements depends entirely on the comparator.` },
+
+{ n: 41, d: "extension", t: "Iterators survive other erasures",
+  p: String.raw`Create a set of ints containing 1, 2, 3 and 4. Keep an iterator to the element 2. Remove the element 3, then print the value the kept iterator refers to.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> s{1, 2, 3, 4};
+    auto it = s.find(2);
+    s.erase(3);
+    std::cout << *it << '\n';
+}`,
+  why: String.raw`Erasing an element invalidates only iterators that point to that element. Iterators to all other elements remain valid.` },
+
+{ n: 42, d: "extension", t: "Move-only elements",
+  p: String.raw`Store uniquely owned heap-allocated integers 7 and 2 in a set ordered by the values they point to. Print the value of the first element.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <set>
+
+struct ByValue {
+    bool operator()(const std::unique_ptr<int>& a, const std::unique_ptr<int>& b) const { return *a < *b; }
+};
+
+int main() {
+    std::set<std::unique_ptr<int>, ByValue> s;
+    s.insert(std::make_unique<int>(7));
+    s.insert(std::make_unique<int>(2));
+    std::cout << **s.begin() << '\n';
+}`,
+  why: String.raw`Sets can hold move-only types. Elements are moved into place, and the comparator reads through the pointer to decide order.` },
+
+{ n: 43, d: "extension", t: "Ask the comparator directly",
+  p: String.raw`Create a set of ints ordered from largest to smallest. Use the set's own comparison function to check whether 5 comes before 3 in its ordering, and print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int, std::greater<>> s;
+    auto comp = s.key_comp();
+    std::cout << std::boolalpha << comp(5, 3) << '\n';
+}`,
+  why: String.raw`The set exposes the comparator it uses, so code that needs the same ordering can ask it directly rather than repeating the rule.` },
+
+{ n: 44, d: "extension", t: "Sets of vectors",
+  p: String.raw`Create a set whose elements are vectors of ints, ordered lexicographically. Add the vectors {2,1}, {1,9} and {1,2}. Print the first element of the first vector in the set, then its second element, separated by a space.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <vector>
+
+int main() {
+    std::set<std::vector<int>> s{{2, 1}, {1, 9}, {1, 2}};
+    const auto& first = *s.begin();
+    std::cout << first[0] << ' ' << first[1] << '\n';
+}`,
+  why: String.raw`Containers provide lexicographic comparison, so a set of them sorts by the first differing element, just as a dictionary does.` },
+
+{ n: 45, d: "extension", t: "Count comparisons",
+  p: String.raw`Create a set of ints with a comparator that counts its own calls. Insert 5, 2, 8, 1 and 9. Print whether the count is greater than zero, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int comparisons = 0;
+
+struct Counting {
+    bool operator()(int a, int b) const { ++comparisons; return a < b; }
+};
+
+int main() {
+    std::set<int, Counting> s;
+    for (int v : {5, 2, 8, 1, 9}) s.insert(v);
+    std::cout << std::boolalpha << (comparisons > 0) << '\n';
+}`,
+  why: String.raw`Each insertion and lookup walks down the tree comparing keys. The comparator's call count reflects the depth of that walk.` },
+
+{ n: 46, d: "extension", t: "Case-insensitive uniqueness",
+  p: String.raw`Create a set of strings that treats words differing only in letter case as equal. Insert Apple, apple and BANANA, then print the number of elements.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <set>
+#include <string>
+
+struct CaseInsensitive {
+    bool operator()(const std::string& a, const std::string& b) const {
+        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+            [](unsigned char x, unsigned char y) { return std::tolower(x) < std::tolower(y); });
+    }
+};
+
+int main() {
+    std::set<std::string, CaseInsensitive> s;
+    for (const char* w : {"Apple", "apple", "BANANA"}) s.insert(w);
+    std::cout << s.size() << '\n';
+}`,
+  why: String.raw`Uniqueness is defined by the comparator. Two elements are duplicates precisely when neither compares less than the other.` },
+
+{ n: 47, d: "extension", t: "Filter a set lazily",
+  p: String.raw`Create a set of ints containing 1 through 6. Print the even elements in order, separated by spaces, using a lazy filter view over the set.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <set>
+
+int main() {
+    const std::set<int> s{1, 2, 3, 4, 5, 6};
+    bool first = true;
+    for (int v : s | std::views::filter([](int x) { return x % 2 == 0; })) {
+        std::cout << (first ? "" : " ") << v;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A view applies the filter as it is iterated and stores nothing new, so the set itself is left untouched.` },
+
+{ n: 48, d: "extension", t: "Merge with overlap",
+  p: String.raw`Set a holds 1 and 2. Set b holds 2 and 3. Move the elements of b into a. Print the size of a, then the size of b, separated by a space.`,
+  ex: String.raw`3 1`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> a{1, 2}, b{2, 3};
+    a.merge(b);
+    std::cout << a.size() << ' ' << b.size() << '\n';
+}`,
+  why: String.raw`Only the non-duplicate node moves across. The shared value remains in the source set, which is why its size is not zero.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "applications", t: "Distinct words",
+  p: String.raw`The sentence "the cat and the hat" contains repeated words. Count the distinct words and print the number.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("the cat and the hat");
+    std::set<std::string> words;
+    for (std::string w; in >> w;) words.insert(w);
+    std::cout << words.size() << '\n';
+}`,
+  why: String.raw`Deduplicating a stream of tokens is a common use of a set. Insertion does the membership check and the storage in one step.` },
+
+{ n: 50, d: "applications", t: "Unique IDs in a range",
+  p: String.raw`The IDs 5, 1, 9, 5 and 3 were recorded, possibly with repeats. Count how many distinct IDs lie between 2 and 6 inclusive, and print that number.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    const std::set<int> ids{5, 1, 9, 5, 3};
+    auto lo = ids.lower_bound(2);
+    auto hi = ids.upper_bound(6);
+    std::cout << std::distance(lo, hi) << '\n';
+}`,
+  why: String.raw`Storing IDs in a set both removes repeats and makes range queries a pair of bound lookups.` },
+
+{ n: 51, d: "applications", t: "Free time between meetings",
+  p: String.raw`A working day runs from 9 to 17. Busy periods are [9,10] and [12,13]. Print the free gaps within the day, each as [start,end], separated by spaces.`,
+  ex: String.raw`[10,12] [13,17]`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <set>
+#include <utility>
+
+int main() {
+    const std::set<std::pair<int, int>> busy{{9, 10}, {12, 13}};   // sorted by start
+    int cursor = 9;
+    bool first = true;
+    auto gap = [&](int a, int b) {
+        std::cout << (first ? "" : " ") << '[' << a << ',' << b << ']';
+        first = false;
+    };
+    for (const auto& [s, e] : busy) {
+        if (s > cursor) gap(cursor, s);
+        cursor = std::max(cursor, e);
+    }
+    if (cursor < 17) gap(cursor, 17);
+    std::cout << '\n';
+}`,
+  why: String.raw`With busy periods sorted by start, the free time is whatever lies between the running end of the last busy period and the next start.` },
+
+{ n: 52, d: "applications", t: "Unique visitors across days",
+  p: String.raw`Day one visitors were a and b. Day two visitors were b and c. Day three visitors were a and d. Count the number of distinct visitors over the three days and print it.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<std::string>> days{{"a", "b"}, {"b", "c"}, {"a", "d"}};
+    std::set<std::string> all;
+    for (const auto& day : days)
+        for (const auto& v : day) all.insert(v);
+    std::cout << all.size() << '\n';
+}`,
+  why: String.raw`A running set gives the union across any number of groups without tracking which group each visitor came from.` },
+
+{ n: 53, d: "applications", t: "Longest run without repeats",
+  p: String.raw`Find the length of the longest substring of abcabcbb that contains no repeated character. Print that length.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <set>
+#include <string>
+
+int main() {
+    const std::string s = "abcabcbb";
+    std::set<char> window;
+    std::size_t best = 0, left = 0;
+    for (std::size_t right = 0; right < s.size(); ++right) {
+        while (window.contains(s[right])) {
+            window.erase(s[left]);
+            ++left;
+        }
+        window.insert(s[right]);
+        best = std::max(best, window.size());
+    }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`The window holds exactly the characters of the current substring. Growing it on the right and shrinking it on the left keeps the set free of repeats.` },
+
+{ n: 54, d: "applications", t: "Normalised tags",
+  p: String.raw`Tags were entered as Python, java, python and Go. Treat tags that differ only in letter case as the same, convert each to lowercase, then print the distinct tags in alphabetical order separated by spaces.`,
+  ex: String.raw`go java python`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <set>
+#include <string>
+
+int main() {
+    std::set<std::string> tags;
+    for (std::string t : {"Python", "java", "python", "Go"}) {
+        for (char& c : t) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        tags.insert(t);
+    }
+    bool first = true;
+    for (const auto& t : tags) {
+        std::cout << (first ? "" : " ") << t;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Normalising before insertion means the set's ordinary string comparison handles the deduplication and the sorting together.` },
+
+{ n: 55, d: "applications", t: "Visit order without revisits",
+  p: String.raw`An undirected graph has edges 0-1, 0-2 and 1-3. Starting from node 0, visit nodes breadth-first, always taking neighbours in increasing order, and never visiting a node twice. Print the visit order separated by spaces.`,
+  ex: String.raw`0 1 2 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <set>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> adj{{1, 2}, {0, 3}, {0}, {1}};
+    std::set<int> visited{0};
+    std::queue<int> q;
+    q.push(0);
+    bool first = true;
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop();
+        std::cout << (first ? "" : " ") << u;
+        first = false;
+        for (int v : adj[u]) {
+            if (visited.insert(v).second) q.push(v);
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A visited set records every node the search has already claimed, so each node joins the frontier exactly once.` },
+
+{ n: 56, d: "applications", t: "Shared letters",
+  p: String.raw`Form a set of the distinct letters in hello and another set of the distinct letters in world. Print the letters found in both sets, in alphabetical order, with no separators.`,
+  ex: String.raw`lo`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+#include <string>
+
+int main() {
+    const std::string a = "hello", b = "world";
+    const std::set<char> sa(a.begin(), a.end()), sb(b.begin(), b.end());
+    std::set<char> common;
+    std::set_intersection(sa.begin(), sa.end(), sb.begin(), sb.end(),
+                          std::inserter(common, common.end()));
+    for (char c : common) std::cout << c;
+    std::cout << '\n';
+}`,
+  why: String.raw`Building a set from a string gives its distinct characters directly, and intersection then finds the letters they share.` },
+
+{ n: 57, d: "applications", t: "Mutual friends",
+  p: String.raw`Alice's friends are bob, carol and dan. Erin's friends are carol, dan and frank. Print the names of the friends they have in common, in alphabetical order, separated by spaces.`,
+  ex: String.raw`carol dan`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <set>
+#include <string>
+
+int main() {
+    const std::set<std::string> alice{"bob", "carol", "dan"};
+    const std::set<std::string> erin{"carol", "dan", "frank"};
+    std::set<std::string> mutual;
+    std::set_intersection(alice.begin(), alice.end(), erin.begin(), erin.end(),
+                          std::inserter(mutual, mutual.end()));
+    bool first = true;
+    for (const auto& name : mutual) {
+        std::cout << (first ? "" : " ") << name;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Mutual connections are the intersection of two neighbourhoods. Keeping each neighbourhood as a set makes that intersection a single ordered pass.` },
+
+{ n: 58, d: "applications", t: "Top distinct scores",
+  p: String.raw`Scores 50, 90, 50 and 70 were recorded. Print the two highest distinct scores, highest first, separated by a space.`,
+  ex: String.raw`90 70`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <iterator>
+#include <set>
+
+int main() {
+    std::set<int, std::greater<>> scores{50, 90, 50, 70};
+    auto it = scores.begin();
+    std::cout << *it << ' ' << *std::next(it) << '\n';
+}`,
+  why: String.raw`Keeping distinct scores in descending order means the best ones are simply the first elements of the set.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-set-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 10, label: "Easy", range: "Problems 1–10", badge: "easy" },
+  { from: 11, to: 20, label: "Medium", range: "Problems 11–20", badge: "medium" },
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" },
+  { from: 31, to: 48, label: "Extension", range: "Problems 31–48", badge: null },
+  { from: 49, to: 58, label: "Applications", range: "Problems 49–58", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

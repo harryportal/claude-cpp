@@ -1,0 +1,1108 @@
+<title>STL String Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL String Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Build by appending",
+  p: String.raw`Start with the string ab. Add c with +=, then append de. Print the result.`,
+  ex: String.raw`abcde`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "ab";
+    s += "c";
+    s.append("de");
+    std::cout << s << '\n';
+}`,
+  why: String.raw`operator+= and append both add to the end of the string, growing its buffer as needed.` },
+
+{ n: 2, d: "easy", t: "Size and emptiness",
+  p: String.raw`Print the size of the string hello, then whether it is empty as true or false, separated by a space.`,
+  ex: String.raw`5 false`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "hello";
+    std::cout << s.size() << ' ' << std::boolalpha << s.empty() << '\n';
+}`,
+  why: String.raw`size counts characters, not bytes of any particular encoding. A string is empty exactly when its size is zero.` },
+
+{ n: 3, d: "easy", t: "at() checks the index",
+  p: String.raw`For the string abc, print the character at index 1. Then try index 10 with at, and print bad if it throws std::out_of_range. Separate the two results with a space.`,
+  ex: String.raw`b bad`,
+  code: String.raw`#include <iostream>
+#include <stdexcept>
+#include <string>
+
+int main() {
+    const std::string s = "abc";
+    std::cout << s.at(1) << ' ';
+    try {
+        std::cout << s.at(10);
+    } catch (const std::out_of_range&) {
+        std::cout << "bad";
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`at throws std::out_of_range for an invalid index, while operator[] leaves the check to you.` },
+
+{ n: 4, d: "easy", t: "Find a substring",
+  p: String.raw`Print the index where the substring lo first appears in hello.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "hello";
+    std::cout << s.find("lo") << '\n';
+}`,
+  why: String.raw`find returns the position of the first match, or npos when there is none.` },
+
+{ n: 5, d: "easy", t: "npos means not found",
+  p: String.raw`Check whether the character z appears in the string hello, by comparing find's result with npos. Print true if it is not found.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "hello";
+    std::cout << std::boolalpha << (s.find('z') == std::string::npos) << '\n';
+}`,
+  why: String.raw`npos is the largest possible size_t value, so it can never be a valid position. Compare with it explicitly.` },
+
+{ n: 6, d: "easy", t: "Extract a suffix",
+  p: String.raw`From the string hello world, print the substring that starts at index 6.`,
+  ex: String.raw`world`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "hello world";
+    std::cout << s.substr(6) << '\n';
+}`,
+  why: String.raw`substr with one argument returns everything from that index to the end. It returns a new string rather than a view.` },
+
+{ n: 7, d: "easy", t: "Lexicographic comparison",
+  p: String.raw`Compare apple with banana using the compare member. Print true if the result is negative.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string a = "apple", b = "banana";
+    std::cout << std::boolalpha << (a.compare(b) < 0) << '\n';
+}`,
+  why: String.raw`compare returns a negative, zero or positive value. Strings compare character by character, so a comes before b.` },
+
+{ n: 8, d: "easy", t: "Insert characters",
+  p: String.raw`Start with ace. Insert b at index 1, then insert d at index 3. Print the result.`,
+  ex: String.raw`abcde`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "ace";
+    s.insert(1, "b");
+    s.insert(3, "d");
+    std::cout << s << '\n';
+}`,
+  why: String.raw`insert shifts the characters from the given index to the right to make room. Each insertion changes the indices of the characters after it.` },
+
+{ n: 9, d: "easy", t: "Erase a range",
+  p: String.raw`Start with hello. Erase the three characters starting at index 1, then print the result.`,
+  ex: String.raw`ho`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "hello";
+    s.erase(1, 3);
+    std::cout << s << '\n';
+}`,
+  why: String.raw`erase takes a starting index and a count. The characters after the removed range move left to fill the gap.` },
+
+{ n: 10, d: "easy", t: "Replace a character",
+  p: String.raw`Start with a-b-c. Replace the single character at index 1 with +. Print the result.`,
+  ex: String.raw`a+b-c`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "a-b-c";
+    s.replace(1, 1, "+");
+    std::cout << s << '\n';
+}`,
+  why: String.raw`replace takes a position, a count of characters to remove, and the text to put in their place.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Count words in a sentence",
+  p: String.raw`Count the words in the sentence "the quick  brown", which has two spaces between quick and brown. Print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("the quick  brown");
+    int words = 0;
+    for (std::string w; in >> w;) ++words;
+    std::cout << words << '\n';
+}`,
+  why: String.raw`Stream extraction skips any run of whitespace, so repeated spaces do not create empty words.` },
+
+{ n: 12, d: "medium", t: "Split on a delimiter keeping empty fields",
+  p: String.raw`Split the string a,b,,c on each comma, keeping empty fields. Print the fields separated by a bar.`,
+  ex: String.raw`a|b||c`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "a,b,,c";
+    std::string out;
+    bool first = true;
+    std::size_t start = 0;
+    while (true) {
+        const std::size_t pos = s.find(',', start);
+        if (!first) out += '|';
+        out += s.substr(start, pos == std::string::npos ? std::string::npos : pos - start);
+        first = false;
+        if (pos == std::string::npos) break;
+        start = pos + 1;
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Each field runs from the previous delimiter to the next one. When no delimiter remains, the last field is everything left, which keeps empty fields in the middle.` },
+
+{ n: 13, d: "medium", t: "Trim surrounding whitespace",
+  p: String.raw`Trim the leading and trailing spaces and tabs from the string "  hi there" followed by a space and a tab. Print the result inside square brackets.`,
+  ex: String.raw`[hi there]`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "  hi there \t";
+    const auto first = s.find_first_not_of(" \t");
+    const auto last = s.find_last_not_of(" \t");
+    std::cout << '[' << s.substr(first, last - first + 1) << "]\n";
+}`,
+  why: String.raw`find_first_not_of and find_last_not_of locate the first and last characters that are not whitespace, and substr keeps what lies between them.` },
+
+{ n: 14, d: "medium", t: "Reverse the order of words",
+  p: String.raw`Reverse the order of the words in the sentence one two three and print the result with single spaces between the words.`,
+  ex: String.raw`three two one`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::istringstream in("one two three");
+    std::vector<std::string> words;
+    for (std::string w; in >> w;) words.push_back(w);
+    std::string out;
+    for (auto it = words.rbegin(); it != words.rend(); ++it) {
+        if (!out.empty()) out += ' ';
+        out += *it;
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Collecting the words first lets the output walk them backwards and join them with single spaces.` },
+
+{ n: 15, d: "medium", t: "Palindrome ignoring case and punctuation",
+  p: String.raw`Check whether the phrase A man, a plan, a canal: Panama reads the same forwards and backwards when letters are compared without case and punctuation is ignored. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "A man, a plan, a canal: Panama";
+    std::string clean;
+    for (unsigned char c : s)
+        if (std::isalnum(c)) clean += static_cast<char>(std::tolower(c));
+    bool ok = true;
+    for (std::size_t i = 0, j = clean.size() - 1; i < j; ++i, --j)
+        if (clean[i] != clean[j]) { ok = false; break; }
+    std::cout << std::boolalpha << ok << '\n';
+}`,
+  why: String.raw`Filtering to lowercase letters and digits first reduces the question to a plain palindrome test with two indices moving inward.` },
+
+{ n: 16, d: "medium", t: "Anagram check by sorting",
+  p: String.raw`Check whether listen and silent are anagrams of each other. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string a = "listen", b = "silent";
+    std::sort(a.begin(), a.end());
+    std::sort(b.begin(), b.end());
+    std::cout << std::boolalpha << (a == b) << '\n';
+}`,
+  why: String.raw`Two strings are anagrams exactly when their sorted characters are equal, so sorting both reduces the test to one comparison.` },
+
+{ n: 17, d: "medium", t: "Count vowels ignoring case",
+  p: String.raw`Count the vowels a, e, i, o and u in the string Programming Language, ignoring case. Print the count.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "Programming Language";
+    int count = 0;
+    for (unsigned char c : s) {
+        switch (std::tolower(c)) {
+            case 'a': case 'e': case 'i': case 'o': case 'u': ++count; break;
+            default: break;
+        }
+    }
+    std::cout << count << '\n';
+}`,
+  why: String.raw`Converting each character to lowercase before the check makes one set of letters cover both cases.` },
+
+{ n: 18, d: "medium", t: "Caesar shift with wrap-around",
+  p: String.raw`Shift each lowercase letter of xyz abc forward by three places, wrapping z back to a. Leave spaces unchanged. Print the result.`,
+  ex: String.raw`abc def`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "xyz abc";
+    for (char& c : s)
+        if (c >= 'a' && c <= 'z') c = static_cast<char>('a' + (c - 'a' + 3) % 26);
+    std::cout << s << '\n';
+}`,
+  why: String.raw`Subtracting 'a' maps each letter to an index from 0 to 25, the modulo wraps it, and adding 'a' back gives the shifted letter.` },
+
+{ n: 19, d: "medium", t: "Remove all spaces",
+  p: String.raw`Remove every space from the string a b  c so only the letters remain. Print the result.`,
+  ex: String.raw`abc`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "a b  c";
+    s.erase(std::remove(s.begin(), s.end(), ' '), s.end());
+    std::cout << s << '\n';
+}`,
+  why: String.raw`remove shifts the kept characters to the front, and erase trims the leftover tail. Together they remove every match in one pass.` },
+
+{ n: 20, d: "medium", t: "Uppercase a string",
+  p: String.raw`Convert the string Hello, World to uppercase and print it.`,
+  ex: String.raw`HELLO, WORLD`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "Hello, World";
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    std::cout << s << '\n';
+}`,
+  why: String.raw`Casting to unsigned char before toupper avoids undefined behaviour on negative char values. transform writes the result back into the same string.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Longest common prefix",
+  p: String.raw`Find the longest common prefix of the strings flower, flow and flight. Print it.`,
+  ex: String.raw`fl`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> words{"flower", "flow", "flight"};
+    std::string prefix = words.front();
+    for (const auto& w : words) {
+        std::size_t i = 0;
+        while (i < prefix.size() && i < w.size() && prefix[i] == w[i]) ++i;
+        prefix.resize(i);
+    }
+    std::cout << prefix << '\n';
+}`,
+  why: String.raw`Start with the first word and shrink it to the part that matches each following word. The prefix can only get shorter, so one pass per word is enough.` },
+
+{ n: 22, d: "hard", t: "Run-length decoding",
+  p: String.raw`Decode the run-length string 3a2b1c, where each number says how many times the following letter repeats. Print the decoded string.`,
+  ex: String.raw`aaabbc`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string enc = "3a2b1c";
+    std::string out;
+    std::size_t i = 0;
+    while (i < enc.size()) {
+        std::size_t count = 0;
+        while (std::isdigit(static_cast<unsigned char>(enc[i]))) {
+            count = count * 10 + (enc[i] - '0');
+            ++i;
+        }
+        out.append(count, enc[i]);
+        ++i;
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`The digits before each letter form a count, which append(count, c) writes in one call. Multi-digit counts work because each digit shifts the running total by a factor of ten.` },
+
+{ n: 23, d: "hard", t: "View a slice without copying",
+  p: String.raw`Create a string_view over the string hello world. Take the first five characters as a second view, print that view, then print true if its data pointer equals the original string's data pointer. Separate the two results with a space.`,
+  ex: String.raw`hello true`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <string_view>
+
+int main() {
+    const std::string s = "hello world";
+    const std::string_view sv = s;
+    const std::string_view head = sv.substr(0, 5);
+    std::cout << head << ' ' << std::boolalpha << (head.data() == s.data()) << '\n';
+}`,
+  why: String.raw`A string_view only refers to characters owned by another object. Taking a substring adjusts the pointer and length, so no characters are copied.` },
+
+{ n: 24, d: "hard", t: "Sum numbers in a line",
+  p: String.raw`Parse the numbers in the line 12 7 30 using a string stream, and print their sum.`,
+  ex: String.raw`49`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("12 7 30");
+    int total = 0, value = 0;
+    while (in >> value) total += value;
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Extracting into an int skips the spaces between the numbers and stops at the end of the line, so the loop needs no manual parsing.` },
+
+{ n: 25, d: "hard", t: "Format with zero padding",
+  p: String.raw`Using the C++20 formatting library, format the number 7 padded with zeros to three digits, followed by a hyphen and the letter x. Print the result.`,
+  ex: String.raw`007-x`,
+  code: String.raw`#include <format>
+#include <iostream>
+
+int main() {
+    std::cout << std::format("{:03}-{}", 7, 'x') << '\n';
+}`,
+  why: String.raw`std::format takes a format string with replacement fields. The field 03 pads the integer with zeros to a width of three.` },
+
+{ n: 26, d: "hard", t: "Find all occurrences",
+  p: String.raw`Find every starting index where ab occurs in the string abcabab, including overlapping matches. Print the indices separated by spaces.`,
+  ex: String.raw`0 3 5`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "abcabab", pat = "ab";
+    bool first = true;
+    for (std::size_t pos = s.find(pat); pos != std::string::npos; pos = s.find(pat, pos + 1)) {
+        std::cout << (first ? "" : " ") << pos;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Searching again from one position past the previous match picks up overlapping occurrences as well as separate ones.` },
+
+{ n: 27, d: "hard", t: "Reserve capacity ahead of growth",
+  p: String.raw`Create an empty string and reserve room for at least 100 characters. Print true if its capacity is at least 100.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s;
+    s.reserve(100);
+    std::cout << std::boolalpha << (s.capacity() >= 100) << '\n';
+}`,
+  why: String.raw`reserve allocates capacity without changing the size. Appends then avoid reallocating until the reserved space is used up.` },
+
+{ n: 28, d: "easy", t: "Sort the characters",
+  p: String.raw`Sort the characters of banana in ascending order and print the result.`,
+  ex: String.raw`aaabnn`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "banana";
+    std::sort(s.begin(), s.end());
+    std::cout << s << '\n';
+}`,
+  why: String.raw`A string is a sequence of characters with random-access iterators, so the standard sort works on it directly.` },
+
+{ n: 29, d: "medium", t: "Rotation check",
+  p: String.raw`Check whether erbottlewat is a rotation of waterbottle, meaning it is the same string with some prefix moved to the end. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string a = "waterbottle", b = "erbottlewat";
+    const bool rotation = a.size() == b.size() && (a + a).find(b) != std::string::npos;
+    std::cout << std::boolalpha << rotation << '\n';
+}`,
+  why: String.raw`Every rotation of a string appears inside the string concatenated with itself. The length check rules out matches that are only substrings of a longer string.` },
+
+{ n: 30, d: "hard", t: "Edit distance",
+  p: String.raw`Compute the minimum number of single-character insertions, deletions and substitutions needed to turn kitten into sitting. Print the number.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::string a = "kitten", b = "sitting";
+    std::vector<std::vector<int>> dp(a.size() + 1, std::vector<int>(b.size() + 1, 0));
+    for (std::size_t i = 0; i <= a.size(); ++i) dp[i][0] = static_cast<int>(i);
+    for (std::size_t j = 0; j <= b.size(); ++j) dp[0][j] = static_cast<int>(j);
+    for (std::size_t i = 1; i <= a.size(); ++i)
+        for (std::size_t j = 1; j <= b.size(); ++j) {
+            const int cost = a[i - 1] == b[j - 1] ? 0 : 1;
+            dp[i][j] = std::min({dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost});
+        }
+    std::cout << dp[a.size()][b.size()] << '\n';
+}`,
+  why: String.raw`dp[i][j] is the cost of turning the first i characters of a into the first j of b. Each cell takes the cheapest of deleting, inserting, or matching or substituting the last characters.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "easy", t: "Default string is empty",
+  p: String.raw`Create a default-constructed string and print whether it is empty, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s;
+    std::cout << std::boolalpha << s.empty() << '\n';
+}`,
+  why: String.raw`A default-constructed string holds no characters.` },
+
+{ n: 32, d: "medium", t: "Embedded null characters",
+  p: String.raw`Create a string from the five characters a, b, the null character, c and d. Print its size, then the length of the C string obtained from c_str, separated by a space.`,
+  ex: String.raw`5 2`,
+  code: String.raw`#include <cstring>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s("ab\0cd", 5);
+    std::cout << s.size() << ' ' << std::strlen(s.c_str()) << '\n';
+}`,
+  why: String.raw`std::string tracks its length separately, so it can hold null characters. c_str returns a pointer that ends at the first null, which strlen measures.` },
+
+{ n: 33, d: "easy", t: "npos is the largest size",
+  p: String.raw`Print true if std::string::npos equals the largest value that std::size_t can hold.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <limits>
+#include <string>
+
+int main() {
+    std::cout << std::boolalpha
+              << (std::string::npos == std::numeric_limits<std::size_t>::max()) << '\n';
+}`,
+  why: String.raw`npos is defined as the maximum value of size_type, which is why it can signal failure without clashing with any real index.` },
+
+{ n: 34, d: "easy", t: "Push and pop at the back",
+  p: String.raw`Start with ab. Push c onto the back, then pop it off again. Print the back character and the size, separated by a space.`,
+  ex: String.raw`b 2`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "ab";
+    s.push_back('c');
+    s.pop_back();
+    std::cout << s.back() << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`push_back and pop_back add and remove one character at the end, so a string can act as a stack of characters.` },
+
+{ n: 35, d: "easy", t: "Parse a hexadecimal number",
+  p: String.raw`Convert the hexadecimal string ff to an integer with std::stoi and print it.`,
+  ex: String.raw`255`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << std::stoi("ff", nullptr, 16) << '\n';
+}`,
+  why: String.raw`The third argument of stoi is the number base, so the same function parses decimal, hexadecimal or binary text.` },
+
+{ n: 36, d: "easy", t: "Convert a double to text",
+  p: String.raw`Convert the double 2.5 to a string with to_string and print it.`,
+  ex: String.raw`2.500000`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << std::to_string(2.5) << '\n';
+}`,
+  why: String.raw`to_string on a floating-point value uses a fixed format with six digits after the decimal point.` },
+
+{ n: 37, d: "medium", t: "Case-insensitive equality",
+  p: String.raw`Check whether HeLLo and hello are equal when letters are compared without case. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string a = "HeLLo", b = "hello";
+    auto lower = [](std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return s;
+    };
+    std::cout << std::boolalpha << (lower(a) == lower(b)) << '\n';
+}`,
+  why: String.raw`Lowercasing both strings first turns the case-insensitive question into an ordinary comparison.` },
+
+{ n: 38, d: "easy", t: "Swap two strings",
+  p: String.raw`Create the strings a and b. Swap them, then print both separated by a space.`,
+  ex: String.raw`b a`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::string a = "a", b = "b";
+    std::swap(a, b);
+    std::cout << a << ' ' << b << '\n';
+}`,
+  why: String.raw`swap exchanges the internal buffers of two strings, so no characters are copied.` },
+
+{ n: 39, d: "medium", t: "string_view comparison with a literal",
+  p: String.raw`Create a string_view of the text abc and print true if it equals the literal abc.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string_view>
+
+int main() {
+    const std::string_view sv = "abc";
+    std::cout << std::boolalpha << (sv == "abc") << '\n';
+}`,
+  why: String.raw`string_view has comparison operators that work with string literals directly, without building a string object.` },
+
+{ n: 40, d: "medium", t: "Moved-from strings are empty",
+  p: String.raw`Create the string a with the value data, then move it into b. Print whether a is empty after the move, as true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+int main() {
+    std::string a = "data";
+    std::string b = std::move(a);
+    std::cout << std::boolalpha << a.empty() << '\n';
+}`,
+  why: String.raw`A moved-from string is left in a valid but unspecified state. In practice, std::string's move constructor leaves the source empty.` },
+
+{ n: 41, d: "medium", t: "Keep the first occurrence of each character",
+  p: String.raw`From the string mississippi, remove every character that already appeared earlier, keeping the first occurrence of each. Print the result.`,
+  ex: String.raw`misp`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_set>
+
+int main() {
+    std::string s = "mississippi";
+    std::unordered_set<char> seen;
+    s.erase(std::remove_if(s.begin(), s.end(), [&seen](char c) { return !seen.insert(c).second; }),
+            s.end());
+    std::cout << s << '\n';
+}`,
+  why: String.raw`remove_if visits characters in order, so a set of characters seen so far decides which later copies to drop.` },
+
+{ n: 42, d: "medium", t: "Replace every occurrence",
+  p: String.raw`In the string cat catalog cat, replace every occurrence of cat with dog. Print the result.`,
+  ex: String.raw`dog dogalog dog`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "cat catalog cat";
+    const std::string from = "cat", to = "dog";
+    for (std::size_t pos = s.find(from); pos != std::string::npos; pos = s.find(from, pos + to.size()))
+        s.replace(pos, from.size(), to);
+    std::cout << s << '\n';
+}`,
+  why: String.raw`After each replacement the search resumes past the new text, so a replacement is never matched again.` },
+
+{ n: 43, d: "easy", t: "Prefix and suffix checks",
+  p: String.raw`For the file name report.txt, print whether it starts with rep and whether it ends with .txt, separated by a space.`,
+  ex: String.raw`true true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string name = "report.txt";
+    std::cout << std::boolalpha << name.starts_with("rep") << ' ' << name.ends_with(".txt") << '\n';
+}`,
+  why: String.raw`starts_with and ends_with test a prefix or suffix directly, which is clearer than comparing substrings by hand.` },
+
+{ n: 44, d: "easy", t: "Contains check",
+  p: String.raw`Print whether the string haystack contains the substring st.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "haystack";
+    std::cout << std::boolalpha << s.contains("st") << '\n';
+}`,
+  why: String.raw`contains returns true when the substring is present, and it is a readable alternative to comparing find with npos.` },
+
+{ n: 45, d: "easy", t: "Characters as integers",
+  p: String.raw`Print the integer value of the character A, then the character two places after A. Separate the two results with a space.`,
+  ex: String.raw`65 C`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    std::cout << static_cast<int>('A') << ' ' << static_cast<char>('A' + 2) << '\n';
+}`,
+  why: String.raw`Characters are small integers in the character set, so arithmetic on them produces a valid code that can be cast back to a character.` },
+
+{ n: 46, d: "medium", t: "Count one character",
+  p: String.raw`Count how many times the letter a appears in abracadabra. Print the count.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+int main() {
+    const std::string s = "abracadabra";
+    std::cout << std::count(s.begin(), s.end(), 'a') << '\n';
+}`,
+  why: String.raw`count scans the characters once and tallies the matches, so it works on a string as on any sequence.` },
+
+{ n: 47, d: "medium", t: "Join strings with a separator",
+  p: String.raw`Join the strings a, b and c with the separator ", " between each pair, and print the result.`,
+  ex: String.raw`a, b, c`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> parts{"a", "b", "c"};
+    std::string out;
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        if (i > 0) out += ", ";
+        out += parts[i];
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Adding the separator before every element except the first gives exactly one separator between each pair.` },
+
+{ n: 48, d: "easy", t: "Strip leading zeros",
+  p: String.raw`Remove the leading zeros from 000120, keeping the number itself, and print the result.`,
+  ex: String.raw`120`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "000120";
+    const auto first = s.find_first_not_of('0');
+    s = (first == std::string::npos) ? "0" : s.substr(first);
+    std::cout << s << '\n';
+}`,
+  why: String.raw`find_first_not_of finds the first digit that is not zero, and substr keeps everything from there. An all-zero string is special-cased to 0.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "medium", t: "Read a CSV field",
+  p: String.raw`Take the line name,age,city and print its third field, which is the text after the second comma.`,
+  ex: String.raw`city`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("name,age,city");
+    std::string field;
+    for (int i = 0; i < 3 && std::getline(in, field, ','); ++i) {}
+    std::cout << field << '\n';
+}`,
+  why: String.raw`getline with a delimiter reads one field at a time, which is how simple CSV lines are split without a parser.` },
+
+{ n: 50, d: "medium", t: "Fill a template placeholder",
+  p: String.raw`In the template Hello {name}, replace the placeholder {name} with Ann and print the result.`,
+  ex: String.raw`Hello Ann`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s = "Hello {name}";
+    const std::string key = "{name}", value = "Ann";
+    const auto pos = s.find(key);
+    if (pos != std::string::npos) s.replace(pos, key.size(), value);
+    std::cout << s << '\n';
+}`,
+  why: String.raw`find locates the placeholder, and replace swaps it for the value using the placeholder's length.` },
+
+{ n: 51, d: "medium", t: "Validate an identifier",
+  p: String.raw`Check whether _var1 and 1var are valid identifiers. An identifier must start with a letter or underscore, and the rest must be letters, digits or underscores. Print the two results separated by a space.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <string>
+
+bool valid(const std::string& s) {
+    if (s.empty()) return false;
+    const unsigned char first = static_cast<unsigned char>(s[0]);
+    if (!std::isalpha(first) && s[0] != '_') return false;
+    for (unsigned char c : s)
+        if (!std::isalnum(c) && c != '_') return false;
+    return true;
+}
+
+int main() {
+    std::cout << std::boolalpha << valid("_var1") << ' ' << valid("1var") << '\n';
+}`,
+  why: String.raw`The first character follows a stricter rule than the rest, so it is checked separately before the loop over the remaining characters.` },
+
+{ n: 52, d: "easy", t: "Mask all but the last four digits",
+  p: String.raw`Replace all but the last four characters of 4111111111111234 with asterisks, then print the result.`,
+  ex: String.raw`************1234`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string card = "4111111111111234";
+    card.replace(0, card.size() - 4, card.size() - 4, '*');
+    std::cout << card << '\n';
+}`,
+  why: String.raw`replace can fill a range with repeated characters. Replacing everything before the last four positions hides the number while keeping its length.` },
+
+{ n: 53, d: "medium", t: "Title-case each word",
+  p: String.raw`Capitalise the first letter of each word in hello big world and lowercase the rest of each word. Print the result with single spaces between words.`,
+  ex: String.raw`Hello Big World`,
+  code: String.raw`#include <cctype>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::istringstream in("hello big world");
+    std::vector<std::string> words;
+    for (std::string w; in >> w;) {
+        for (auto& c : w) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        w[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(w[0])));
+        words.push_back(w);
+    }
+    for (std::size_t i = 0; i < words.size(); ++i)
+        std::cout << words[i] << (i + 1 < words.size() ? " " : "\n");
+}`,
+  why: String.raw`Each word is lowercased first so that only its initial letter is capitalised afterwards. Splitting on whitespace keeps the spacing clean.` },
+
+{ n: 54, d: "medium", t: "Most frequent word",
+  p: String.raw`Count the words in the sentence the cat the dog the and print the word that appears most often.`,
+  ex: String.raw`the`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("the cat the dog the");
+    std::map<std::string, int> counts;
+    for (std::string w; in >> w;) ++counts[w];
+    std::string best;
+    int bestCount = 0;
+    for (const auto& [word, n] : counts)
+        if (n > bestCount) { best = word; bestCount = n; }
+    std::cout << best << '\n';
+}`,
+  why: String.raw`A map counts each distinct word, and a single pass keeps the word with the highest count seen so far.` },
+
+{ n: 55, d: "medium", t: "Extract the host from a URL",
+  p: String.raw`Extract the host name from https://example.com/path?q=1. The host is the text after the scheme separator :// and before the next slash. Print it.`,
+  ex: String.raw`example.com`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string url = "https://example.com/path?q=1";
+    const auto start = url.find("://") + 3;
+    const auto end = url.find('/', start);
+    std::cout << url.substr(start, end - start) << '\n';
+}`,
+  why: String.raw`Locating the scheme separator gives the start of the host. The next slash after it marks where the host ends.` },
+
+{ n: 56, d: "easy", t: "Binary text to a number",
+  p: String.raw`Convert the binary string 1011 to an integer with std::stoi and print it.`,
+  ex: String.raw`11`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << std::stoi("1011", nullptr, 2) << '\n';
+}`,
+  why: String.raw`stoi with base 2 reads each digit as a power of two, so the result is the binary value.` },
+
+{ n: 57, d: "medium", t: "Hamming distance",
+  p: String.raw`Count the positions where karolin and kathrin have different characters. Both strings have the same length. Print the count.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string a = "karolin", b = "kathrin";
+    int diff = 0;
+    for (std::size_t i = 0; i < a.size(); ++i)
+        if (a[i] != b[i]) ++diff;
+    std::cout << diff << '\n';
+}`,
+  why: String.raw`Comparing the two strings position by position counts the mismatches, and equal lengths guarantee every index is valid for both.` },
+
+{ n: 58, d: "medium", t: "Spell out a number",
+  p: String.raw`Spell out the digits of 2026 as words separated by spaces, using a lookup table of digit names. Print the result.`,
+  ex: String.raw`two zero two six`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> names{"zero", "one", "two", "three", "four",
+                                         "five", "six", "seven", "eight", "nine"};
+    const std::string number = std::to_string(2026);
+    std::string out;
+    for (char c : number) {
+        if (!out.empty()) out += ' ';
+        out += names[c - '0'];
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Converting the number to text makes each digit a character, and subtracting '0' turns it into an index into the name table.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-string-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
+  { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>

@@ -1,0 +1,1535 @@
+<title>unordered_map Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">std::unordered_map · 58 problems</p>
+    <h1>unordered_map Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Basics ----------
+{ n: 1, g: "Basics", d: "easy", t: "Insert and look up",
+  p: String.raw`Create an unordered_map<string, int> holding apple to 3 and pear to 5. Print the value for pear. Then look up kiwi and print its value, or -1 if it is absent.`,
+  ex: String.raw`5 -1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> m{{"apple", 3}, {"pear", 5}};
+    if (auto it = m.find("pear"); it != m.end()) std::cout << it->second << ' ';   // 5
+    auto it = m.find("kiwi");
+    std::cout << (it == m.end() ? -1 : it->second) << '\n';                       // -1
+}`,
+  why: String.raw`find returns an iterator to the element, or end() when the key is missing. It never inserts anything.` },
+
+{ n: 2, g: "Basics", d: "easy", t: "Default insertion with operator[]",
+  p: String.raw`On an empty unordered_map<string, int>, read the value for the key x using operator[]. Print that value and the size of the map afterwards.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> m;
+    int v = m["x"];
+    std::cout << v << ' ' << m.size() << '\n';   // 0 1
+}`,
+  why: String.raw`operator[] inserts a value-initialised element for a missing key, so reading through it changes the map.` },
+
+{ n: 3, g: "Basics", d: "easy", t: "Erase by key",
+  p: String.raw`Start with a, b and c mapped to 1, 2 and 3. Erase the key b, then erase the key z. Print the two return values and the final size.`,
+  ex: String.raw`1 0 2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
+    std::cout << m.erase("b") << ' ' << m.erase("z") << ' ' << m.size() << '\n';   // 1 0 2
+}`,
+  why: String.raw`erase(key) returns how many elements were removed, which is 0 or 1 for a unique-key map.` },
+
+{ n: 4, g: "Basics", d: "easy", t: "Membership checks",
+  p: String.raw`In an unordered_map<string, int> containing only a, print whether a is present using count, then whether z is present using contains. Print booleans.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> m{{"a", 1}};
+    std::cout << std::boolalpha << (m.count("a") > 0) << ' ' << m.contains("z") << '\n';   // true false
+}`,
+  why: String.raw`count returns a size_t that is 0 or 1 here, while contains returns a bool directly. Both leave the map unchanged.` },
+
+{ n: 5, g: "Basics", d: "easy", t: "emplace does not overwrite",
+  p: String.raw`Call emplace on an unordered_map<int, string> with key 1 and value one, then again with key 1 and value uno. Print whether each call inserted, then the value stored under key 1.`,
+  ex: String.raw`true false one`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, std::string> m;
+    auto [it1, ok1] = m.emplace(1, "one");
+    auto [it2, ok2] = m.emplace(1, "uno");
+    std::cout << std::boolalpha << ok1 << ' ' << ok2 << ' ' << m[1] << '\n';   // true false one
+}`,
+  why: String.raw`emplace constructs only when the key is absent. Its result says whether the insertion happened, and an existing value is left alone.` },
+
+{ n: 6, g: "Basics", d: "easy", t: "try_emplace versus insert_or_assign",
+  p: String.raw`Start with k mapped to first in an unordered_map<string, string>. Call try_emplace with k and second, print the value of k, then call insert_or_assign with k and third and print the value again.`,
+  ex: String.raw`first third`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, std::string> m{{"k", "first"}};
+    m.try_emplace("k", "second");
+    std::cout << m["k"] << ' ';          // first
+    m.insert_or_assign("k", "third");
+    std::cout << m["k"] << '\n';         // third
+}`,
+  why: String.raw`try_emplace leaves an existing value alone, while insert_or_assign always replaces it.` },
+
+{ n: 7, g: "Basics", d: "easy", t: "Sum the values",
+  p: String.raw`Given an unordered_map<string, int> with a to 4, b to 6 and c to 10, print the sum of all its values.`,
+  ex: String.raw`20`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> m{{"a", 4}, {"b", 6}, {"c", 10}};
+    long long total = 0;
+    for (const auto& [key, value] : m) total += value;
+    std::cout << total << '\n';   // 20
+}`,
+  why: String.raw`Range-based for visits every element once, in an order that is unspecified. Summing is independent of that order.` },
+
+{ n: 8, g: "Basics", d: "easy", t: "Reserve buckets",
+  p: String.raw`Reserve room for 100 elements in an empty unordered_map<int, int>, then print whether its bucket count is at least 100.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, int> m;
+    m.reserve(100);
+    std::cout << std::boolalpha << (m.bucket_count() >= 100) << '\n';   // true
+}`,
+  why: String.raw`reserve sizes the table so that the requested number of elements fits under the maximum load factor without a rehash.` },
+
+{ n: 9, g: "Basics", d: "medium", t: "Merge without overwriting",
+  p: String.raw`m1 holds 1 to a and 2 to b. m2 holds 2 to x and 3 to c. Merge m2 into m1 by moving nodes. Print m1's value for key 2, the size of m1, and the size of m2.`,
+  ex: String.raw`b 3 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, std::string> m1{{1, "a"}, {2, "b"}}, m2{{2, "x"}, {3, "c"}};
+    m1.merge(m2);
+    std::cout << m1[2] << ' ' << m1.size() << ' ' << m2.size() << '\n';   // b 3 1
+}`,
+  why: String.raw`merge transfers nodes whose keys are not already in the destination. A key that collides stays in the source map, so m2 keeps key 2.` },
+
+{ n: 10, g: "Basics", d: "medium", t: "Extract and rekey a node",
+  p: String.raw`Start with 1 to a and 2 to b. Extract the node for key 1, change its key to 5, and insert it back. Print whether key 1 exists, then the value of key 5.`,
+  ex: String.raw`false a`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+int main() {
+    std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}};
+    auto node = m.extract(1);
+    node.key() = 5;
+    m.insert(std::move(node));
+    std::cout << std::boolalpha << m.contains(1) << ' ' << m.at(5) << '\n';   // false a
+}`,
+  why: String.raw`A node handle owns the key and value. Changing the key through the handle avoids copying the mapped value.` },
+
+{ n: 11, g: "Basics", d: "medium", t: "Character frequencies",
+  p: String.raw`Count how many times each character appears in banana. Print each character with its count, in alphabetical order of the characters.`,
+  ex: String.raw`a:3 b:1 n:2 `,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<char, int> freq;
+    for (char c : std::string("banana")) ++freq[c];
+    std::map<char, int> sorted(freq.begin(), freq.end());
+    for (const auto& [c, n] : sorted) std::cout << c << ':' << n << ' ';   // a:3 b:1 n:2
+}`,
+  why: String.raw`An unordered map is not ordered, so the counts are copied into a std::map only to produce sorted output.` },
+
+{ n: 12, g: "Basics", d: "medium", t: "Map equality",
+  p: String.raw`Compare two unordered_map<int, string> values. The first holds 1 to a and 2 to b, and the second holds the same pairs inserted in the other order. Print whether they are equal. Then compare the first with a map holding only 1 to a and print that result.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, std::string> a{{1, "a"}, {2, "b"}};
+    std::unordered_map<int, std::string> b{{2, "b"}, {1, "a"}};
+    std::unordered_map<int, std::string> c{{1, "a"}};
+    std::cout << std::boolalpha << (a == b) << ' ' << (a == c) << '\n';   // true false
+}`,
+  why: String.raw`Equality compares sizes and then each key's mapped value, so insertion order does not matter.` },
+
+// ---------- Counting and grouping ----------
+{ n: 13, g: "Counting and grouping", d: "medium", t: "Anagram groups",
+  p: String.raw`Group the words eat, tea, tan, ate, nat and bat by anagram class. Print each group's words separated by spaces, followed by a bar. Print the groups sorted lexicographically by their words.`,
+  ex: String.raw`bat | eat tea ate | tan nat | `,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::vector<std::string> words{"eat", "tea", "tan", "ate", "nat", "bat"};
+    std::unordered_map<std::string, std::vector<std::string>> groups;
+    for (const auto& w : words) {
+        std::string key = w;
+        std::sort(key.begin(), key.end());
+        groups[key].push_back(w);
+    }
+    std::vector<std::vector<std::string>> out;
+    for (auto& [key, g] : groups) out.push_back(g);
+    std::sort(out.begin(), out.end());
+    for (const auto& g : out) {
+        for (const auto& w : g) std::cout << w << ' ';
+        std::cout << "| ";
+    }
+}`,
+  why: String.raw`Sorting each word's letters produces a canonical key. Words with the same key land in one bucket.` },
+
+{ n: 14, g: "Counting and grouping", d: "medium", t: "Most frequent value",
+  p: String.raw`Return the most frequent value in a vector<int>. If several values share the top count, return the smallest of them. Print the result for 1, 3, 3, 2, 2.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int most_frequent(const std::vector<int>& v) {
+    std::unordered_map<int, int> cnt;
+    for (int x : v) ++cnt[x];
+    int best = v.front();
+    int bestc = 0;
+    for (const auto& [x, c] : cnt)
+        if (c > bestc || (c == bestc && x < best)) {
+            best = x;
+            bestc = c;
+        }
+    return best;
+}
+
+int main() {
+    std::cout << most_frequent({1, 3, 3, 2, 2}) << '\n';   // 2
+}`,
+  why: String.raw`The tie-break is applied during the scan, so the result does not depend on the map's iteration order.` },
+
+{ n: 15, g: "Counting and grouping", d: "medium", t: "First non-repeating character",
+  p: String.raw`Return the index of the first character in a string that appears exactly once. Return -1 if there is none. Print the results for leetcode and aabb.`,
+  ex: String.raw`0 -1`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int first_unique(const std::string& s) {
+    std::unordered_map<char, int> cnt;
+    for (char c : s) ++cnt[c];
+    for (std::size_t i = 0; i < s.size(); ++i)
+        if (cnt[s[i]] == 1) return static_cast<int>(i);
+    return -1;
+}
+
+int main() {
+    std::cout << first_unique("leetcode") << ' ' << first_unique("aabb") << '\n';   // 0 -1
+}`,
+  why: String.raw`Counting in a first pass means the second pass can answer each character's count in constant average time.` },
+
+{ n: 16, g: "Counting and grouping", d: "medium", t: "Subarrays with a target sum",
+  p: String.raw`Count the contiguous subarrays of a vector<int> whose sum equals k. Print the count for 1, 1, 1 with k = 2.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int subarray_sum_count(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> seen{{0, 1}};   // prefix sum -> occurrences
+    int sum = 0;
+    int count = 0;
+    for (int x : v) {
+        sum += x;
+        if (auto it = seen.find(sum - k); it != seen.end()) count += it->second;
+        ++seen[sum];
+    }
+    return count;
+}
+
+int main() {
+    std::cout << subarray_sum_count({1, 1, 1}, 2) << '\n';   // 2
+}`,
+  why: String.raw`A subarray from index i+1 to j sums to k exactly when prefix(j) minus k was seen as a prefix sum at some i. The map counts those earlier prefixes.` },
+
+{ n: 17, g: "Counting and grouping", d: "medium", t: "Longest balanced run",
+  p: String.raw`Given a vector of 0s and 1s, return the length of the longest contiguous subarray containing equal numbers of 0s and 1s. Print the result for 0, 1, 0.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int longest_balanced(const std::vector<int>& v) {
+    std::unordered_map<int, int> first{{0, -1}};   // balance -> first index seen
+    int bal = 0;
+    int best = 0;
+    for (int i = 0; i < static_cast<int>(v.size()); ++i) {
+        bal += v[i] == 1 ? 1 : -1;
+        if (auto it = first.find(bal); it != first.end())
+            best = std::max(best, i - it->second);
+        else
+            first[bal] = i;
+    }
+    return best;
+}
+
+int main() {
+    std::cout << longest_balanced({0, 1, 0}) << '\n';   // 2
+}`,
+  why: String.raw`Treat 1 as +1 and 0 as -1. A subarray is balanced exactly when two prefix balances are equal, so the first index of each balance gives the longest span.` },
+
+{ n: 18, g: "Counting and grouping", d: "medium", t: "Top k frequent values",
+  p: String.raw`Return the k most frequent values of a vector<int>, ordered by descending count and then by ascending value. Print the top 2 for 1, 1, 1, 2, 2, 3.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+std::vector<int> top_k_frequent(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> cnt;
+    for (int x : v) ++cnt[x];
+    std::vector<std::pair<int, int>> items(cnt.begin(), cnt.end());   // (value, count)
+    std::sort(items.begin(), items.end(), [](const auto& a, const auto& b) {
+        return a.second != b.second ? a.second > b.second : a.first < b.first;
+    });
+    std::vector<int> out;
+    for (int i = 0; i < k && i < static_cast<int>(items.size()); ++i) out.push_back(items[i].first);
+    return out;
+}
+
+int main() {
+    for (int x : top_k_frequent({1, 1, 1, 2, 2, 3}, 2)) std::cout << x << ' ';   // 1 2
+}`,
+  why: String.raw`The map gives counts in average constant time. Sorting the distinct values costs O(d log d), where d is the number of distinct values.` },
+
+{ n: 19, g: "Counting and grouping", d: "medium", t: "Positions of each value",
+  p: String.raw`For the vector 5, 3, 5, 2, collect the indices at which each value occurs. Print each value with its indices, in ascending order of value, followed by a semicolon.`,
+  ex: String.raw`2: 3; 3: 1; 5: 0 2; `,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <map>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::vector<int> v{5, 3, 5, 2};
+    std::unordered_map<int, std::vector<std::size_t>> idx;
+    for (std::size_t i = 0; i < v.size(); ++i) idx[v[i]].push_back(i);
+    std::map<int, std::vector<std::size_t>> sorted(idx.begin(), idx.end());
+    for (const auto& [val, ids] : sorted) {
+        std::cout << val << ':';
+        for (std::size_t i : ids) std::cout << ' ' << i;
+        std::cout << "; ";
+    }
+}`,
+  why: String.raw`Grouping positions by value is a single pass. Sorting the keys afterwards is only for stable output.` },
+
+{ n: 20, g: "Counting and grouping", d: "medium", t: "Isomorphic strings",
+  p: String.raw`Two strings are isomorphic when each character of the first maps to exactly one character of the second, and no two characters map to the same one. Print whether egg and add are isomorphic, then whether foo and bar are.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+bool isomorphic(const std::string& s, const std::string& t) {
+    if (s.size() != t.size()) return false;
+    std::unordered_map<char, char> st, ts;
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        auto sit = st.try_emplace(s[i], t[i]).first;
+        auto tit = ts.try_emplace(t[i], s[i]).first;
+        if (sit->second != t[i] || tit->second != s[i]) return false;
+    }
+    return true;
+}
+
+int main() {
+    std::cout << std::boolalpha << isomorphic("egg", "add") << ' ' << isomorphic("foo", "bar") << '\n';   // true false
+}`,
+  why: String.raw`Two maps, one in each direction, catch both a character mapping to two targets and two characters sharing a target.` },
+
+{ n: 21, g: "Counting and grouping", d: "medium", t: "Pairs with a fixed difference",
+  p: String.raw`Count the distinct values x in a vector<int> for which x + k is also present, with k greater than 0. Print the count for 1, 5, 3, 4, 2 with k = 2.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int pairs_with_diff(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> seen;
+    for (int x : v) ++seen[x];
+    int count = 0;
+    for (const auto& [x, n] : seen)
+        if (seen.contains(x + k)) ++count;
+    return count;
+}
+
+int main() {
+    std::cout << pairs_with_diff({1, 5, 3, 4, 2}, 2) << '\n';   // 3
+}`,
+  why: String.raw`Iterating over the distinct values and checking one neighbour per value counts each pair once, because k is positive.` },
+
+{ n: 22, g: "Counting and grouping", d: "medium", t: "First repeated value",
+  p: String.raw`Return the first value in a vector<int> that has already appeared earlier in the sequence. Return nothing if all values are distinct. Print the result for 2, 1, 3, 1, 2.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <unordered_map>
+#include <vector>
+
+std::optional<int> first_repeated(const std::vector<int>& v) {
+    std::unordered_map<int, bool> seen;
+    for (int x : v) {
+        if (seen.contains(x)) return x;
+        seen.emplace(x, true);
+    }
+    return std::nullopt;
+}
+
+int main() {
+    if (auto r = first_repeated({2, 1, 3, 1, 2})) std::cout << *r << '\n';   // 1
+}`,
+  why: String.raw`The first value whose key is already present is the first repeat encountered in order. The check happens before insertion.` },
+
+// ---------- Lookup patterns ----------
+{ n: 23, g: "Lookup patterns", d: "medium", t: "Count pairs with a target sum",
+  p: String.raw`Count pairs of positions i < j in a vector<int> whose values add up to k. Print the count for 1, 2, 3, 4, 3 with k = 6.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int pairs_sum(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> seen;   // value -> occurrences so far
+    int count = 0;
+    for (int x : v) {
+        if (auto it = seen.find(k - x); it != seen.end()) count += it->second;
+        ++seen[x];
+    }
+    return count;
+}
+
+int main() {
+    std::cout << pairs_sum({1, 2, 3, 4, 3}, 6) << '\n';   // 2
+}`,
+  why: String.raw`Each element looks back for its complement among earlier elements, so every pair is counted exactly once.` },
+
+{ n: 24, g: "Lookup patterns", d: "medium", t: "Duplicate within distance",
+  p: String.raw`Return true if a vector<int> contains two equal values whose indices differ by at most k. Print the result for 1, 2, 3, 1 with k = 3.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+bool nearby_dup(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> last;   // value -> most recent index
+    for (int i = 0; i < static_cast<int>(v.size()); ++i) {
+        if (auto it = last.find(v[i]); it != last.end() && i - it->second <= k) return true;
+        last[v[i]] = i;
+    }
+    return false;
+}
+
+int main() {
+    std::cout << std::boolalpha << nearby_dup({1, 2, 3, 1}, 3) << '\n';   // true
+}`,
+  why: String.raw`Only the most recent index of each value matters, because any closer earlier occurrence would already have triggered the check.` },
+
+{ n: 25, g: "Lookup patterns", d: "medium", t: "First index of each value",
+  p: String.raw`Record the first index at which each value appears in the vector 5, 3, 5, 2. Print each value and its first index in ascending order of value, using the format value@index followed by a space.`,
+  ex: String.raw`2@3 3@1 5@0 `,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <map>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::vector<int> v{5, 3, 5, 2};
+    std::unordered_map<int, std::size_t> first;
+    for (std::size_t i = 0; i < v.size(); ++i) first.try_emplace(v[i], i);
+    std::map<int, std::size_t> sorted(first.begin(), first.end());
+    for (const auto& [val, i] : sorted) std::cout << val << '@' << i << ' ';
+}`,
+  why: String.raw`try_emplace keeps the entry created by the first occurrence, so later occurrences leave it alone.` },
+
+{ n: 26, g: "Lookup patterns", d: "medium", t: "Word pattern matching",
+  p: String.raw`Given a pattern string and a sentence, return true if each pattern character maps to exactly one word and each word maps back to exactly one pattern character. Print the result for abba and dog cat cat dog.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+bool word_pattern(const std::string& pattern, const std::string& s) {
+    std::vector<std::string> words;
+    std::istringstream in(s);
+    for (std::string w; in >> w;) words.push_back(w);
+    if (words.size() != pattern.size()) return false;
+    std::unordered_map<char, std::string> p2w;
+    std::unordered_map<std::string, char> w2p;
+    for (std::size_t i = 0; i < pattern.size(); ++i) {
+        auto pit = p2w.try_emplace(pattern[i], words[i]).first;
+        auto wit = w2p.try_emplace(words[i], pattern[i]).first;
+        if (pit->second != words[i] || wit->second != pattern[i]) return false;
+    }
+    return true;
+}
+
+int main() {
+    std::cout << std::boolalpha << word_pattern("abba", "dog cat cat dog") << '\n';   // true
+}`,
+  why: String.raw`The same two-directional mapping as the isomorphic check, applied to words instead of characters.` },
+
+{ n: 27, g: "Lookup patterns", d: "medium", t: "Ransom note",
+  p: String.raw`Return true if the ransom note string can be formed from the characters of the magazine string, using each magazine character at most once. Print the results for aa from aab and for aaa from aab.`,
+  ex: String.raw`true false`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+bool can_construct(const std::string& ransom, const std::string& mag) {
+    std::unordered_map<char, int> have;
+    for (char c : mag) ++have[c];
+    for (char c : ransom)
+        if (--have[c] < 0) return false;
+    return true;
+}
+
+int main() {
+    std::cout << std::boolalpha << can_construct("aa", "aab") << ' ' << can_construct("aaa", "aab") << '\n';   // true false
+}`,
+  why: String.raw`Counting the available characters turns the question into a check that no count goes negative.` },
+
+{ n: 28, g: "Lookup patterns", d: "medium", t: "Longest substring without repeats",
+  p: String.raw`Return the length of the longest substring of a string that contains no repeated character. Print the result for abcabcbb.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int longest_unique(const std::string& s) {
+    std::unordered_map<char, int> last;   // character -> last index
+    int best = 0;
+    int left = 0;
+    for (int i = 0; i < static_cast<int>(s.size()); ++i) {
+        if (auto it = last.find(s[i]); it != last.end() && it->second >= left)
+            left = it->second + 1;
+        last[s[i]] = i;
+        best = std::max(best, i - left + 1);
+    }
+    return best;
+}
+
+int main() {
+    std::cout << longest_unique("abcabcbb") << '\n';   // 3
+}`,
+  why: String.raw`The window's left edge only moves forward. A repeated character jumps the left edge past its previous occurrence, so each index is visited once.` },
+
+{ n: 29, g: "Lookup patterns", d: "hard", t: "At most two distinct characters",
+  p: String.raw`Return the length of the longest substring of a string that contains at most two distinct characters. Print the result for eceba.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int at_most_two_distinct(const std::string& s) {
+    std::unordered_map<char, int> cnt;
+    int left = 0;
+    int best = 0;
+    for (int right = 0; right < static_cast<int>(s.size()); ++right) {
+        ++cnt[s[right]];
+        while (cnt.size() > 2) {
+            if (--cnt[s[left]] == 0) cnt.erase(s[left]);
+            ++left;
+        }
+        best = std::max(best, right - left + 1);
+    }
+    return best;
+}
+
+int main() {
+    std::cout << at_most_two_distinct("eceba") << '\n';   // 3
+}`,
+  why: String.raw`The window grows on the right, and the map's size tells when it has too many distinct characters. Shrinking from the left removes counts that reach zero.` },
+
+{ n: 30, g: "Lookup patterns", d: "hard", t: "Distinct count per window",
+  p: String.raw`For each window of length k in a vector<int>, print the number of distinct values in that window. Print the results for 1, 2, 1, 3, 4, 2, 3 with k = 4.`,
+  ex: String.raw`3 4 4 3`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+std::vector<int> distinct_per_window(const std::vector<int>& v, int k) {
+    std::unordered_map<int, int> cnt;
+    std::vector<int> out;
+    for (int i = 0; i < static_cast<int>(v.size()); ++i) {
+        ++cnt[v[i]];
+        if (i >= k && --cnt[v[i - k]] == 0) cnt.erase(v[i - k]);
+        if (i >= k - 1) out.push_back(static_cast<int>(cnt.size()));
+    }
+    return out;
+}
+
+int main() {
+    for (int d : distinct_per_window({1, 2, 1, 3, 4, 2, 3}, 4)) std::cout << d << ' ';   // 3 4 4 3
+}`,
+  why: String.raw`Counts let a sliding window add one value and remove another in constant average time. The number of keys is the number of distinct values in the window.` },
+
+// ---------- Keys and hashing ----------
+{ n: 31, g: "Keys and hashing", d: "hard", t: "Struct key with custom hash",
+  p: String.raw`Define a Coord struct with int fields r and c, and a hash for it. Store the value 1 at (0, 0) and 7 at (2, 3) in an unordered_map<Coord, int>. Print the value at (2, 3), and whether (1, 1) is present.`,
+  ex: String.raw`7 false`,
+  code: String.raw`#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <unordered_map>
+
+struct Coord {
+    int r, c;
+    bool operator==(const Coord&) const = default;
+};
+
+struct CoordHash {
+    std::size_t operator()(const Coord& p) const noexcept {
+        const auto packed = (static_cast<long long>(p.r) << 32) ^ static_cast<unsigned int>(p.c);
+        return std::hash<long long>{}(packed);
+    }
+};
+
+int main() {
+    std::unordered_map<Coord, int, CoordHash> grid{{{0, 0}, 1}, {{2, 3}, 7}};
+    std::cout << grid.at({2, 3}) << ' ' << std::boolalpha << grid.contains({1, 1}) << '\n';   // 7 false
+}`,
+  why: String.raw`An unordered container needs a hash for the key and an equality test. Here equality is defaulted and the hash packs both coordinates into one value.` },
+
+{ n: 32, g: "Keys and hashing", d: "hard", t: "Pair key with a functor",
+  p: String.raw`Use std::pair<int, int> as the key of an unordered_map<pair, string>, supplying your own hash functor. Assign a to (1,2), b to (2,1) and c to (1,2) again. Print the number of entries and the value at (1,2).`,
+  ex: String.raw`2 c`,
+  code: String.raw`#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+struct PairHash {
+    std::size_t operator()(const std::pair<int, int>& p) const noexcept {
+        const std::size_t h1 = std::hash<int>{}(p.first);
+        const std::size_t h2 = std::hash<int>{}(p.second);
+        return h1 * 31 ^ h2;
+    }
+};
+
+int main() {
+    std::unordered_map<std::pair<int, int>, std::string, PairHash> m;
+    m[{1, 2}] = "a";
+    m[{2, 1}] = "b";
+    m[{1, 2}] = "c";
+    std::cout << m.size() << ' ' << m.at({1, 2}) << '\n';   // 2 c
+}`,
+  why: String.raw`The default std::hash for pair does not exist, so a functor is supplied. Order matters in the hash, so (1,2) and (2,1) need different hashes.` },
+
+{ n: 33, g: "Keys and hashing", d: "hard", t: "Case-insensitive keys",
+  p: String.raw`Build an unordered_map<string, int> whose keys compare without regard to letter case, using your own hash and equality functors. Set Ann to 1, then add 1 to ann, then add 1 to ANN. Print the number of entries and the value under aNn.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <cstddef>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+struct CiHash {
+    std::size_t operator()(const std::string& s) const noexcept {
+        std::size_t h = 0;
+        for (unsigned char c : s) h = h * 131 + static_cast<std::size_t>(std::tolower(c));
+        return h;
+    }
+};
+
+struct CiEqual {
+    bool operator()(const std::string& a, const std::string& b) const noexcept {
+        return a.size() == b.size() &&
+               std::equal(a.begin(), a.end(), b.begin(), [](char x, char y) {
+                   return std::tolower(static_cast<unsigned char>(x)) ==
+                          std::tolower(static_cast<unsigned char>(y));
+               });
+    }
+};
+
+int main() {
+    std::unordered_map<std::string, int, CiHash, CiEqual> m;
+    m["Ann"] = 1;
+    m["ann"] += 1;
+    m["ANN"] += 1;
+    std::cout << m.size() << ' ' << m["aNn"] << '\n';   // 1 3
+}`,
+  why: String.raw`Equal keys must hash identically, so the hash lowercases each character before combining. Equality then compares the same way.` },
+
+{ n: 34, g: "Keys and hashing", d: "hard", t: "Heterogeneous lookup with string_view",
+  p: String.raw`Using an unordered_map<string, int> with transparent hashing and equality, look up the key alpha through a string_view, without creating a std::string for the lookup. Print the value found, then whether beta is absent when looked up the same way. The map holds alpha to 1 and gamma to 3.`,
+  ex: String.raw`1 true`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
+struct SvHash {
+    using is_transparent = void;
+    std::size_t operator()(std::string_view s) const noexcept {
+        return std::hash<std::string_view>{}(s);
+    }
+};
+
+int main() {
+    std::unordered_map<std::string, int, SvHash, std::equal_to<>> m{{"alpha", 1}, {"gamma", 3}};
+    std::string_view key = "alpha";
+    std::cout << m.find(key)->second << ' ';
+    std::cout << std::boolalpha << (m.find(std::string_view{"beta"}) == m.end()) << '\n';   // 1 true
+}`,
+  why: String.raw`is_transparent on both the hash and the equality functor lets find accept any type they can compare with the key. The lookup then avoids building a std::string.` },
+
+{ n: 35, g: "Keys and hashing", d: "hard", t: "Pointer stability across inserts",
+  p: String.raw`Insert key 1 mapped to keep in an unordered_map<int, string>, and keep a pointer to its value. Then insert 9998 more entries. Print whether the pointer still refers to keep, and whether looking up key 1 gives the same address.`,
+  ex: String.raw`true true`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, std::string> m{{1, "keep"}};
+    const std::string* p = &m.at(1);
+    for (int i = 2; i < 10000; ++i) m.emplace(i, std::to_string(i));
+    std::cout << std::boolalpha << (*p == "keep") << ' ' << (&m.at(1) == p) << '\n';   // true true
+}`,
+  why: String.raw`unordered_map stores each element in its own node. Rehashing relinks nodes but never moves them, so pointers and references to values remain valid.` },
+
+{ n: 36, g: "Keys and hashing", d: "hard", t: "Erase leaves other iterators valid",
+  p: String.raw`Hold an iterator to key 2 in an unordered_map<int, string> that holds 1, 2 and 3. Erase keys 1 and 3, then print the value the iterator refers to and the size of the map.`,
+  ex: String.raw`b 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, std::string> m{{1, "a"}, {2, "b"}, {3, "c"}};
+    auto keep = m.find(2);
+    m.erase(m.find(1));
+    m.erase(m.find(3));
+    std::cout << keep->second << ' ' << m.size() << '\n';   // b 1
+}`,
+  why: String.raw`Erasing an element invalidates only iterators to that element. Iterators to other elements remain valid.` },
+
+{ n: 37, g: "Keys and hashing", d: "hard", t: "Load factor control",
+  p: String.raw`Set the maximum load factor of an empty unordered_map<int, int> to 0.5, insert the keys 0 to 99, and print whether the current load factor is at most the maximum load factor.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<int, int> m;
+    m.max_load_factor(0.5f);
+    for (int i = 0; i < 100; ++i) m[i] = i;
+    std::cout << std::boolalpha << (m.load_factor() <= m.max_load_factor()) << '\n';   // true
+}`,
+  why: String.raw`The table rehashes as needed to keep the load factor under the limit. A lower limit gives faster lookups at the cost of more buckets.` },
+
+{ n: 38, g: "Keys and hashing", d: "hard", t: "Memoised Fibonacci",
+  p: String.raw`Compute the 50th Fibonacci number, with fib(0) = 0 and fib(1) = 1, using a memo stored in an unordered_map<int, long long>. Print the result.`,
+  ex: String.raw`12586269025`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+
+long long fib(int n, std::unordered_map<int, long long>& memo) {
+    if (n < 2) return n;
+    if (auto it = memo.find(n); it != memo.end()) return it->second;
+    const long long r = fib(n - 1, memo) + fib(n - 2, memo);
+    memo.emplace(n, r);
+    return r;
+}
+
+int main() {
+    std::unordered_map<int, long long> memo;
+    std::cout << fib(50, memo) << '\n';   // 12586269025
+}`,
+  why: String.raw`Each value is computed once and cached, which reduces the exponential recursion to linear work.` },
+
+// ---------- Applications ----------
+{ n: 39, g: "Applications", d: "hard", t: "Time-based key-value store",
+  p: String.raw`Implement a store where set(key, value, timestamp) records a value and get(key, timestamp) returns the value with the largest timestamp not exceeding the query, or an empty string. Timestamps for each key arrive in increasing order. Run: set foo bar at 1; get foo at 1; get foo at 3; set foo bar2 at 4; get foo at 4; get foo at 5.`,
+  ex: String.raw`bar bar bar2 bar2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+class TimeMap {
+    std::unordered_map<std::string, std::vector<std::pair<int, std::string>>> data_;   // sorted by time
+public:
+    void set(const std::string& key, const std::string& value, int ts) {
+        data_[key].emplace_back(ts, value);
+    }
+    std::string get(const std::string& key, int ts) const {
+        auto it = data_.find(key);
+        if (it == data_.end()) return "";
+        const auto& v = it->second;
+        auto pos = std::upper_bound(v.begin(), v.end(), ts,
+            [](int t, const auto& entry) { return t < entry.first; });
+        if (pos == v.begin()) return "";
+        return std::prev(pos)->second;
+    }
+};
+
+int main() {
+    TimeMap tm;
+    tm.set("foo", "bar", 1);
+    std::cout << tm.get("foo", 1) << ' ';
+    std::cout << tm.get("foo", 3) << ' ';
+    tm.set("foo", "bar2", 4);
+    std::cout << tm.get("foo", 4) << ' ';
+    std::cout << tm.get("foo", 5) << '\n';
+}`,
+  why: String.raw`The hash map finds the key's history in constant average time. Within that history, binary search locates the latest entry at or before the query time.` },
+
+{ n: 40, g: "Applications", d: "hard", t: "Cycle in a directed graph",
+  p: String.raw`Given a directed graph as adjacency lists in an unordered_map<int, vector<int>>, return true if it contains a cycle. The graph has edges 1 to 2, 2 to 3 and 3 to 1. Print the result.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+bool has_cycle(const std::unordered_map<int, std::vector<int>>& g) {
+    std::unordered_map<int, int> state;   // 0 unvisited, 1 on the current path, 2 finished
+    std::function<bool(int)> dfs = [&](int u) -> bool {
+        state[u] = 1;
+        if (auto it = g.find(u); it != g.end()) {
+            for (int v : it->second) {
+                const int s = state[v];
+                if (s == 1) return true;
+                if (s == 0 && dfs(v)) return true;
+            }
+        }
+        state[u] = 2;
+        return false;
+    };
+    for (const auto& [u, adj] : g)
+        if (state[u] == 0 && dfs(u)) return true;
+    return false;
+}
+
+int main() {
+    std::unordered_map<int, std::vector<int>> g{{1, {2}}, {2, {3}}, {3, {1}}};
+    std::cout << std::boolalpha << has_cycle(g) << '\n';   // true
+}`,
+  why: String.raw`A back edge to a node on the current path is what makes a cycle. Tracking three states per node separates that from edges into already finished parts of the graph.` },
+
+{ n: 41, g: "Applications", d: "hard", t: "Topological order with in-degrees",
+  p: String.raw`Given the directed edges 1 to 2, 1 to 3, 2 to 4 and 3 to 4, produce a topological order using in-degree counts stored in unordered_maps. When several nodes are ready, take them in the order they were first seen. Print the order.`,
+  ex: String.raw`1 2 3 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+std::vector<int> topo(const std::vector<std::pair<int, int>>& edges) {
+    std::unordered_map<int, std::vector<int>> adj;
+    std::unordered_map<int, int> indeg;
+    std::vector<int> nodes;
+    for (auto [a, b] : edges) {
+        if (!indeg.contains(a)) { indeg[a] = 0; nodes.push_back(a); }
+        if (!indeg.contains(b)) { indeg[b] = 0; nodes.push_back(b); }
+        adj[a].push_back(b);
+        ++indeg[b];
+    }
+    std::queue<int> q;
+    for (int n : nodes)
+        if (indeg[n] == 0) q.push(n);
+    std::vector<int> order;
+    while (!q.empty()) {
+        const int u = q.front();
+        q.pop();
+        order.push_back(u);
+        for (int v : adj[u])
+            if (--indeg[v] == 0) q.push(v);
+    }
+    return order;
+}
+
+int main() {
+    for (int x : topo({{1, 2}, {1, 3}, {2, 4}, {3, 4}})) std::cout << x << ' ';   // 1 2 3 4
+}`,
+  why: String.raw`Nodes with no incoming edges can go first. Removing a node decrements its neighbours' in-degrees, and any that reach zero become ready.` },
+
+{ n: 42, g: "Applications", d: "hard", t: "Connected components with union-find",
+  p: String.raw`Using a union-find structure whose parent links live in an unordered_map, union 1 with 2 and 3 with 4. Print the number of components among the nodes 1 to 4. Then union 2 with 3 and print the count again.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+
+struct DSU {
+    std::unordered_map<int, int> parent;
+    int find(int x) {
+        if (!parent.contains(x)) parent[x] = x;
+        if (parent[x] == x) return x;
+        return parent[x] = find(parent[x]);
+    }
+    void unite(int a, int b) {
+        const int ra = find(a);
+        const int rb = find(b);
+        parent[ra] = rb;
+    }
+};
+
+int components(DSU& d, int n) {
+    int c = 0;
+    for (int x = 1; x <= n; ++x)
+        if (d.find(x) == x) ++c;
+    return c;
+}
+
+int main() {
+    DSU d;
+    d.unite(1, 2);
+    d.unite(3, 4);
+    std::cout << components(d, 4) << ' ';   // 2
+    d.unite(2, 3);
+    std::cout << components(d, 4) << '\n';  // 1
+}`,
+  why: String.raw`find with path compression keeps trees shallow, so each operation is nearly constant time. Each set has one root, and the number of roots among the nodes is the number of components.` },
+
+{ n: 43, g: "Applications", d: "medium", t: "Last two actions per user",
+  p: String.raw`Process the log entries (ann, login), (bob, view), (ann, view) and (ann, logout). For each user keep only their two most recent actions. Print ann's kept actions, then bob's, in the format name: action action; .`,
+  ex: String.raw`ann: view logout; bob: view; `,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::pair<std::string, std::string>> logs{
+        {"ann", "login"}, {"bob", "view"}, {"ann", "view"}, {"ann", "logout"}};
+    std::unordered_map<std::string, std::deque<std::string>> last;
+    for (const auto& [user, action] : logs) {
+        auto& q = last[user];
+        q.push_back(action);
+        if (q.size() > 2) q.pop_front();
+    }
+    for (const char* name : {"ann", "bob"}) {
+        std::cout << name << ':';
+        for (const auto& a : last[name]) std::cout << ' ' << a;
+        std::cout << "; ";
+    }
+}`,
+  why: String.raw`Each user gets a short deque that is trimmed as new entries arrive. The map gives direct access to each user's history.` },
+
+{ n: 44, g: "Applications", d: "medium", t: "Deduplicate keeping the first value",
+  p: String.raw`Given the pairs (a, 1), (b, 2) and (a, 9), build a map that keeps only the first value seen for each key. Print the entries in alphabetical order of key, in the format key=value followed by a space.`,
+  ex: String.raw`a=1 b=2 `,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::pair<std::string, int>> in{{"a", 1}, {"b", 2}, {"a", 9}};
+    std::unordered_map<std::string, int> m;
+    for (const auto& [k, v] : in) m.try_emplace(k, v);
+    std::map<std::string, int> sorted(m.begin(), m.end());
+    for (const auto& [k, v] : sorted) std::cout << k << '=' << v << ' ';
+}`,
+  why: String.raw`try_emplace inserts only when the key is absent, so the first value wins without any explicit check.` },
+
+{ n: 45, g: "Applications", d: "medium", t: "Sparse vector dot product",
+  p: String.raw`Represent two sparse vectors as unordered_map<int, long long> from index to nonzero value. Vector a has 2 at index 0 and 5 at index 3. Vector b has 4 at index 3 and 1 at index 7. Compute their dot product.`,
+  ex: String.raw`20`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+
+long long dot(const std::unordered_map<int, long long>& a, const std::unordered_map<int, long long>& b) {
+    const auto& small = a.size() <= b.size() ? a : b;
+    const auto& big = a.size() <= b.size() ? b : a;
+    long long s = 0;
+    for (const auto& [idx, val] : small)
+        if (auto it = big.find(idx); it != big.end()) s += val * it->second;
+    return s;
+}
+
+int main() {
+    std::unordered_map<int, long long> a{{0, 2}, {3, 5}}, b{{3, 4}, {7, 1}};
+    std::cout << dot(a, b) << '\n';   // 20
+}`,
+  why: String.raw`Only indices where both vectors are nonzero contribute. Iterating over the smaller map and looking up each index in the larger one makes the work proportional to the sparser vector.` },
+
+{ n: 46, g: "Applications", d: "medium", t: "Inverted index",
+  p: String.raw`Documents 0, 1 and 2 contain the text cat dog, dog bird and cat bird. Build an inverted index from each word to the set of document ids containing it. For the words bird, cat and dog, in that order, print the word, a colon, and its document ids in ascending order, followed by a semicolon.`,
+  ex: String.raw`bird: 1 2; cat: 0 2; dog: 0 1; `,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    const std::vector<std::string> docs{"cat dog", "dog bird", "cat bird"};
+    std::unordered_map<std::string, std::set<int>> index;
+    for (int id = 0; id < static_cast<int>(docs.size()); ++id) {
+        std::istringstream in(docs[id]);
+        for (std::string w; in >> w;) index[w].insert(id);
+    }
+    for (const char* w : {"bird", "cat", "dog"}) {
+        std::cout << w << ':';
+        for (int id : index[w]) std::cout << ' ' << id;
+        std::cout << "; ";
+    }
+}`,
+  why: String.raw`Each word maps to a set, so document ids stay unique and ordered. The index answers which documents contain a word without scanning them.` },
+
+{ n: 47, g: "Applications", d: "hard", t: "Randomised set in constant time",
+  p: String.raw`Implement a set of integers supporting insert and remove, each returning whether it changed the set, and a size query. Both insert and remove must run in constant average time. Run: insert 1, insert 1 again, remove 1, then print the size. Print each boolean result, and the size last.`,
+  ex: String.raw`true false true 0`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+class IntSet {
+    std::unordered_map<int, std::size_t> pos_;   // value -> index in vals_
+    std::vector<int> vals_;
+public:
+    bool insert(int x) {
+        if (pos_.contains(x)) return false;
+        pos_[x] = vals_.size();
+        vals_.push_back(x);
+        return true;
+    }
+    bool remove(int x) {
+        auto it = pos_.find(x);
+        if (it == pos_.end()) return false;
+        const std::size_t i = it->second;
+        const int last = vals_.back();
+        vals_[i] = last;
+        pos_[last] = i;
+        vals_.pop_back();
+        pos_.erase(x);
+        return true;
+    }
+    std::size_t size() const noexcept { return vals_.size(); }
+};
+
+int main() {
+    IntSet s;
+    std::cout << std::boolalpha << s.insert(1) << ' ' << s.insert(1) << ' ' << s.remove(1) << ' ' << s.size() << '\n';
+}`,
+  why: String.raw`Swapping the removed value with the last element of a vector makes removal a constant-time pop. The map records each value's position so that it can be found in constant average time.` },
+
+{ n: 48, g: "Applications", d: "hard", t: "Minimum window substring",
+  p: String.raw`Return the shortest substring of s that contains every character of t, counting multiplicities. If none exists, return an empty string. Print the result for s = ADOBECODEBANC and t = ABC.`,
+  ex: String.raw`BANC`,
+  code: String.raw`#include <climits>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+std::string min_window(const std::string& s, const std::string& t) {
+    std::unordered_map<char, int> need, have;
+    for (char c : t) ++need[c];
+    const int required = static_cast<int>(need.size());
+    int formed = 0;
+    int bestL = 0;
+    int bestLen = INT_MAX;
+    int l = 0;
+    for (int r = 0; r < static_cast<int>(s.size()); ++r) {
+        const char c = s[r];
+        if (need.contains(c) && ++have[c] == need[c]) ++formed;
+        while (formed == required) {
+            if (r - l + 1 < bestLen) {
+                bestLen = r - l + 1;
+                bestL = l;
+            }
+            const char d = s[l++];
+            if (need.contains(d) && have[d]-- == need[d]) --formed;
+        }
+    }
+    return bestLen == INT_MAX ? "" : s.substr(bestL, bestLen);
+}
+
+int main() {
+    std::cout << min_window("ADOBECODEBANC", "ABC") << '\n';   // BANC
+}`,
+  why: String.raw`The window expands to the right until every required count is met, then shrinks from the left while it stays valid. Tracking how many character requirements are currently met avoids recomputing comparisons.` },
+{ n: 49, g: "Applications", d: "medium", t: "Most frequent word",
+  p: String.raw`The text "b a b c a b" is split on spaces. Count each word in an unordered_map<string,int>. Print the word with the highest count and that count, separated by a space.`,
+  ex: String.raw`b 3`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::istringstream in("b a b c a b");
+    std::unordered_map<std::string, int> freq;
+    for (std::string w; in >> w;) ++freq[w];
+    std::string best;
+    int bc = 0;
+    for (const auto& [w, c] : freq)
+        if (c > bc || (c == bc && w < best)) { best = w; bc = c; }
+    std::cout << best << ' ' << bc << '\n';
+}`,
+  why: String.raw`Word counting is the basic shape of search indexing and log analysis. Hashing each word makes every update constant time on average.` },
+
+{ n: 50, g: "Applications", d: "medium", t: "Session store with expiry",
+  p: String.raw`Store the key k with value v that expires at time 5. Look it up at time 3, then at time 6. Print the value found at time 3, or none if it has expired, followed by the result at time 6, separated by a space.`,
+  ex: String.raw`v none`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+struct Entry {
+    std::string value;
+    int expires;
+};
+
+int main() {
+    std::unordered_map<std::string, Entry> store;
+    store["k"] = Entry{"v", 5};
+    auto get = [&](const std::string& k, int now) -> std::string {
+        auto it = store.find(k);
+        if (it == store.end() || now >= it->second.expires) return "none";
+        return it->second.value;
+    };
+    std::cout << get("k", 3) << ' ' << get("k", 6) << '\n';
+}`,
+  why: String.raw`Session and token stores keep an expiry time beside each entry. The check happens at lookup, so no sweeper is needed for correctness.` },
+
+{ n: 51, g: "Applications", d: "medium", t: "Hits per page and user",
+  p: String.raw`Record page visits as (page, user) pairs: (home,1), (home,2), (home,2) and (about,2). Count the visits for the pair (home,2) and print the count.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+struct PairHash {
+    std::size_t operator()(const std::pair<std::string, int>& p) const {
+        return std::hash<std::string>{}(p.first) ^ (std::hash<int>{}(p.second) << 1);
+    }
+};
+
+int main() {
+    std::unordered_map<std::pair<std::string, int>, int, PairHash> hits;
+    const std::pair<std::string, int> events[] = {
+        {"home", 1}, {"home", 2}, {"home", 2}, {"about", 2}};
+    for (const auto& ev : events) ++hits[ev];
+    std::cout << hits[{"home", 2}] << '\n';
+}`,
+  why: String.raw`Composite keys let one flat map answer questions that would otherwise need a map of maps. A custom hash is needed because pairs have no default one.` },
+
+{ n: 52, g: "Applications", d: "hard", t: "Duplicate file contents",
+  p: String.raw`Three files are named a with contents x, b with contents y, and c with contents x. Count how many distinct contents appear in more than one file, and print that number.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::pair<std::string, std::string>> files{{"a", "x"}, {"b", "y"}, {"c", "x"}};
+    std::unordered_map<std::string, int> by_content;
+    for (const auto& [name, content] : files) ++by_content[content];
+    int dup = 0;
+    for (const auto& [c, n] : by_content)
+        if (n > 1) ++dup;
+    std::cout << dup << '\n';
+}`,
+  why: String.raw`Deduplication tools group files by a digest of their contents. Any digest that appears more than once marks a set of duplicates.` },
+
+{ n: 53, g: "Applications", d: "medium", t: "Transfer between accounts",
+  p: String.raw`Alice has 50 and Bob has 0. Transfer 30 from Alice to Bob, but only if Alice has at least 30. Print Alice's balance, then Bob's, separated by a space.`,
+  ex: String.raw`20 30`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> bal{{"alice", 50}, {"bob", 0}};
+    const int amt = 30;
+    if (bal["alice"] >= amt) {
+        bal["alice"] -= amt;
+        bal["bob"] += amt;
+    }
+    std::cout << bal["alice"] << ' ' << bal["bob"] << '\n';
+}`,
+  why: String.raw`Ledgers check the balance before they move money. Keeping balances in a map keyed by account name makes each transfer two lookups.` },
+
+{ n: 54, g: "Applications", d: "hard", t: "Longest path in a DAG",
+  p: String.raw`A directed graph has edges 1 to 2, 1 to 3, 2 to 4 and 3 to 4, and no cycles. Find the largest number of edges on any path that starts at 1. Remember results you have already computed for each node so that no node is solved twice. Print that number.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int longest(int u, const std::unordered_map<int, std::vector<int>>& g,
+            std::unordered_map<int, int>& memo) {
+    auto it = memo.find(u);
+    if (it != memo.end()) return it->second;
+    int best = 0;
+    auto ai = g.find(u);
+    if (ai != g.end())
+        for (int v : ai->second) best = std::max(best, 1 + longest(v, g, memo));
+    memo[u] = best;
+    return best;
+}
+
+int main() {
+    const std::unordered_map<int, std::vector<int>> g{{1, {2, 3}}, {2, {4}}, {3, {4}}};
+    std::unordered_map<int, int> memo;
+    std::cout << longest(1, g, memo) << '\n';
+}`,
+  why: String.raw`Memoised recursion over a directed acyclic graph computes each node's answer once, however many paths reach it. The memo table is keyed by node.` },
+
+{ n: 55, g: "Applications", d: "medium", t: "Degree in an undirected graph",
+  p: String.raw`An undirected graph has edges 1-2, 1-3 and 2-3. Build an adjacency map from node to its neighbours, then print the number of neighbours of node 1.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::unordered_map<int, std::vector<int>> adj;
+    for (auto [a, b] : {std::pair{1, 2}, std::pair{1, 3}, std::pair{2, 3}}) {
+        adj[a].push_back(b);
+        adj[b].push_back(a);
+    }
+    std::cout << adj[1].size() << '\n';
+}`,
+  why: String.raw`Adjacency maps suit sparse graphs, where most node pairs have no edge. Each edge is recorded in both directions for an undirected graph.` },
+
+{ n: 56, g: "Applications", d: "medium", t: "Indices of a pair summing to a target",
+  p: String.raw`In the list 2 7 11 15, find two positions whose values add up to 9. Print the earlier index, then the later index, separated by a space.`,
+  ex: String.raw`0 1`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    const std::vector<int> nums{2, 7, 11, 15};
+    const int target = 9;
+    std::unordered_map<int, int> seen;
+    for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+        auto it = seen.find(target - nums[i]);
+        if (it != seen.end()) {
+            std::cout << it->second << ' ' << i << '\n';
+            break;
+        }
+        seen[nums[i]] = i;
+    }
+}`,
+  why: String.raw`Remembering each value's position lets you check, for every new element, whether its partner has already appeared. One pass is enough.` },
+
+{ n: 57, g: "Applications", d: "hard", t: "Keys grouped by value",
+  p: String.raw`The map from letter to number is a to 1, b to 2 and c to 1. Invert it so that each number maps to the list of letters that have it. Print the letters that map to 1 in sorted order, separated by a space.`,
+  ex: String.raw`a c`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    const std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 1}};
+    std::unordered_map<int, std::vector<std::string>> inv;
+    for (const auto& [k, v] : m) inv[v].push_back(k);
+    auto& keys = inv[1];
+    std::sort(keys.begin(), keys.end());
+    for (std::size_t i = 0; i < keys.size(); ++i)
+        std::cout << keys[i] << (i + 1 < keys.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Inverting a mapping is a common step when you need to go from a value back to everything that produced it. A map of lists records the many-to-one case.` },
+
+{ n: 58, g: "Applications", d: "hard", t: "Bracket matching with a lookup table",
+  p: String.raw`Check whether the text ({[]}) has correctly nested brackets, using a table that maps each closing bracket to its opening partner. Print true or false.`,
+  ex: String.raw`true`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    const std::string s = "({[]})";
+    const std::unordered_map<char, char> pair_of{{')', '('}, {']', '['}, {'}', '{'}};
+    std::stack<char> st;
+    bool ok = true;
+    for (char c : s) {
+        if (pair_of.count(c)) {
+            if (st.empty() || st.top() != pair_of.at(c)) { ok = false; break; }
+            st.pop();
+        } else {
+            st.push(c);
+        }
+    }
+    std::cout << std::boolalpha << (ok && st.empty()) << '\n';
+}`,
+  why: String.raw`Each closing bracket must match the most recent unmatched opening one, which is exactly what a stack gives. The lookup table keeps the pairing rule in one place.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-unordered-map-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+const groups = [...new Set(problems.map(p => p.g))];
+for (const g of groups) {
+  const items = problems.filter(p => p.g === g);
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", null, g), el("span", "range", items.length + " problems"));
+  section.append(h);
+  for (const p of items) section.append(buildCard(p));
+  list.append(section);
+}
+
+updateProgress();
+</script>

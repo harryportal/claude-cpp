@@ -1,0 +1,1519 @@
+<title>STL Priority Queue Problems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 58 problems</p>
+    <h1>STL Priority Queue Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Easy ----------
+{ n: 1, d: "easy", t: "Largest first",
+  p: String.raw`Push 3, 1 and 4 onto a priority queue. Print the top element, then pop it and print the new top, separated by a space.`,
+  ex: String.raw`4 3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    pq.push(3); pq.push(1); pq.push(4);
+    std::cout << pq.top() << ' ';
+    pq.pop();
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`By default a priority_queue is a max-heap, so top is always the largest element.` },
+
+{ n: 2, d: "easy", t: "Smallest first with greater",
+  p: String.raw`Push 3, 1 and 4 onto a priority queue that puts the smallest value on top. Print the top element.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<int, std::vector<int>, std::greater<>> pq;
+    pq.push(3); pq.push(1); pq.push(4);
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`Passing std::greater as the comparator reverses the order, turning the heap into a min-heap.` },
+
+{ n: 3, d: "easy", t: "Size and emptiness",
+  p: String.raw`Create an empty priority queue of ints and print whether it is empty. Then push one value and print the size. Separate the two results with a space.`,
+  ex: String.raw`true 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    std::cout << std::boolalpha << pq.empty() << ' ';
+    pq.push(5);
+    std::cout << pq.size() << '\n';
+}`,
+  why: String.raw`Size and emptiness are the basic bookkeeping of any container, and a priority queue supports both directly.` },
+
+{ n: 4, d: "easy", t: "Drain in priority order",
+  p: String.raw`Push 5, 1, 3 and 2 onto a priority queue, then pop them all, printing each one, separated by spaces.`,
+  ex: String.raw`5 3 2 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    for (int v : {5, 1, 3, 2}) pq.push(v);
+    while (!pq.empty()) {
+        std::cout << pq.top() << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`Each pop removes the current top, so draining a heap yields its values in sorted order.` },
+
+{ n: 5, d: "easy", t: "Priority by the first member",
+  p: String.raw`Push the pairs (2, b) and (5, a) onto a priority queue of pairs of an int and a string. Print the string of the top pair.`,
+  ex: String.raw`a`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+
+int main() {
+    std::priority_queue<std::pair<int, std::string>> pq;
+    pq.push({2, "b"});
+    pq.push({5, "a"});
+    std::cout << pq.top().second << '\n';
+}`,
+  why: String.raw`Pairs compare by their first member, then their second. The pair with the largest first member is on top.` },
+
+{ n: 6, d: "easy", t: "emplace builds in place",
+  p: String.raw`Create an empty priority queue of ints. Put 7 into it by constructing the element directly inside the queue, then print the top element.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    pq.emplace(7);
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`emplace constructs the new element in place from its arguments, then the heap reorders itself.` },
+
+{ n: 7, d: "easy", t: "Explicit container and comparator",
+  p: String.raw`Create a min-heap of ints backed by a std::vector. Push 9 and 4, then print the top element.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<int, std::vector<int>, std::greater<int>> pq;
+    pq.push(9); pq.push(4);
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`The three template arguments are the element type, the underlying container, and the comparator. Spelling them out makes the heap's behaviour explicit.` },
+
+{ n: 8, d: "easy", t: "Heapify on construction",
+  p: String.raw`Create a priority queue holding the values 1, 5 and 2, initialised in one step from a vector, with the largest value on top. Print the top element.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<int> pq(std::less<int>(), std::vector<int>{1, 5, 2});
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`A constructor that takes a container rearranges it into heap order in linear time, instead of pushing one value at a time.` },
+
+{ n: 9, d: "easy", t: "Running maximum",
+  p: String.raw`Push the values 2, 8 and 5 one at a time. After each push, print the largest value so far, separated by spaces.`,
+  ex: String.raw`2 8 8`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    for (int v : {2, 8, 5}) {
+        pq.push(v);
+        std::cout << pq.top() << (v == 5 ? "\n" : " ");
+    }
+}`,
+  why: String.raw`The top of a max-heap is the maximum of everything pushed so far, so it can be read after every push.` },
+
+{ n: 10, d: "easy", t: "Sum by draining",
+  p: String.raw`Push 1, 2 and 3 onto a priority queue, then pop every element while adding it up. Print the total.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    for (int v : {1, 2, 3}) pq.push(v);
+    int total = 0;
+    while (!pq.empty()) { total += pq.top(); pq.pop(); }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`A priority queue offers no iteration, so visiting every element means popping each one.` },
+
+// ---------- Medium ----------
+{ n: 11, d: "medium", t: "Top k largest values",
+  p: String.raw`From the values 3, 1, 9, 4 and 7, find the two largest and print them in descending order, separated by a space.`,
+  ex: String.raw`9 7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    for (int v : {3, 1, 9, 4, 7}) pq.push(v);
+    const int first = pq.top(); pq.pop();
+    std::cout << first << ' ' << pq.top() << '\n';
+}`,
+  why: String.raw`Repeatedly taking the top gives the largest values in order. Stopping after k pops gives the k largest without sorting everything.` },
+
+{ n: 12, d: "medium", t: "Kth smallest with a bounded max-heap",
+  p: String.raw`From the values 5, 1, 9 and 3, find the second smallest value while never storing more than two values at once. Print it.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> pq;
+    for (int v : {5, 1, 9, 3}) {
+        pq.push(v);
+        if (pq.size() > 2) pq.pop();
+    }
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`Keeping the two smallest values means the largest of them is on top, which is the second smallest overall once the whole input has been seen.` },
+
+{ n: 13, d: "medium", t: "Merge k sorted lists",
+  p: String.raw`Merge the sorted lists 1, 4, 7; 2, 5; and 3, 6 into one sorted sequence. Print the merged values separated by spaces.`,
+  ex: String.raw`1 2 3 4 5 6 7`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <tuple>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> lists{{1, 4, 7}, {2, 5}, {3, 6}};
+    // (value, list index, position in list), smallest value on top
+    using Item = std::tuple<int, std::size_t, std::size_t>;
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> pq;
+    for (std::size_t i = 0; i < lists.size(); ++i) pq.emplace(lists[i][0], i, 0);
+    bool first = true;
+    while (!pq.empty()) {
+        const auto [value, li, pos] = pq.top();
+        pq.pop();
+        std::cout << (first ? "" : " ") << value;
+        first = false;
+        if (pos + 1 < lists[li].size()) pq.emplace(lists[li][pos + 1], li, pos + 1);
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The heap holds one candidate from each list, the front of each. Popping the smallest and advancing that list keeps the heap small, so the merge costs O(N log k) for k lists.` },
+
+{ n: 14, d: "medium", t: "Running median with two heaps",
+  p: String.raw`Feed the values 5, 15, 1 and 3 one at a time. After each value, print the median of the values so far, with two values averaged when there is an even count. Separate the medians with spaces.`,
+  ex: String.raw`5 10 5 4`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<double> lower;                                                  // max-heap
+    std::priority_queue<double, std::vector<double>, std::greater<>> upper;             // min-heap
+    bool first = true;
+    for (double v : {5.0, 15.0, 1.0, 3.0}) {
+        if (lower.empty() || v <= lower.top()) lower.push(v);
+        else upper.push(v);
+        if (lower.size() > upper.size() + 1) { upper.push(lower.top()); lower.pop(); }
+        else if (upper.size() > lower.size()) { lower.push(upper.top()); upper.pop(); }
+        const double median = lower.size() > upper.size() ? lower.top() : (lower.top() + upper.top()) / 2;
+        std::cout << (first ? "" : " ") << median;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`The lower half lives in a max-heap and the upper half in a min-heap, so both middle values are on top. Keeping the sizes within one of each other makes the median a constant-time read.` },
+
+{ n: 15, d: "medium", t: "Process tasks by priority",
+  p: String.raw`Tasks are write with priority 3, fix with priority 2 and test with priority 1. Higher numbers run first. Print the task names in the order they run, separated by spaces.`,
+  ex: String.raw`write fix test`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+
+int main() {
+    std::priority_queue<std::pair<int, std::string>> tasks;
+    tasks.push({2, "fix"});
+    tasks.push({3, "write"});
+    tasks.push({1, "test"});
+    bool first = true;
+    while (!tasks.empty()) {
+        std::cout << (first ? "" : " ") << tasks.top().second;
+        first = false;
+        tasks.pop();
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A scheduler needs the most urgent task at all times. A max-heap keyed on priority always exposes that task at the top.` },
+
+{ n: 16, d: "medium", t: "Shortest path with Dijkstra",
+  p: String.raw`A directed graph has edges 0 to 1 with cost 4, 0 to 2 with cost 1, 2 to 1 with cost 2, and 1 to 3 with cost 1. Find the cheapest total cost from node 0 to node 3. Print that cost.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <limits>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<std::pair<int, int>>> adj{
+        {{1, 4}, {2, 1}}, {{3, 1}}, {{1, 2}}, {}};
+    std::vector<int> dist(adj.size(), std::numeric_limits<int>::max());
+    using Entry = std::pair<int, int>;   // (distance, node)
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<>> pq;
+    dist[0] = 0;
+    pq.push({0, 0});
+    while (!pq.empty()) {
+        const auto [d, u] = pq.top();
+        pq.pop();
+        if (d > dist[u]) continue;
+        for (const auto& [v, w] : adj[u]) {
+            if (d + w < dist[v]) {
+                dist[v] = d + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+    std::cout << dist[3] << '\n';
+}`,
+  why: String.raw`Dijkstra always expands the cheapest known node next. A popped entry that is older than the best known distance is skipped, so each node is expanded with its final distance.` },
+
+{ n: 17, d: "medium", t: "Combine the two cheapest",
+  p: String.raw`Start with the costs 1, 2, 3 and 4. Combine the two smallest current costs into one cost equal to their sum, add that sum to a running total, and repeat until one cost remains. Print the running total.`,
+  ex: String.raw`19`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<long long, std::vector<long long>, std::greater<>> pq;
+    for (long long v : {1, 2, 3, 4}) pq.push(v);
+    long long total = 0;
+    while (pq.size() > 1) {
+        const long long a = pq.top(); pq.pop();
+        const long long b = pq.top(); pq.pop();
+        total += a + b;
+        pq.push(a + b);
+    }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Merging the two smallest first keeps the cheap values combined early. This is the greedy idea behind Huffman coding, and a min-heap finds the two smallest in logarithmic time.` },
+
+{ n: 18, d: "medium", t: "Custom comparator by length",
+  p: String.raw`Push the words bb, a and ccc onto a priority queue that puts the longest word on top. Pop them all and print the words separated by spaces.`,
+  ex: String.raw`ccc bb a`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+#include <vector>
+
+struct ByLength {
+    bool operator()(const std::string& a, const std::string& b) const { return a.size() < b.size(); }
+};
+
+int main() {
+    std::priority_queue<std::string, std::vector<std::string>, ByLength> pq;
+    for (const char* w : {"bb", "a", "ccc"}) pq.push(w);
+    while (!pq.empty()) {
+        std::cout << pq.top() << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`The comparator defines what "on top" means. Here it returns true when a is shorter than b, so the longest string has the highest priority.` },
+
+{ n: 19, d: "medium", t: "Stable order with a sequence number",
+  p: String.raw`Two tasks a and b both have priority 1 and were submitted in that order. Tasks with equal priority must run in submission order. Print the task names in the order they run, separated by a space.`,
+  ex: String.raw`a b`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+#include <tuple>
+
+int main() {
+    // (priority, -submission order, name): among equal priorities, earlier submissions rank higher
+    std::priority_queue<std::tuple<int, int, std::string>> pq;
+    pq.emplace(1, -1, "a");
+    pq.emplace(1, -2, "b");
+    std::cout << std::get<2>(pq.top()) << ' ';
+    pq.pop();
+    std::cout << std::get<2>(pq.top()) << '\n';
+}`,
+  why: String.raw`A heap does not preserve insertion order on its own, so the submission counter is part of the key. Negating it makes an earlier submission compare greater.` },
+
+{ n: 20, d: "medium", t: "Nearest points to the origin",
+  p: String.raw`Given the points (3,3), (5,-1) and (-2,4), find the two closest to the origin, measuring distance by x*x + y*y. Print the two points in order of increasing distance, separated by a space.`,
+  ex: String.raw`(3,3) (-2,4)`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <queue>
+#include <tuple>
+#include <vector>
+
+int main() {
+    const std::vector<std::pair<int, int>> pts{{3, 3}, {5, -1}, {-2, 4}};
+    // (squared distance, x, y), largest on top so it can be evicted
+    std::priority_queue<std::tuple<int, int, int>> pq;
+    for (const auto& [x, y] : pts) {
+        pq.emplace(x * x + y * y, x, y);
+        if (pq.size() > 2) pq.pop();
+    }
+    std::vector<std::tuple<int, int, int>> keep;
+    while (!pq.empty()) { keep.push_back(pq.top()); pq.pop(); }
+    std::sort(keep.begin(), keep.end());
+    for (std::size_t i = 0; i < keep.size(); ++i) {
+        const auto [d, x, y] = keep[i];
+        std::cout << '(' << x << ',' << y << ')' << (i + 1 < keep.size() ? " " : "\n");
+    }
+}`,
+  why: String.raw`A max-heap of size two always holds the two closest points seen so far, with the farthest of them ready to be evicted. Sorting the survivors by distance gives the required order.` },
+
+// ---------- Hard ----------
+{ n: 21, d: "hard", t: "Recover the cheapest route",
+  p: String.raw`A directed graph has edges 0 to 1 with cost 4, 0 to 2 with cost 1, 2 to 1 with cost 2, and 1 to 3 with cost 1. List the nodes along a cheapest route from 0 to 3, in order, separated by spaces.`,
+  ex: String.raw`0 2 1 3`,
+  code: String.raw`#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<std::pair<int, int>>> adj{
+        {{1, 4}, {2, 1}}, {{3, 1}}, {{1, 2}}, {}};
+    const int n = static_cast<int>(adj.size());
+    std::vector<int> dist(n, std::numeric_limits<int>::max());
+    std::vector<int> parent(n, -1);
+    using Entry = std::pair<int, int>;   // (distance, node)
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<>> pq;
+    dist[0] = 0;
+    pq.push({0, 0});
+    while (!pq.empty()) {
+        const auto [d, u] = pq.top();
+        pq.pop();
+        if (d > dist[u]) continue;
+        for (const auto& [v, w] : adj[u]) {
+            if (d + w < dist[v]) {
+                dist[v] = d + w;
+                parent[v] = u;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+    std::vector<int> path;
+    for (int v = 3; v != -1; v = parent[v]) path.push_back(v);
+    std::reverse(path.begin(), path.end());
+    for (std::size_t i = 0; i < path.size(); ++i)
+        std::cout << path[i] << (i + 1 < path.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Recording the node each distance came from lets you walk backwards from the destination to the source and then reverse the list.` },
+
+{ n: 22, d: "hard", t: "Top two words",
+  p: String.raw`Read the sentence a b a c b a. Print the two most frequent words in descending order of frequency, each followed by its count, separated by spaces.`,
+  ex: String.raw`a 3 b 2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+int main() {
+    std::istringstream in("a b a c b a");
+    std::unordered_map<std::string, int> count;
+    for (std::string w; in >> w;) ++count[w];
+    std::priority_queue<std::pair<int, std::string>> pq;   // (count, word)
+    for (const auto& [w, c] : count) pq.push({c, w});
+    for (int i = 0; i < 2; ++i) {
+        std::cout << pq.top().second << ' ' << pq.top().first << (i == 0 ? ' ' : '\n');
+        pq.pop();
+    }
+}`,
+  why: String.raw`Counting is a hash map job. Ranking the counts is a heap job, and only the top entries are ever removed.` },
+
+{ n: 23, d: "hard", t: "Largest in each window",
+  p: String.raw`For the array 1 3 -1 -3 5 3 6 7, print the largest value in every contiguous window of 3 elements, separated by spaces.`,
+  ex: String.raw`3 3 5 5 6 7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{1, 3, -1, -3, 5, 3, 6, 7};
+    const int k = 3;
+    std::priority_queue<std::pair<int, int>> pq;   // (value, index)
+    bool first = true;
+    for (int i = 0; i < static_cast<int>(a.size()); ++i) {
+        pq.push({a[i], i});
+        if (i >= k - 1) {
+            while (pq.top().second <= i - k) pq.pop();   // outdated entries left the window
+            std::cout << (first ? "" : " ") << pq.top().first;
+            first = false;
+        }
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Entries that have slid out of the window are not removed eagerly. They are discarded only when they reach the top, which keeps each operation logarithmic.` },
+
+{ n: 24, d: "hard", t: "Cheapest network",
+  p: String.raw`An undirected graph has 4 nodes numbered 0 to 3 and these edges: 0-1 cost 1, 0-2 cost 4, 1-2 cost 2, 1-3 cost 6, 2-3 cost 5. Find the smallest total cost of a set of edges that connects all four nodes. Print that total.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    // adj[u] holds (cost, neighbour) pairs
+    const std::vector<std::vector<std::pair<int, int>>> adj{
+        {{1, 1}, {4, 2}},
+        {{1, 0}, {2, 2}, {6, 3}},
+        {{4, 0}, {2, 1}, {5, 3}},
+        {{6, 1}, {5, 2}}};
+    std::vector<bool> in(adj.size(), false);
+    using Edge = std::pair<int, int>;   // (cost, node)
+    std::priority_queue<Edge, std::vector<Edge>, std::greater<>> pq;
+    pq.push({0, 0});
+    int total = 0;
+    while (!pq.empty()) {
+        const auto [w, u] = pq.top();
+        pq.pop();
+        if (in[u]) continue;
+        in[u] = true;
+        total += w;
+        for (const auto& [cost, v] : adj[u])
+            if (!in[v]) pq.push({cost, v});
+    }
+    std::cout << total << '\n';
+}`,
+  why: String.raw`Growing one tree from a single node and always attaching the cheapest edge that leaves it gives a minimum spanning tree.` },
+
+{ n: 25, d: "hard", t: "Third largest so far",
+  p: String.raw`The values 4, 5, 8 and 2 arrive one at a time. After each arrival, print the 3rd largest value seen so far, or - if fewer than three values have arrived. Separate the results with spaces.`,
+  ex: String.raw`- - 4 4`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    // keeps only the three largest values; the smallest of them sits on top
+    std::priority_queue<int, std::vector<int>, std::greater<>> pq;
+    bool first = true;
+    for (int v : {4, 5, 8, 2}) {
+        pq.push(v);
+        if (pq.size() > 3) pq.pop();
+        std::cout << (first ? "" : " ");
+        if (pq.size() < 3) std::cout << '-';
+        else std::cout << pq.top();
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Holding only the k largest values, with the smallest of them on top, gives the k-th largest in constant time after each arrival.` },
+
+{ n: 26, d: "hard", t: "Minimum rooms",
+  p: String.raw`Meetings run during the intervals [0,30], [5,10] and [15,20]. Find the fewest rooms needed so that no two meetings that overlap share a room. Print that number.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::pair<int, int>> meetings{{0, 30}, {5, 10}, {15, 20}};
+    std::sort(meetings.begin(), meetings.end());
+    std::priority_queue<int, std::vector<int>, std::greater<>> ends;   // end times of rooms in use
+    std::size_t rooms = 0;
+    for (const auto& [start, end] : meetings) {
+        if (!ends.empty() && ends.top() <= start) ends.pop();
+        ends.push(end);
+        rooms = std::max(rooms, ends.size());
+    }
+    std::cout << rooms << '\n';
+}`,
+  why: String.raw`Each room is free again at its meeting's end time. The earliest-finishing room is the one to reuse, and the size of the set of busy rooms is the answer.` },
+
+{ n: 27, d: "hard", t: "Event simulation",
+  p: String.raw`Events are scheduled as follows: C at time 5, A at time 1 and B at time 3. Events are processed in time order. Processing A also schedules D at time 2. Print the event names in the order they are processed, separated by spaces.`,
+  ex: String.raw`A D B C`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+#include <vector>
+
+int main() {
+    using Event = std::pair<int, std::string>;   // (time, name)
+    std::priority_queue<Event, std::vector<Event>, std::greater<>> events;
+    events.push({5, "C"});
+    events.push({1, "A"});
+    events.push({3, "B"});
+    bool first = true;
+    while (!events.empty()) {
+        const Event e = events.top();
+        events.pop();
+        std::cout << (first ? "" : " ") << e.second;
+        first = false;
+        if (e.second == "A") events.push({2, "D"});
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A simulation clock is just a queue ordered by time. Each handled event may add more future events, and the earliest one always comes next.` },
+
+{ n: 28, d: "hard", t: "Cheapest grid path",
+  p: String.raw`A 3x3 grid has these costs: row 1: 1 3 1; row 2: 1 5 1; row 3: 4 2 1. Starting at the top-left cell, reach the bottom-right cell by moving up, down, left or right. The cost of a route is the sum of the costs of the cells it visits, including both ends. Print the minimum cost.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <limits>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> grid{{1, 3, 1}, {1, 5, 1}, {4, 2, 1}};
+    const int R = static_cast<int>(grid.size());
+    const int C = static_cast<int>(grid[0].size());
+    std::vector<std::vector<int>> dist(R, std::vector<int>(C, std::numeric_limits<int>::max()));
+    using Entry = std::pair<int, std::pair<int, int>>;   // (cost, (row, col))
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<>> pq;
+    dist[0][0] = grid[0][0];
+    pq.push({dist[0][0], {0, 0}});
+    const int dr[] = {1, -1, 0, 0};
+    const int dc[] = {0, 0, 1, -1};
+    while (!pq.empty()) {
+        const auto [d, pos] = pq.top();
+        pq.pop();
+        const auto [r, c] = pos;
+        if (d > dist[r][c]) continue;
+        for (int k = 0; k < 4; ++k) {
+            const int nr = r + dr[k];
+            const int nc = c + dc[k];
+            if (nr < 0 || nc < 0 || nr >= R || nc >= C) continue;
+            const int nd = d + grid[nr][nc];
+            if (nd < dist[nr][nc]) {
+                dist[nr][nc] = nd;
+                pq.push({nd, {nr, nc}});
+            }
+        }
+    }
+    std::cout << dist[R - 1][C - 1] << '\n';
+}`,
+  why: String.raw`The grid is a graph where each cell's cost is the cost of entering it. Always expanding the cheapest cell reached so far finds the best total to every cell.` },
+
+{ n: 29, d: "hard", t: "Rearrange without neighbours",
+  p: String.raw`For each string below, rearrange its letters so that no two adjacent letters are equal, or report impossible if that cannot be done. Print the result for aab, then the result for aaab, one per line.`,
+  ex: String.raw`aba
+impossible`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <queue>
+#include <string>
+#include <utility>
+
+std::string reorganize(const std::string& s) {
+    std::map<char, int> count;
+    for (char ch : s) ++count[ch];
+    std::priority_queue<std::pair<int, char>> pq;   // (remaining count, letter), most frequent on top
+    for (const auto& [ch, c] : count) pq.push({c, ch});
+    std::string out;
+    while (!pq.empty()) {
+        auto [c1, ch1] = pq.top();
+        pq.pop();
+        if (!out.empty() && out.back() == ch1) {
+            if (pq.empty()) return "";            // only the same letter is left
+            auto [c2, ch2] = pq.top();
+            pq.pop();
+            out += ch2;
+            if (--c2 > 0) pq.push({c2, ch2});
+            pq.push({c1, ch1});
+        } else {
+            out += ch1;
+            if (--c1 > 0) pq.push({c1, ch1});
+        }
+    }
+    return out;
+}
+
+int main() {
+    for (const char* s : {"aab", "aaab"}) {
+        const std::string r = reorganize(s);
+        std::cout << (r.empty() ? "impossible" : r) << '\n';
+    }
+}`,
+  why: String.raw`Always placing the most frequent remaining letter, unless it would repeat the previous one, keeps the most crowded letter spread out as far as possible.` },
+
+{ n: 30, d: "hard", t: "Kth entry of a table",
+  p: String.raw`Consider a 3x3 multiplication table whose entries are row times column, with rows and columns numbered 1 to 3. Counting duplicates, list all nine entries in sorted order and print the 5th one.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <tuple>
+#include <vector>
+
+int main() {
+    const int n = 3, k = 5;
+    // (value, row, col): each row starts at column 1 and walks rightwards
+    using Item = std::tuple<int, int, int>;
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> pq;
+    for (int i = 1; i <= n; ++i) pq.emplace(i, i, 1);
+    int value = 0;
+    for (int step = 0; step < k; ++step) {
+        const auto [v, r, c] = pq.top();
+        pq.pop();
+        value = v;
+        if (c < n) pq.emplace(r * (c + 1), r, c + 1);
+    }
+    std::cout << value << '\n';
+}`,
+  why: String.raw`Each row of the table is already sorted, so the heap only needs to hold one candidate per row. Stepping along the row that produced each pop is what keeps the heap small.` },
+
+// ---------- Extension ----------
+{ n: 31, d: "extension", t: "Heap order inside a plain vector",
+  p: String.raw`Rearrange the vector 3 1 4 1 5 into max-heap order in place, so that its first element is the largest and every element is at least as large as the elements below it in the heap layout. Print the first element. Then remove that first element from the heap and print the new first element. Separate the two numbers with a space.`,
+  ex: String.raw`5 4`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{3, 1, 4, 1, 5};
+    std::make_heap(v.begin(), v.end());
+    std::cout << v.front() << ' ';
+    std::pop_heap(v.begin(), v.end());   // moves the maximum to the back
+    v.pop_back();
+    std::cout << v.front() << '\n';
+}`,
+  why: String.raw`The heap algorithms are plain functions over any random-access range. A priority queue is just a vector managed with these routines.` },
+
+{ n: 32, d: "extension", t: "Check heap order",
+  p: String.raw`The vector 1 9 4 is checked for max-heap order. Print whether it is in max-heap order. Then rearrange it into max-heap order and check it again. Print both results separated by a space.`,
+  ex: String.raw`false true`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 9, 4};
+    std::cout << std::boolalpha << std::is_heap(v.begin(), v.end()) << ' ';
+    std::make_heap(v.begin(), v.end());
+    std::cout << std::is_heap(v.begin(), v.end()) << '\n';
+}`,
+  why: String.raw`A heap is a property of the layout, not a special type. Any range can be checked for it and any range can be made to satisfy it.` },
+
+{ n: 33, d: "extension", t: "Sort a heap in place",
+  p: String.raw`Rearrange the vector 5 2 9 1 into max-heap order, then sort it in place so that it becomes ascending. Print the sorted vector with values separated by spaces.`,
+  ex: String.raw`1 2 5 9`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{5, 2, 9, 1};
+    std::make_heap(v.begin(), v.end());
+    std::sort_heap(v.begin(), v.end());
+    for (std::size_t i = 0; i < v.size(); ++i)
+        std::cout << v[i] << (i + 1 < v.size() ? " " : "\n");
+}`,
+  why: String.raw`Repeatedly moving the top to the end of the shrinking heap produces sorted order in place. This is heap sort, and it needs no extra memory.` },
+
+{ n: 34, d: "extension", t: "Peek at the underlying storage",
+  p: String.raw`Create a priority queue of ints and push 3, 8 and 5. Print the number of elements held inside the queue's underlying storage, then the first element of that storage, separated by a space.`,
+  ex: String.raw`3 8`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+struct Exposed : std::priority_queue<int> {
+    // c is the protected underlying container of std::priority_queue
+    const std::vector<int>& storage() const { return c; }
+};
+
+int main() {
+    Exposed pq;
+    for (int v : {3, 8, 5}) pq.push(v);
+    std::cout << pq.storage().size() << ' ' << pq.storage().front() << '\n';
+}`,
+  why: String.raw`The adapter wraps a container and exposes only the heap operations. Its storage is a protected member, so a derived class can reach it when needed.` },
+
+{ n: 35, d: "extension", t: "Swap two queues",
+  p: String.raw`Queue a holds the value 1, and queue b holds 9 and 4. Swap the contents of a and b. Print the top of a, then the top of b, separated by a space.`,
+  ex: String.raw`9 1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <utility>
+
+int main() {
+    std::priority_queue<int> a, b;
+    a.push(1);
+    b.push(9);
+    b.push(4);
+    std::swap(a, b);
+    std::cout << a.top() << ' ' << b.top() << '\n';
+}`,
+  why: String.raw`Swapping two adapters exchanges their underlying containers in constant time, without copying any elements.` },
+
+{ n: 36, d: "extension", t: "Lambda comparator",
+  p: String.raw`Create a priority queue of ints where the value with the larger last digit is on top. Push 19, 22 and 35, then print the top.`,
+  ex: String.raw`19`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    auto by_last_digit = [](int a, int b) { return a % 10 < b % 10; };
+    std::priority_queue<int, std::vector<int>, decltype(by_last_digit)> pq(by_last_digit);
+    for (int v : {19, 22, 35}) pq.push(v);
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`A lambda has a unique type, so it must be named with decltype and its instance handed to the constructor. The comparator then travels with the queue.` },
+
+{ n: 37, d: "extension", t: "Build from a range",
+  p: String.raw`Create a priority queue in one construction call from all the elements of the vector 4, 9 and 2. Print the top.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+int main() {
+    const std::vector<int> v{4, 9, 2};
+    std::priority_queue pq(v.begin(), v.end());
+    std::cout << pq.top() << '\n';
+}`,
+  why: String.raw`Constructing from a sequence lets the library arrange all the elements into heap order in one pass, rather than pushing them one by one.` },
+
+{ n: 38, d: "extension", t: "Pop in ascending order",
+  p: String.raw`Push 5, 2, 9 and 1 into a priority queue that puts the smallest value on top. Pop them all, printing each value, separated by spaces.`,
+  ex: String.raw`1 2 5 9`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<int, std::vector<int>, std::greater<>> pq;
+    for (int v : {5, 2, 9, 1}) pq.push(v);
+    while (!pq.empty()) {
+        std::cout << pq.top() << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`Changing the comparator flips the whole ordering of the queue. The same code then drains the values in the opposite direction.` },
+
+{ n: 39, d: "extension", t: "Use a deque as storage",
+  p: String.raw`Create a priority queue of ints that stores its elements in a std::deque. Push 2, 7 and 5. Print the top and the size, separated by a space.`,
+  ex: String.raw`7 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int, std::deque<int>> pq;
+    pq.push(2);
+    pq.push(7);
+    pq.push(5);
+    std::cout << pq.top() << ' ' << pq.size() << '\n';
+}`,
+  why: String.raw`The underlying container only needs random access, front-to-back iteration and push and pop at its back. A deque satisfies these, so it can stand in for a vector.` },
+
+{ n: 40, d: "extension", t: "Move an existing vector in",
+  p: String.raw`Start with a std::vector holding 3 and 1. Build a priority queue that puts the smallest value on top, taking that vector over as its storage. Print the top and the size, separated by a space.`,
+  ex: String.raw`1 2`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<int> storage{3, 1};
+    std::priority_queue<int, std::vector<int>, std::greater<>> pq(std::greater<>(), std::move(storage));
+    std::cout << pq.top() << ' ' << pq.size() << '\n';
+}`,
+  why: String.raw`Passing a container by move avoids copying its elements. The constructor then arranges them into heap order in place.` },
+
+{ n: 41, d: "extension", t: "Store uniquely owned values",
+  p: String.raw`Store uniquely owned heap-allocated integers 4 and 9 in a priority queue ordered by the values they point to, largest on top. Print the value at the top.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <queue>
+#include <vector>
+
+struct ByValue {
+    bool operator()(const std::unique_ptr<int>& a, const std::unique_ptr<int>& b) const { return *a < *b; }
+};
+
+int main() {
+    std::priority_queue<std::unique_ptr<int>, std::vector<std::unique_ptr<int>>, ByValue> pq;
+    pq.push(std::make_unique<int>(4));
+    pq.push(std::make_unique<int>(9));
+    std::cout << *pq.top() << '\n';
+}`,
+  why: String.raw`Move-only element types work because the queue only ever moves them into place and never copies them. The top is exposed as a const reference, so it is read rather than taken.` },
+
+{ n: 42, d: "extension", t: "Comparator that holds data",
+  p: String.raw`Items 0, 1 and 2 have weights 50, 10 and 30. Push the item numbers 0, 1 and 2 into a queue where the item with the smallest weight is on top. Pop all items, printing their numbers separated by spaces.`,
+  ex: String.raw`1 2 0`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+struct ByWeight {
+    const std::vector<int>* weight;
+    bool operator()(int a, int b) const { return (*weight)[a] > (*weight)[b]; }
+};
+
+int main() {
+    const std::vector<int> weight{50, 10, 30};
+    std::priority_queue<int, std::vector<int>, ByWeight> pq(ByWeight{&weight});
+    for (int i = 0; i < 3; ++i) pq.push(i);
+    while (!pq.empty()) {
+        std::cout << pq.top() << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`A comparator can carry state, such as a pointer to a lookup table. The queue then orders plain indices by values that live elsewhere.` },
+
+{ n: 43, d: "extension", t: "Order by a member operator",
+  p: String.raw`Define a job with a priority number and a name. Push the jobs (2, backup), (9, deploy) and (5, test) into a priority queue that uses the priority number to decide order, largest first. Pop all of them, printing the names separated by spaces.`,
+  ex: String.raw`deploy test backup`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+struct Job {
+    int priority;
+    std::string name;
+    bool operator<(const Job& other) const { return priority < other.priority; }
+};
+
+int main() {
+    std::priority_queue<Job> pq;
+    pq.push({2, "backup"});
+    pq.push({9, "deploy"});
+    pq.push({5, "test"});
+    while (!pq.empty()) {
+        std::cout << pq.top().name << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`With no comparator given, the queue uses the less-than operator of the element type. Defining it on the type makes the type sortable by that rule everywhere.` },
+
+{ n: 44, d: "extension", t: "Count comparisons",
+  p: String.raw`Push 4, 1, 7 and 3 into a priority queue whose comparator counts how many times it is called. Print whether that count is more than zero, then the top element, separated by a space.`,
+  ex: String.raw`true 7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int comparisons = 0;
+
+struct Counting {
+    bool operator()(int a, int b) const { ++comparisons; return a < b; }
+};
+
+int main() {
+    std::priority_queue<int, std::vector<int>, Counting> pq;
+    for (int v : {4, 1, 7, 3}) pq.push(v);
+    std::cout << std::boolalpha << (comparisons > 0) << ' ' << pq.top() << '\n';
+}`,
+  why: String.raw`Every push and pop orders elements by calling the comparator, so its call count is a direct measure of the work the heap performs.` },
+
+{ n: 45, d: "extension", t: "Priority changes by re-pushing",
+  p: String.raw`Schedule task a with priority 1, then task b with priority 3, then change the priority of a to 5 by scheduling it again. Process the tasks from highest current priority to lowest, skipping any outdated schedule entries. Print the names of the tasks that run, separated by spaces.`,
+  ex: String.raw`a b`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <queue>
+#include <string>
+#include <utility>
+
+int main() {
+    std::priority_queue<std::pair<int, std::string>> pq;   // (priority, name)
+    std::map<std::string, int> current;
+    auto schedule = [&](const std::string& name, int p) {
+        current[name] = p;
+        pq.push({p, name});
+    };
+    schedule("a", 1);
+    schedule("b", 3);
+    schedule("a", 5);
+    bool first = true;
+    while (!pq.empty()) {
+        const auto [p, name] = pq.top();
+        pq.pop();
+        if (current[name] != p) continue;   // stale entry
+        std::cout << (first ? "" : " ") << name;
+        first = false;
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`A heap cannot change a stored value in place. Pushing a fresh entry and ignoring the old one when it surfaces gives the same effect, at the cost of some extra entries.` },
+
+{ n: 46, d: "extension", t: "Points by distance",
+  p: String.raw`Store points in a priority queue so that the point farthest from the origin, measured by x*x + y*y, is on top. Add (3,4), (1,1) and (0,6). Print the top point as x and y separated by a space.`,
+  ex: String.raw`0 6`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+struct Point {
+    int x, y;
+    Point(int x_, int y_) : x(x_), y(y_) {}
+    long long dist2() const { return 1LL * x * x + 1LL * y * y; }
+    bool operator<(const Point& o) const { return dist2() < o.dist2(); }
+};
+
+int main() {
+    std::priority_queue<Point> pq;
+    pq.emplace(3, 4);
+    pq.emplace(1, 1);
+    pq.emplace(0, 6);
+    std::cout << pq.top().x << ' ' << pq.top().y << '\n';
+}`,
+  why: String.raw`emplace forwards the constructor arguments and builds the point in the queue's storage, so no temporary copy is made.` },
+
+{ n: 47, d: "extension", t: "Merge two queues",
+  p: String.raw`Queue a holds 5 and 1. Queue b holds 7 and 2. Move everything from b into a. Print the top of a and the size of a, separated by a space.`,
+  ex: String.raw`7 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::priority_queue<int> a, b;
+    a.push(5); a.push(1);
+    b.push(7); b.push(2);
+    while (!b.empty()) {
+        a.push(b.top());
+        b.pop();
+    }
+    std::cout << a.top() << ' ' << a.size() << '\n';
+}`,
+  why: String.raw`Two heaps do not combine cheaply in general. Moving the elements of one into the other costs O(n log m), which is acceptable for small inputs.` },
+
+{ n: 48, d: "extension", t: "Case-insensitive ordering",
+  p: String.raw`Push the words apple, Banana and cherry into a priority queue ordered alphabetically while ignoring letter case, with the alphabetically last word on top. Pop all the words, printing them separated by spaces.`,
+  ex: String.raw`cherry Banana apple`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <vector>
+
+struct CaseInsensitive {
+    bool operator()(const std::string& a, const std::string& b) const {
+        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+            [](unsigned char x, unsigned char y) { return std::tolower(x) < std::tolower(y); });
+    }
+};
+
+int main() {
+    std::priority_queue<std::string, std::vector<std::string>, CaseInsensitive> pq;
+    for (const char* w : {"apple", "Banana", "cherry"}) pq.push(w);
+    while (!pq.empty()) {
+        std::cout << pq.top() << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`The comparator is free to define any strict weak ordering. Ignoring case is just a different ordering over the same strings.` },
+
+// ---------- Applications ----------
+{ n: 49, d: "applications", t: "Last stone standing",
+  p: String.raw`Stones weigh 2, 7, 4, 1, 8 and 1. Repeatedly take the two heaviest stones. If they weigh the same, both are destroyed. Otherwise the lighter one is destroyed and the heavier one's weight is reduced by the lighter one's weight. Print the weight of the last stone left, or 0 if none remain.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<int> stones;
+    for (int s : {2, 7, 4, 1, 8, 1}) stones.push(s);
+    while (stones.size() > 1) {
+        const int y = stones.top(); stones.pop();
+        const int x = stones.top(); stones.pop();
+        if (y != x) stones.push(y - x);
+    }
+    std::cout << (stones.empty() ? 0 : stones.top()) << '\n';
+}`,
+  why: String.raw`Only the two heaviest stones ever matter at each step, so a max-heap gives them directly. The loop stops once at most one stone is left.` },
+
+{ n: 50, d: "applications", t: "Closest to a target",
+  p: String.raw`From the values 4, 9, 1 and 7, find the two values closest to 6, measured by absolute difference. Print them in order of closeness, separated by a space.`,
+  ex: String.raw`7 4`,
+  code: String.raw`#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    const int target = 6;
+    const std::size_t k = 2;
+    // (distance, value): the farthest candidate is on top, so it can be dropped
+    std::priority_queue<std::pair<int, int>> pq;
+    for (int v : {4, 9, 1, 7}) {
+        pq.emplace(std::abs(v - target), v);
+        if (pq.size() > k) pq.pop();
+    }
+    std::vector<std::pair<int, int>> kept;
+    while (!pq.empty()) { kept.push_back(pq.top()); pq.pop(); }
+    std::sort(kept.begin(), kept.end());
+    for (std::size_t i = 0; i < kept.size(); ++i)
+        std::cout << kept[i].second << (i + 1 < kept.size() ? " " : "\n");
+}`,
+  why: String.raw`Keeping the k best candidates while discarding the worst one as new values arrive is a common way to answer nearest-k questions without sorting the whole input.` },
+
+{ n: 51, d: "applications", t: "The tenth ugly number",
+  p: String.raw`Ugly numbers are positive integers whose only prime factors are 2, 3 and 5. They begin 1, 2, 3, 4, 5, 6, 8, 9, 10, 12. Print the 10th ugly number.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <set>
+#include <vector>
+
+int main() {
+    const int n = 10;
+    std::priority_queue<long long, std::vector<long long>, std::greater<>> pq;
+    std::set<long long> seen;
+    pq.push(1);
+    seen.insert(1);
+    long long value = 0;
+    for (int i = 0; i < n; ++i) {
+        value = pq.top();
+        pq.pop();
+        for (long long f : {2LL, 3LL, 5LL}) {
+            if (seen.insert(value * f).second) pq.push(value * f);
+        }
+    }
+    std::cout << value << '\n';
+}`,
+  why: String.raw`Every ugly number is a smaller one times 2, 3 or 5. A min-heap hands them out in increasing order, and a set stops the same value from being produced twice.` },
+
+{ n: 52, d: "applications", t: "Earliest deadline first",
+  p: String.raw`Jobs have deadlines: A has deadline 3, B has deadline 1 and C has deadline 2. Run the jobs in order of earliest deadline first. Print the names in the order they run, separated by spaces.`,
+  ex: String.raw`B C A`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+#include <vector>
+
+int main() {
+    using Job = std::pair<int, std::string>;   // (deadline, name)
+    std::priority_queue<Job, std::vector<Job>, std::greater<>> pq;
+    pq.push({3, "A"});
+    pq.push({1, "B"});
+    pq.push({2, "C"});
+    while (!pq.empty()) {
+        std::cout << pq.top().second << (pq.size() > 1 ? " " : "\n");
+        pq.pop();
+    }
+}`,
+  why: String.raw`Scheduling systems often run whichever waiting job is due soonest. Keeping the jobs in a min-heap by deadline makes that choice a constant-time read.` },
+
+{ n: 53, d: "applications", t: "Pairs with the smallest sums",
+  p: String.raw`Two lists are a = 1, 7, 11 and b = 2, 4, 6. Pick pairs (x from a, y from b) with the smallest sums x + y. Print the first three pairs in order of increasing sum, each as (x,y), separated by spaces.`,
+  ex: String.raw`(1,2) (1,4) (1,6)`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <tuple>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{1, 7, 11}, b{2, 4, 6};
+    const int k = 3;
+    using Item = std::tuple<int, std::size_t, std::size_t>;   // (sum, index in a, index in b)
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> pq;
+    for (std::size_t i = 0; i < a.size(); ++i) pq.emplace(a[i] + b[0], i, 0);
+    bool first = true;
+    for (int step = 0; step < k && !pq.empty(); ++step) {
+        const auto [sum, i, j] = pq.top();
+        pq.pop();
+        std::cout << (first ? "" : " ") << '(' << a[i] << ',' << b[j] << ')';
+        first = false;
+        if (j + 1 < b.size()) pq.emplace(a[i] + b[j + 1], i, j + 1);
+    }
+    std::cout << '\n';
+}`,
+  why: String.raw`Each row of pairs with a fixed first element is sorted, so the heap only needs one live candidate per row. Advancing along the row that produced each pop keeps the search lazy.` },
+
+{ n: 54, d: "applications", t: "Total cost of combining",
+  p: String.raw`Six symbols have frequencies 45, 13, 12, 16, 9 and 5. Repeatedly combine the two smallest current frequencies into one whose value is their sum, adding that sum to a running total, until one value remains. Print the running total.`,
+  ex: String.raw`224`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    std::priority_queue<long long, std::vector<long long>, std::greater<>> pq;
+    for (long long f : {45, 13, 12, 16, 9, 5}) pq.push(f);
+    long long cost = 0;
+    while (pq.size() > 1) {
+        const long long a = pq.top(); pq.pop();
+        const long long b = pq.top(); pq.pop();
+        cost += a + b;
+        pq.push(a + b);
+    }
+    std::cout << cost << '\n';
+}`,
+  why: String.raw`This total equals the number of bits in a prefix-code encoding of the symbols when each merge builds one level of the code tree. Merging the two rarest symbols first keeps the frequent ones shallow.` },
+
+{ n: 55, d: "applications", t: "Sort a nearly sorted array",
+  p: String.raw`The array 2 1 4 3 6 5 is nearly sorted: every element is at most 2 positions away from its place in the sorted order. Sort it using only a small window of elements at any time, and print the result separated by spaces.`,
+  ex: String.raw`1 2 3 4 5 6`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+int main() {
+    const std::vector<int> a{2, 1, 4, 3, 6, 5};
+    const std::size_t k = 2;
+    std::priority_queue<int, std::vector<int>, std::greater<>> window;
+    std::vector<int> out;
+    std::size_t i = 0;
+    for (; i <= k && i < a.size(); ++i) window.push(a[i]);
+    for (; i < a.size(); ++i) {
+        out.push_back(window.top());
+        window.pop();
+        window.push(a[i]);
+    }
+    while (!window.empty()) {
+        out.push_back(window.top());
+        window.pop();
+    }
+    for (std::size_t j = 0; j < out.size(); ++j)
+        std::cout << out[j] << (j + 1 < out.size() ? " " : "\n");
+}`,
+  why: String.raw`Because no element is far from home, the smallest remaining value is always inside a window of k+1 items. Holding just that window in a min-heap gives sorted output in O(n log k).` },
+
+{ n: 56, d: "applications", t: "Eighth smallest in a matrix",
+  p: String.raw`A 3x3 matrix has rows 1 5 9, 10 11 13 and 12 13 15. Each row is in increasing order and each column is in increasing order. Counting duplicates, print the 8th smallest value in the matrix.`,
+  ex: String.raw`13`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <queue>
+#include <tuple>
+#include <vector>
+
+int main() {
+    const std::vector<std::vector<int>> m{{1, 5, 9}, {10, 11, 13}, {12, 13, 15}};
+    // (value, row, col): one live candidate per row, walking right along that row
+    using Item = std::tuple<int, std::size_t, std::size_t>;
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> pq;
+    for (std::size_t r = 0; r < m.size(); ++r) pq.emplace(m[r][0], r, 0);
+    int value = 0;
+    for (int step = 0; step < 8; ++step) {
+        const auto [v, r, c] = pq.top();
+        pq.pop();
+        value = v;
+        if (c + 1 < m[r].size()) pq.emplace(m[r][c + 1], r, c + 1);
+    }
+    std::cout << value << '\n';
+}`,
+  why: String.raw`Sorted rows let a heap of one candidate per row walk the matrix in ascending order. Each pop costs logarithmic time in the number of rows, not the number of cells.` },
+
+{ n: 57, d: "applications", t: "Greedy project selection",
+  p: String.raw`You start with capital 1 and may complete at most 2 projects. Projects are given as (required capital, profit): (1,2), (1,3) and (2,4). A project can be taken once your capital is at least its required capital, and its profit is added to your capital. Each time, take the affordable project with the largest profit. Print your final capital.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::pair<int, int>> projects{{1, 2}, {1, 3}, {2, 4}};   // (capital, profit)
+    std::sort(projects.begin(), projects.end());
+    std::priority_queue<int> affordable;   // profits of projects we can take now
+    std::size_t next = 0;
+    long long capital = 1;
+    for (int step = 0; step < 2; ++step) {
+        while (next < projects.size() && projects[next].first <= capital) {
+            affordable.push(projects[next].second);
+            ++next;
+        }
+        if (affordable.empty()) break;
+        capital += affordable.top();
+        affordable.pop();
+    }
+    std::cout << capital << '\n';
+}`,
+  why: String.raw`Sorting projects by the capital they need lets you unlock them in order as capital grows. A max-heap of unlocked profits then picks the best one each time.` },
+
+{ n: 58, d: "applications", t: "Sort characters by frequency",
+  p: String.raw`Sort the characters of the string cbbaaa so that characters appear in decreasing order of how often they occur. Print the resulting string.`,
+  ex: String.raw`aaabbc`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <queue>
+#include <string>
+#include <utility>
+
+int main() {
+    const std::string s = "cbbaaa";
+    std::map<char, int> count;
+    for (char ch : s) ++count[ch];
+    std::priority_queue<std::pair<int, char>> pq;   // (count, character)
+    for (const auto& [ch, c] : count) pq.push({c, ch});
+    std::string out;
+    while (!pq.empty()) {
+        const auto [c, ch] = pq.top();
+        pq.pop();
+        out.append(static_cast<std::size_t>(c), ch);
+    }
+    std::cout << out << '\n';
+}`,
+  why: String.raw`Ranking by count with a max-heap means the most frequent character is always emitted next. Each character's run is written out in one go.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "stl-priority-queue-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 10, label: "Easy", range: "Problems 1–10", badge: "easy" },
+  { from: 11, to: 20, label: "Medium", range: "Problems 11–20", badge: "medium" },
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" },
+  { from: 31, to: 48, label: "Extension", range: "Problems 31–48", badge: null },
+  { from: 49, to: 58, label: "Applications", range: "Problems 49–58", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
