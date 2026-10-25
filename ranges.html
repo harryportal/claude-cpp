@@ -1,0 +1,1048 @@
+<title>C++ Ranges</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">Problems by topic · 52 problems</p>
+    <h1>C++ Ranges Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">52</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="52" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "easy", t: "Sum the even numbers from a lazy range", idiom: "Filter view",
+  p: String.raw`Using a lazy range of the integers 1 through 10, keep only the even values and sum them. Print the sum, then a newline.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    int s = 0;
+    for (int x : std::views::iota(1, 11) | std::views::filter([](int v) { return v % 2 == 0; }))
+        s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`A filter view does not build a new container. It yields the elements that satisfy the predicate as the loop asks for them.` },
+
+{ n: 2, d: "easy", t: "Squares produced by a transform view", idiom: "Transform view",
+  p: String.raw`Using a lazy range of the integers 1 through 5, produce their squares and print each square followed by a space, then a newline.`,
+  ex: String.raw`1 4 9 16 25`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    for (int x : std::views::iota(1, 6) | std::views::transform([](int v) { return v * v; }))
+        std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A transform view applies a function to each element as it is read, so the squares are never stored anywhere.` },
+
+{ n: 3, d: "easy", t: "Skip and keep with drop and take", idiom: "Drop and take",
+  p: String.raw`Starting from the integers 1 through 10, skip the first two values and then keep the next three. Print each remaining value followed by a space, then a newline.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    for (int x : std::views::iota(1, 11) | std::views::drop(2) | std::views::take(3))
+        std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`drop and take compose into a window over a sequence, which replaces index arithmetic with a readable pipeline.` },
+
+{ n: 4, d: "easy", t: "Sort strings by length with a projection", idiom: "Projections",
+  p: String.raw`Sort the vector of strings ccc, a and bb by their length, using a projection rather than writing a comparison function. Print the sorted strings separated by spaces, then a newline.`,
+  ex: String.raw`a bb ccc`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::string> v{"ccc", "a", "bb"};
+    std::ranges::sort(v, {}, &std::string::size);
+    for (const auto& s : v) std::cout << s << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A projection tells a range algorithm which member of each element to compare. The algorithm then uses the comparison on that member, which keeps the call short and avoids writing a lambda.` },
+
+{ n: 5, d: "easy", t: "Find the first element matching a predicate", idiom: "Range algorithms",
+  p: String.raw`In the vector 1, 3, 5, 7, find the first element greater than 4 using the range form of find_if. Print its index, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 3, 5, 7};
+    auto it = std::ranges::find_if(v, [](int x) { return x > 4; });
+    std::cout << (it - v.begin()) << "\n";
+}`,
+  why: String.raw`The range versions of algorithms take a whole range instead of a begin and end pair, so one argument identifies the sequence and the mistake of mismatched iterators becomes impossible.` },
+
+{ n: 6, d: "easy", t: "Reverse a range without copying", idiom: "Reverse view",
+  p: String.raw`Print the elements of the vector 1, 2, 3 in reverse order, separated by spaces, then a newline. Do not modify the vector.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    for (int x : v | std::views::reverse) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A reverse view walks the same elements backwards. Nothing is copied, and the original vector is unchanged.` },
+
+{ n: 7, d: "easy", t: "Count multiples of seven", idiom: "Range algorithms",
+  p: String.raw`Count how many of the integers 1 through 100 are divisible by 7, using a range algorithm on a lazy range. Print the count, then a newline.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <ranges>
+
+int main() {
+    auto n = std::ranges::count_if(std::views::iota(1, 101), [](int x) { return x % 7 == 0; });
+    std::cout << n << "\n";
+}`,
+  why: String.raw`Range algorithms accept views as well as containers, so a counting algorithm can run directly on a generated sequence.` },
+
+{ n: 8, d: "easy", t: "Find the record with the highest score", idiom: "Projections",
+  p: String.raw`Given the people ann with score 70, bob with score 90 and cy with score 85, find the person with the highest score using a projection on the score field. Print the name, then a newline.`,
+  ex: String.raw`bob`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct Person {
+    std::string name;
+    int score;
+};
+
+int main() {
+    std::vector<Person> people{{"ann", 70}, {"bob", 90}, {"cy", 85}};
+    auto it = std::ranges::max_element(people, {}, &Person::score);
+    std::cout << it->name << "\n";
+}`,
+  why: String.raw`Taking a projection to a member lets a maximum be found by one field without writing a comparator. The same pattern works for any algorithm that compares elements.` },
+
+{ n: 9, d: "easy", t: "Count elements until a condition first fails", idiom: "Take while",
+  p: String.raw`Using a lazy range of squares of the integers starting at 1, count how many squares are less than 50 before the first square that is not. Print the count, then a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <ranges>
+
+int main() {
+    auto squares = std::views::iota(1) | std::views::transform([](int x) { return x * x; });
+    auto n = std::ranges::distance(squares | std::views::take_while([](int x) { return x < 50; }));
+    std::cout << n << "\n";
+}`,
+  why: String.raw`take_while stops the pipeline at the first failing element, even though the underlying range is infinite. Laziness is what makes this safe.` },
+
+{ n: 10, d: "easy", t: "Flatten a vector of vectors", idiom: "Join view",
+  p: String.raw`Given the nested vector {1, 2}, {3}, {4, 5}, print its elements flattened into one sequence, separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 4 5`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<int>> nested{{1, 2}, {3}, {4, 5}};
+    for (int x : nested | std::views::join) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A join view presents a range of ranges as a single flat range, without copying the inner elements into a new container.` },
+
+{ n: 11, d: "easy", t: "Split a string into fields", idiom: "Split view",
+  p: String.raw`Split the string a,b,c at each comma and count the fields. Print the count, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <string>
+
+int main() {
+    std::string s = "a,b,c";
+    auto fields = s | std::views::split(',');
+    std::cout << std::ranges::distance(fields) << "\n";
+}`,
+  why: String.raw`split produces a view of subranges, one per field, which avoids allocating a string for each field until you need one.` },
+
+{ n: 12, d: "easy", t: "Generate values from an infinite range", idiom: "Infinite ranges",
+  p: String.raw`Using a lazy range of the integers starting at 1, transform each to five times its value, and take the first three results. Print them separated by spaces, then a newline.`,
+  ex: String.raw`5 10 15`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    auto r = std::views::iota(1) | std::views::transform([](int x) { return x * 5; }) | std::views::take(3);
+    for (int x : r) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`An unbounded iota is only a rule for producing values. Taking a prefix turns it into a finite sequence, and the pipeline never generates anything past the prefix.` },
+
+{ n: 13, d: "easy", t: "Copy matching elements into an output container", idiom: "Range copy_if",
+  p: String.raw`Copy the even values from the vector 1 through 6 into a new vector, using a range algorithm, and print the copied values separated by spaces, then a newline.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6};
+    std::vector<int> out;
+    std::ranges::copy_if(v, std::back_inserter(out), [](int x) { return x % 2 == 0; });
+    for (int x : out) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`The range form of copy_if reads the source range once and appends matches to the output iterator. Its output is independent of the input, so the original vector is left as it was.` },
+
+{ n: 14, d: "easy", t: "Length of an integer range", idiom: "Distance",
+  p: String.raw`Compute the number of elements in the range of integers from 5 up to but not including 10, using ranges::distance. Print the count, then a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <ranges>
+
+int main() {
+    std::cout << std::ranges::distance(std::views::iota(5, 10)) << "\n";
+}`,
+  why: String.raw`For a sized range the distance is computed directly from the bounds. Counting is therefore cheap even when the range is generated.` },
+
+{ n: 15, d: "medium", t: "Dot product over two ranges zipped together", idiom: "Zip view",
+  p: String.raw`Given the vectors 1, 2, 3 and 4, 5, 6, pair them up element by element and compute the sum of the products of each pair. Print the result, then a newline.`,
+  ex: String.raw`32`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 2, 3}, b{4, 5, 6};
+    int s = 0;
+    for (auto [x, y] : std::views::zip(a, b)) s += x * y;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`zip walks several ranges in step and yields a tuple of references for each position, so parallel sequences can be processed without an index.` },
+
+{ n: 16, d: "medium", t: "Positions of a value with enumerate", idiom: "Enumerate view",
+  p: String.raw`In the vector 3, 1, 3, 2, print the indices of every element equal to 3, separated by spaces, then a newline.`,
+  ex: String.raw`0 2`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{3, 1, 3, 2};
+    for (auto [i, x] : std::views::enumerate(v))
+        if (x == 3) std::cout << i << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`enumerate yields each element together with its position, which replaces a manually maintained counter in loops that need to know where they are.` },
+
+{ n: 17, d: "medium", t: "Split a sequence into chunks", idiom: "Chunk view",
+  p: String.raw`Split the vector 1, 2, 3, 4, 5 into consecutive chunks of at most two elements. Print the size of each chunk separated by spaces, then a newline.`,
+  ex: String.raw`2 2 1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5};
+    for (auto chunk : v | std::views::chunk(2))
+        std::cout << std::ranges::distance(chunk) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`chunk divides a range into contiguous pieces of a fixed size, the last piece possibly shorter. It describes block processing directly.` },
+
+{ n: 18, d: "medium", t: "Sliding windows of two", idiom: "Slide view",
+  p: String.raw`Consider the sliding windows of length two over the vector 1, 2, 3, 4. Print the sum of each window separated by spaces, then a newline.`,
+  ex: String.raw`3 5 7`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4};
+    for (auto w : v | std::views::slide(2)) {
+        int s = 0;
+        for (int x : w) s += x;
+        std::cout << s << " ";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`slide gives each overlapping window as a view. Moving the window is the same as dropping one element and taking another, so the window sums are each computed from fresh elements.` },
+
+{ n: 19, d: "medium", t: "Run lengths of equal neighbours", idiom: "Chunk by view",
+  p: String.raw`Group the vector 1, 1, 2, 2, 2, 3 into maximal runs of equal values. Print the length of each run separated by spaces, then a newline.`,
+  ex: String.raw`2 3 1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 1, 2, 2, 2, 3};
+    for (auto run : v | std::views::chunk_by(std::ranges::equal_to{}))
+        std::cout << std::ranges::distance(run) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`chunk_by starts a new group whenever the predicate between neighbouring elements fails. It is the range form of grouping sorted data.` },
+
+{ n: 20, d: "medium", t: "Every other element of a range", idiom: "Stride view",
+  p: String.raw`Starting from the integers 0 through 6, take every second value. Print the values separated by spaces, then a newline.`,
+  ex: String.raw`0 2 4 6`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    for (int x : std::views::iota(0, 7) | std::views::stride(2)) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`stride selects positions at a fixed step through a range. It is the range form of a loop that advances by more than one.` },
+
+{ n: 21, d: "medium", t: "Differences between neighbours", idiom: "Adjacent view",
+  p: String.raw`For the vector 1, 4, 9, 16, compute the difference between each element and the one after it. Print the differences separated by spaces, then a newline.`,
+  ex: String.raw`3 5 7`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 4, 9, 16};
+    for (auto [a, b] : v | std::views::adjacent<2>) std::cout << (b - a) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`adjacent<2> yields each consecutive pair, and it gives you neighbouring elements without index arithmetic that could go out of bounds.` },
+
+{ n: 22, d: "medium", t: "Sum of squares of odd numbers", idiom: "Pipelines",
+  p: String.raw`Using a single pipeline over the integers 1 through 9, keep the odd values, square them, and sum the results. Print the sum, then a newline.`,
+  ex: String.raw`165`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    int s = 0;
+    for (int x : std::views::iota(1, 10)
+                  | std::views::filter([](int v) { return v % 2 == 1; })
+                  | std::views::transform([](int v) { return v * v; }))
+        s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`Chaining filter and transform states each step once, and the loop runs the whole chain for each element in turn. The steps read like a description of the data flow.` },
+
+{ n: 23, d: "medium", t: "Sort in descending order with a standard comparator", idiom: "Comparators in ranges",
+  p: String.raw`Sort the vector 3, 1, 2 into descending order using the standard greater comparator in the range form of sort. Print the result separated by spaces, then a newline.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{3, 1, 2};
+    std::ranges::sort(v, std::ranges::greater{});
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`The range algorithms accept function objects in the same way as the iterator forms, so comparators are written once and reused.` },
+
+{ n: 24, d: "medium", t: "First position not less than a value", idiom: "Binary search",
+  p: String.raw`In the sorted vector 1, 3, 4, 4, 7, find the index of the first element that is at least 4 using the range form of lower_bound. Print the index, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 3, 4, 4, 7};
+    auto it = std::ranges::lower_bound(v, 4);
+    std::cout << (it - v.begin()) << "\n";
+}`,
+  why: String.raw`lower_bound uses binary search, which needs the range to be sorted. It returns the first position where the value could be inserted without disturbing order.` },
+
+{ n: 25, d: "medium", t: "Remove adjacent duplicates", idiom: "Unique and erase",
+  p: String.raw`From the vector 1, 1, 2, 3, 3, 3, remove consecutive duplicates using the range form of unique, then erase the leftover tail. Print the remaining elements separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 1, 2, 3, 3, 3};
+    auto r = std::ranges::unique(v);
+    v.erase(r.begin(), r.end());
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`unique moves the distinct values to the front and returns the start of the leftover tail, which still has to be erased from the container to change its size.` },
+
+{ n: 26, d: "medium", t: "Count the elements moved to the front by partition", idiom: "Partition",
+  p: String.raw`Partition the vector 1, 2, 3, 4, 5, 6 so that the even values come first. Print the number of even values, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6};
+    auto r = std::ranges::partition(v, [](int x) { return x % 2 == 0; });
+    std::cout << (r.begin() - v.begin()) << "\n";
+}`,
+  why: String.raw`partition reorders a range so the elements satisfying a predicate come first. The returned subrange marks the boundary between the two groups.` },
+
+{ n: 27, d: "medium", t: "Sum the values of a map", idiom: "Values view",
+  p: String.raw`Given the map with key 1 mapped to 10 and key 2 mapped to 20, sum the mapped values using a view of the values only. Print the sum, then a newline.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <ranges>
+
+int main() {
+    std::map<int, int> m{{1, 10}, {2, 20}};
+    int s = 0;
+    for (int v : m | std::views::values) s += v;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`The values view selects one part of each key-value pair without copying the map, so code that needs only one part does not have to name the pair type.` },
+
+{ n: 28, d: "medium", t: "Add two ranges elementwise", idiom: "Zip transform view",
+  p: String.raw`Using a range that combines the vectors 1, 2 and 10, 20 elementwise by addition, print each result separated by spaces, then a newline.`,
+  ex: String.raw`11 22`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 2}, b{10, 20};
+    for (int x : std::views::zip_transform(std::plus{}, a, b)) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`zip_transform fuses a zip with a function, producing one result per position on demand. No intermediate vector is created for the sums.` },
+
+{ n: 29, d: "medium", t: "First three multiples of three above ten", idiom: "Filter and take",
+  p: String.raw`From the integers starting at 11, keep those divisible by 3 and take the first three. Print them separated by spaces, then a newline.`,
+  ex: String.raw`12 15 18`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    auto r = std::views::iota(11) | std::views::filter([](int x) { return x % 3 == 0; })
+                                  | std::views::take(3);
+    for (int x : r) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Filtering an unbounded range is safe as long as the pipeline ends in a take, because elements are produced only as the consumer requests them.` },
+
+{ n: 30, d: "medium", t: "Sum the first two elements of a C array", idiom: "Counted view",
+  p: String.raw`From the C array 1, 2, 3, make a view of its first two elements using a pointer and a count. Print the sum of those elements, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    int arr[] = {1, 2, 3};
+    int s = 0;
+    for (int x : std::views::counted(arr, 2)) s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`counted turns a pointer and a length into a range, which is how range algorithms interoperate with C-style arrays and buffers.` },
+
+{ n: 31, d: "medium", t: "Sum the elements of a range with a loop", idiom: "Range-based loops",
+  p: String.raw`Sum the values of the vector 4, 5, 6 using a range-based for loop, and print the sum, then a newline.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v{4, 5, 6};
+    int s = 0;
+    for (int x : v) s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`A range-based for loop works with any range, so the same loop applies to containers, views and generated sequences.` },
+
+{ n: 32, d: "hard", t: "Write a custom input range", idiom: "Custom ranges",
+  p: String.raw`Define a type Countdown that holds a starting value, and provide an iterator type and begin and end members so that a range-based for loop over Countdown{3} visits 3, 2 and 1 and stops before 0. Sum the values produced by a loop over Countdown{3} and print the sum, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+struct Countdown {
+    struct It {
+        using value_type = int;
+        using difference_type = std::ptrdiff_t;
+        int v;
+        int operator*() const { return v; }
+        It& operator++() {
+            --v;
+            return *this;
+        }
+        void operator++(int) { ++*this; }
+        bool operator==(const It& o) const = default;
+    };
+    int from;
+    It begin() const { return It{from}; }
+    It end() const { return It{0}; }
+};
+
+int main() {
+    int s = 0;
+    for (int x : Countdown{3}) s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`A custom range needs an iterator that supports increment and dereference, plus a sentinel that marks the end. Once those exist, the standard range algorithms and adaptors work with it unchanged.` },
+
+{ n: 33, d: "hard", t: "Sort by department ascending, then salary descending", idiom: "Multi-key projection",
+  p: String.raw`Sort the employees, given as eng with salary 100 named ann, ops with salary 90 named bob, and eng with salary 120 named cy, so that they are ordered by department ascending and then by salary descending. Use a single projection that returns a tuple. Print the names separated by spaces, then a newline.`,
+  ex: String.raw`cy ann bob`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Emp {
+    std::string dept;
+    int salary;
+    std::string name;
+};
+
+int main() {
+    std::vector<Emp> v{{"eng", 100, "ann"}, {"ops", 90, "bob"}, {"eng", 120, "cy"}};
+    std::ranges::sort(v, {}, [](const Emp& e) { return std::pair{e.dept, -e.salary}; });
+    for (const auto& e : v) std::cout << e.name << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`Comparing a tuple compares its fields in order, so a projection that negates one numeric field reverses that key while keeping the others ascending.` },
+
+{ n: 34, d: "hard", t: "Count how many elements a pipeline actually evaluates", idiom: "Lazy evaluation",
+  p: String.raw`Create the vector 1, 2, 3, 4, 5 and a counter initialized to zero. Build a lazy transform view over it that increments the counter each time its function runs and returns the element doubled. Take the first two elements of that view and iterate over them without anything else. Print the value of the counter, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5};
+    int calls = 0;
+    auto doubled = v | std::views::transform([&calls](int x) {
+        ++calls;
+        return x * 2;
+    });
+    for (int x : doubled | std::views::take(2)) {
+        (void)x;
+    }
+    std::cout << calls << "\n";
+}`,
+  why: String.raw`Views evaluate their functions only for the elements a consumer reads. Taking two elements from a five-element transform therefore calls the function twice, not five times.` },
+
+{ n: 35, d: "hard", t: "Count a run with equal_range", idiom: "Sorted ranges",
+  p: String.raw`In the sorted vector 1, 4, 4, 4, 5, find the subrange of values equal to 4 using the range form of equal_range. Print the number of elements in that subrange, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 4, 4, 4, 5};
+    auto r = std::ranges::equal_range(v, 4);
+    std::cout << std::ranges::distance(r) << "\n";
+}`,
+  why: String.raw`equal_range finds the first and past-the-last positions of a value in a sorted range using two binary searches, so counting duplicates takes logarithmic time.` },
+
+{ n: 36, d: "hard", t: "Drop a leading prefix that satisfies a condition", idiom: "Drop while",
+  p: String.raw`From the vector 1, 2, 5, 1, skip the leading elements that are less than 3 and keep the rest. Print the remaining elements separated by spaces, then a newline.`,
+  ex: String.raw`5 1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 5, 1};
+    for (int x : v | std::views::drop_while([](int x) { return x < 3; })) std::cout << x << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`drop_while only checks the leading elements. Once one fails the condition, every later element is kept, even if it would have satisfied the predicate.` },
+
+{ n: 37, d: "hard", t: "Stable sort keeps the order of equal keys", idiom: "Stable sorting",
+  p: String.raw`Start with the pairs (2, a), (1, b), (2, c), (1, d). Sort them by the first number only, using a stable sort in the range form, so that pairs with equal first numbers keep their original order. Print the second letters of the sorted pairs with no separators, then a newline.`,
+  ex: String.raw`bdac`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<std::pair<int, char>> v{{2, 'a'}, {1, 'b'}, {2, 'c'}, {1, 'd'}};
+    std::ranges::stable_sort(v, {}, &std::pair<int, char>::first);
+    for (const auto& p : v) std::cout << p.second;
+    std::cout << "\n";
+}`,
+  why: String.raw`A stable sort preserves the relative order of elements that compare equal. This matters when a list is sorted in stages, since earlier orderings survive the later sort.` },
+
+{ n: 38, d: "hard", t: "Count common elements of two sorted ranges", idiom: "Set operations on ranges",
+  p: String.raw`Compute the intersection of the sorted vectors 1, 3, 5, 7 and 3, 4, 5, 6 using the range form of set_intersection, writing the result into a new vector. Print the number of elements in the result, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 3, 5, 7}, b{3, 4, 5, 6};
+    std::vector<int> out;
+    std::ranges::set_intersection(a, b, std::back_inserter(out));
+    std::cout << out.size() << "\n";
+}`,
+  why: String.raw`Set algorithms on sorted ranges merge the two inputs in one pass, which is linear in their combined length. Sortedness is what makes that single pass correct.` },
+
+{ n: 39, d: "hard", t: "Find an element by a member field", idiom: "Projections",
+  p: String.raw`In the vector of people named ann, bob and cy, find the one named bob by projecting onto the name field, and print its index, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct Person {
+    std::string name;
+    int age;
+};
+
+int main() {
+    std::vector<Person> v{{"ann", 30}, {"bob", 41}, {"cy", 25}};
+    auto it = std::ranges::find(v, std::string("bob"), &Person::name);
+    std::cout << (it - v.begin()) << "\n";
+}`,
+  why: String.raw`find with a projection compares one member of each element with a value, so searching structured data needs no lambda.` },
+
+{ n: 40, d: "extension", t: "Index-aware loops over a range", idiom: "Enumerate with arithmetic",
+  p: String.raw`Using the vector 5, 6, 7 and enumerate, compute the sum of each element multiplied by its index. Print the result, then a newline.`,
+  ex: String.raw`20`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{5, 6, 7};
+    int s = 0;
+    for (auto [i, x] : std::views::enumerate(v)) s += static_cast<int>(i) * x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`enumerate gives the index as a signed difference type, which must be converted before it is multiplied with unsigned or int values. The conversion is explicit so the intent stays visible.` },
+
+{ n: 41, d: "extension", t: "Build a subrange from two iterators", idiom: "Subrange",
+  p: String.raw`Create a subrange that starts at the second element and stops before the last element of the vector 1, 2, 3, 4. Print the size of the subrange, a space, and the sum of its elements, then a newline.`,
+  ex: String.raw`2 5`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4};
+    auto sr = std::ranges::subrange(v.begin() + 1, v.end() - 1);
+    int s = 0;
+    for (int x : sr) s += x;
+    std::cout << sr.size() << " " << s << "\n";
+}`,
+  why: String.raw`A subrange is a non-owning pair of iterators with range operations. It is a convenient way to pass part of a container to a function that takes a range.` },
+
+{ n: 42, d: "extension", t: "Detect a result that refers to a temporary", idiom: "Dangling iterators",
+  p: String.raw`Search the temporary vector 1, 2 for the value 1 using the range form of find. Check whether the returned type is std::ranges::dangling, which means the result does not refer to a valid iterator once the temporary is gone. Print 1 if it is, else 0, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <type_traits>
+#include <vector>
+
+int main() {
+    using R = decltype(std::ranges::find(std::vector<int>{1, 2}, 1));
+    std::cout << std::is_same_v<R, std::ranges::dangling> << "\n";
+}`,
+  why: String.raw`When a range algorithm is given an rvalue range, it cannot return an iterator into it, because the iterator would dangle after the full expression. It returns the placeholder dangling instead, so the compiler flags misuse at the point it happens.` },
+
+{ n: 43, d: "extension", t: "Make a view read-only", idiom: "as_const view",
+  p: String.raw`Given the vector 1, 2, 3, produce a view of its elements that presents them as const. Check whether the reference type obtained when iterating over that view is a const reference, and print 1 if it is, else 0, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <type_traits>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    using R = std::ranges::range_reference_t<decltype(v | std::views::as_const)>;
+    std::cout << std::is_const_v<std::remove_reference_t<R>> << "\n";
+}`,
+  why: String.raw`as_const is a view that changes the element type of a range to const. It gives a read-only interface to data without copying it or changing the container.` },
+
+{ n: 44, d: "extension", t: "Check which ranges are common", idiom: "Common ranges",
+  p: String.raw`Check whether the vector and the integer range from 1 to 5 are common ranges, meaning that they have the same type for begin and end. Print 1 for each that is, separated by a space, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::cout << std::ranges::common_range<std::vector<int>&> << " "
+              << std::ranges::common_range<decltype(std::views::iota(1, 5))> << "\n";
+}`,
+  why: String.raw`Many older algorithms require begin and end of the same type. Common ranges meet that requirement, and views that do not can be turned into common ones with common_view.` },
+
+{ n: 45, d: "extension", t: "Check whether a view knows its size", idiom: "Sized ranges",
+  p: String.raw`Check whether the view obtained by applying a transform to the vector 1, 2, 3 is a sized range, meaning that its size can be found without iterating. Print 1 if it is, else 0, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    auto t = v | std::views::transform([](int x) { return x + 1; });
+    std::cout << std::ranges::sized_range<decltype(t)> << "\n";
+}`,
+  why: String.raw`A sized range reports its size in constant time, which lets algorithms such as distance and reserve work without walking the sequence.` },
+
+{ n: 46, d: "extension", t: "Iterate over a range of ranges by reference", idiom: "Nested views",
+  p: String.raw`Given the vector of vectors {1, 2} and {3}, sum all their elements by joining them into one view. Print the sum, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<std::vector<int>> nested{{1, 2}, {3}};
+    int s = 0;
+    for (int x : nested | std::views::join) s += x;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`Joining keeps references into the inner vectors, so a loop can read each element without copying the nested structure.` },
+
+{ n: 47, d: "applications", t: "Sum the numbers in a comma-separated line", idiom: "Parsing with split",
+  p: String.raw`The line 1,2,3 contains numbers separated by commas. Split it at each comma, convert each field to an integer, and print the total, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <string>
+
+int main() {
+    std::string line = "1,2,3";
+    int total = 0;
+    for (auto field : line | std::views::split(',')) {
+        std::string t(field.begin(), field.end());
+        total += std::stoi(t);
+    }
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Splitting a line into fields lazily avoids building a vector of strings first. Only one field is converted at a time, which keeps the work proportional to the input.` },
+
+{ n: 48, d: "applications", t: "Count words in a sentence", idiom: "Splitting text",
+  p: String.raw`Count the words in the sentence the quick fox, where words are separated by single spaces. Print the count, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <string>
+
+int main() {
+    std::string s = "the quick fox";
+    std::cout << std::ranges::distance(s | std::views::split(' ')) << "\n";
+}`,
+  why: String.raw`A split view yields one subrange per word, so counting words is the same as counting the fields that the split produces.` },
+
+{ n: 49, d: "applications", t: "First two error messages from a log", idiom: "Log filtering",
+  p: String.raw`Given the log lines INFO a, ERROR b, ERROR c, select the lines that begin with ERROR and take the first two. Print each message, which is the text after the word ERROR and a space, separated by a space, then a newline.`,
+  ex: String.raw`b c`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <vector>
+
+int main() {
+    std::vector<std::string> log{"INFO a", "ERROR b", "ERROR c"};
+    auto errors = log | std::views::filter([](const std::string& l) {
+                            return std::string_view(l).starts_with("ERROR");
+                        })
+                      | std::views::take(2);
+    for (const auto& l : errors) std::cout << std::string_view(l).substr(6) << " ";
+    std::cout << "\n";
+}`,
+  why: String.raw`A lazy pipeline reads the log only as far as needed to find two errors, so it can process a stream of any length without holding all of it in memory.` },
+
+{ n: 50, d: "applications", t: "Sliding window sums over a sensor stream", idiom: "Sliding windows",
+  p: String.raw`Given the readings 1, 2, 3, 4, 5, compute the sum of each pair of consecutive readings, using sliding windows of length two. Print the sums separated by spaces, then a newline.`,
+  ex: String.raw`3 5 7 9`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> readings{1, 2, 3, 4, 5};
+    for (auto w : readings | std::views::slide(2)) {
+        int s = 0;
+        for (int x : w) s += x;
+        std::cout << s << " ";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Windowed statistics such as moving averages are sliding-window computations. A slide view supplies each window without copying the readings.` },
+
+{ n: 51, d: "applications", t: "Average age of adults", idiom: "Filter and reduce",
+  p: String.raw`Given the ages 12, 20 and 30, select the ages that are at least 18, and print their average with two decimal places, then a newline.`,
+  ex: String.raw`25.00`,
+  code: String.raw`#include <cstdio>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> ages{12, 20, 30};
+    int sum = 0, count = 0;
+    for (int a : ages | std::views::filter([](int x) { return x >= 18; })) {
+        sum += a;
+        ++count;
+    }
+    std::printf("%.2f\n", static_cast<double>(sum) / count);
+}`,
+  why: String.raw`Filtering and then reducing is the usual shape of an aggregate query. The filter view feeds the reduction without an intermediate list of the adults.` },
+
+{ n: 52, d: "applications", t: "Row sums of a flattened matrix", idiom: "Chunking data into rows",
+  p: String.raw`A two-by-three matrix is stored row by row in the vector 1, 2, 3, 4, 5, 6. Split the storage into rows of three values and print the sum of each row separated by a space, then a newline.`,
+  ex: String.raw`6 15`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> m{1, 2, 3, 4, 5, 6};
+    for (auto row : m | std::views::chunk(3)) {
+        int s = 0;
+        for (int x : row) s += x;
+        std::cout << s << " ";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Matrices stored in row-major order are a range of values that chunk turns back into rows. This keeps the storage flat while the computation is written row by row.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-ranges-progress";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 14, label: "Easy", range: "Problems 1–14", badge: "easy" },
+  { from: 15, to: 31, label: "Medium", range: "Problems 15–31", badge: "medium" },
+  { from: 32, to: 39, label: "Hard", range: "Problems 32–39", badge: "hard" },
+  { from: 40, to: 46, label: "Extension", range: "Problems 40–46", badge: null },
+  { from: 47, to: 52, label: "Applications", range: "Problems 47–52", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
