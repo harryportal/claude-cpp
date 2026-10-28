@@ -1,37 +1,93 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C++ and OS Practice</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C++ Practice</title>
 <style>
-:root{--bg:#f4f6f8;--fg:#1a1f29;--muted:#5d6676;--surface:#fff;--line:#d9dee6;--accent:#2d5b86}
-@media (prefers-color-scheme:dark){:root{--bg:#11141a;--fg:#e6e9ef;--muted:#9aa3b3;--surface:#181c24;--line:#2a303b;--accent:#8fb7dd;color-scheme:dark}}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:32px max(16px,env(safe-area-inset-left,0px)) 48px}
-main{max-width:760px;margin:0 auto}
-h1{font-size:28px;margin:0 0 6px}p.note{color:var(--muted);margin:0 0 24px}
-.grid{display:grid;gap:10px;grid-template-columns:1fr}
-.card{display:block;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--accent);text-decoration:none;font-weight:600}
-.card:hover{border-color:var(--accent)}
-</style></head><body><main>
-<h1>C++ and OS Practice</h1>
-<p class="note">Problem sets with expected output and worked solutions. Each page keeps its own progress in this browser.</p>
-<div class="grid">
-<a class="card" href="ca.html"><span>C++ Concurrency in Action</span></a>
-<a class="card" href="layout.html"><span>C++ Memory Model and Layout</span></a>
-<a class="card" href="layout2.html"><span>C++ Memory Layout Gaps</span></a>
-<a class="card" href="perf.html"><span>C++ High-Performance Patterns</span></a>
-<a class="card" href="idioms.html"><span>C++ Idioms Problems</span></a>
-<a class="card" href="templates.html"><span>C++ Templates Problems</span></a>
-<a class="card" href="smartptr.html"><span>C++ Smart Pointers Problems</span></a>
-<a class="card" href="practical.html"><span>C++ Practical Problems</span></a>
-<a class="card" href="concurrency.html"><span>STL Concurrency Problems</span></a>
-<a class="card" href="array.html"><span>STL Array Problems</span></a>
-<a class="card" href="string.html"><span>STL String Problems</span></a>
-<a class="card" href="set.html"><span>STL Set Problems</span></a>
-<a class="card" href="list.html"><span>STL List Problems</span></a>
-<a class="card" href="forward_list.html"><span>STL Forward List Problems</span></a>
-<a class="card" href="deque.html"><span>STL Deque Problems</span></a>
-<a class="card" href="stack.html"><span>STL Stack Problems</span></a>
-<a class="card" href="queue.html"><span>STL Queue Problems</span></a>
-<a class="card" href="priority_queue.html"><span>STL Priority Queue Problems</span></a>
-<a class="card" href="umap.html"><span>unordered_map Problems</span></a>
-<a class="card" href="move.html"><span>C++ Move Semantics</span></a>
-<a class="card" href="algorithms.html"><span>C++ Algorithms Problems</span></a>
-<a class="card" href="ranges.html"><span>C++ Ranges Problems</span></a>
-</div></main></body></html>
+:root{--bg:#f4f6f8;--fg:#1a1f29;--muted:#5d6676;--surface:#fff;--line:#d9dee6;--accent:#2d5b86;--pill:#e4ecf4;--pill-fg:#2d5b86}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141a;--fg:#e6e9ef;--muted:#9aa3b3;--surface:#181c24;--line:#2a303b;--accent:#8fb7dd;--pill:#222b38;--pill-fg:#9cc4e8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11141a;--fg:#e6e9ef;--muted:#9aa3b3;--surface:#181c24;--line:#2a303b;--accent:#8fb7dd;--pill:#222b38;--pill-fg:#9cc4e8;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:40px max(16px,env(safe-area-inset-left,0px)) 56px max(16px,env(safe-area-inset-right,0px))}
+main{max-width:920px;margin:0 auto}
+.intro{margin:0 0 36px}
+.kicker{margin:0 0 6px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+h1{font-size:32px;line-height:1.2;margin:0 0 12px;text-wrap:balance}
+.lede{margin:0 0 16px;color:var(--fg);max-width:64ch}
+.stats{display:flex;flex-wrap:wrap;gap:10px 22px;color:var(--muted);font-size:14px}
+.stats strong{color:var(--fg);font-size:18px;font-variant-numeric:tabular-nums;margin-right:4px}
+.group{margin:0 0 34px}
+.group-head{margin:0 0 12px}
+.group-head h2{font-size:18px;margin:0 0 2px}
+.group-head p{margin:0;color:var(--muted);font-size:14px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.card{display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--fg);text-decoration:none;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card .title{font-weight:600;color:var(--accent);overflow-wrap:anywhere}
+.pill{align-self:flex-start;font-size:12px;background:var(--pill);color:var(--pill-fg);border-radius:99px;padding:2px 9px;font-variant-numeric:tabular-nums}
+footer{margin-top:12px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <div class="intro">
+    <p class="kicker">Self-paced practice</p>
+    <h1>C++ Practice</h1>
+    <p class="lede">Problems for the C++ language, the standard library and the algorithms built on them. Each one has a short statement, the exact output the program should print, and a worked solution you can reveal once you have tried it.</p>
+    <div class="stats">
+      <span><strong>1,464</strong>problems</span>
+      <span><strong>22</strong>topics</span>
+      <span><strong>4</strong>areas</span>
+    </div>
+  </div>
+
+  <section class="group">
+    <header class="group-head"><h2>Language and design</h2><p>Idioms, templates, smart pointers, move semantics and practical patterns.</p></header>
+    <div class="grid">
+      <a class="card" href="idioms.html"><span class="title">C++ Idioms</span><span class="pill">120 problems</span></a>
+      <a class="card" href="templates.html"><span class="title">Templates</span><span class="pill">98 problems</span></a>
+      <a class="card" href="smartptr.html"><span class="title">Smart Pointers</span><span class="pill">80 problems</span></a>
+      <a class="card" href="move.html"><span class="title">Move Semantics</span><span class="pill">45 problems</span></a>
+      <a class="card" href="practical.html"><span class="title">Practical Problems</span><span class="pill">70 problems</span></a>
+      <a class="card" href="perf.html"><span class="title">High-Performance Patterns</span><span class="pill">88 problems</span></a>
+    </div>
+  </section>
+
+  <section class="group">
+    <header class="group-head"><h2>Memory and concurrency</h2><p>How objects are laid out in memory, and how threads share it.</p></header>
+    <div class="grid">
+      <a class="card" href="layout.html"><span class="title">Memory Model and Layout</span><span class="pill">32 problems</span></a>
+      <a class="card" href="layout2.html"><span class="title">Memory Layout Gaps</span><span class="pill">19 problems</span></a>
+      <a class="card" href="ca.html"><span class="title">Concurrency in Action</span><span class="pill">121 problems</span></a>
+      <a class="card" href="concurrency.html"><span class="title">STL Concurrency</span><span class="pill">113 problems</span></a>
+    </div>
+  </section>
+
+  <section class="group">
+    <header class="group-head"><h2>Standard containers</h2><p>Each container, its operations and when to choose it.</p></header>
+    <div class="grid">
+      <a class="card" href="array.html"><span class="title">Array</span><span class="pill">58 problems</span></a>
+      <a class="card" href="string.html"><span class="title">String</span><span class="pill">58 problems</span></a>
+      <a class="card" href="set.html"><span class="title">Set</span><span class="pill">58 problems</span></a>
+      <a class="card" href="umap.html"><span class="title">unordered_map</span><span class="pill">58 problems</span></a>
+      <a class="card" href="list.html"><span class="title">List</span><span class="pill">58 problems</span></a>
+      <a class="card" href="forward_list.html"><span class="title">Forward List</span><span class="pill">58 problems</span></a>
+      <a class="card" href="deque.html"><span class="title">Deque</span><span class="pill">58 problems</span></a>
+      <a class="card" href="stack.html"><span class="title">Stack</span><span class="pill">58 problems</span></a>
+      <a class="card" href="queue.html"><span class="title">Queue</span><span class="pill">58 problems</span></a>
+      <a class="card" href="priority_queue.html"><span class="title">Priority Queue</span><span class="pill">58 problems</span></a>
+    </div>
+  </section>
+
+  <section class="group">
+    <header class="group-head"><h2>Algorithms and ranges</h2><p>Classic algorithms written in C++, and the ranges library that composes them.</p></header>
+    <div class="grid">
+      <a class="card" href="algorithms.html"><span class="title">Algorithms</span><span class="pill">46 problems</span></a>
+      <a class="card" href="ranges.html"><span class="title">Ranges and Views</span><span class="pill">52 problems</span></a>
+    </div>
+  </section>
+  <footer>Progress is saved in this browser. Each topic page has a link back here.</footer>
+</main>
+</body>
+</html>
