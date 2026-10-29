@@ -112,7 +112,7 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 
 <script>
 const problems = [
-{ n: 1, d: "easy", t: "Position of a value", idiom: "std::find",
+{ n: 1, d: "easy", t: "Position of a value",
   p: String.raw`In the vector 4, 8, 15, 16, 23, 42, find the index of the value 15. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -127,7 +127,7 @@ int main() {
 }`,
   why: String.raw`std::find returns an iterator to the first matching element. Distance from the beginning turns that iterator into an index.` },
 
-{ n: 2, d: "easy", t: "Counting matches", idiom: "std::count",
+{ n: 2, d: "easy", t: "Occurrences of a value",
   p: String.raw`Count how many times the value 3 appears in the vector 1, 3, 3, 5, 3. Print the count, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -140,7 +140,7 @@ int main() {
 }`,
   why: String.raw`std::count tallies the elements equal to a given value in one pass over the range.` },
 
-{ n: 3, d: "easy", t: "Counting by condition", idiom: "std::count_if",
+{ n: 3, d: "easy", t: "Numbers meeting a rule",
   p: String.raw`Count how many even numbers are among the integers from 1 to 10. Print the count, then a newline.`,
   ex: String.raw`5`,
   code: String.raw`#include <algorithm>
@@ -153,7 +153,7 @@ int main() {
 }`,
   why: String.raw`std::count_if counts the elements for which a predicate returns true.` },
 
-{ n: 4, d: "easy", t: "Summing a range", idiom: "std::accumulate",
+{ n: 4, d: "easy", t: "Total of a range",
   p: String.raw`Compute the sum of the integers from 1 to 10. Print the sum, then a newline.`,
   ex: String.raw`55`,
   code: String.raw`#include <iostream>
@@ -166,7 +166,7 @@ int main() {
 }`,
   why: String.raw`std::accumulate folds a range into a single value, starting from the initial value given.` },
 
-{ n: 5, d: "easy", t: "Smallest value", idiom: "std::min_element",
+{ n: 5, d: "easy", t: "Lowest value",
   p: String.raw`Print the smallest value in the vector 4, -2, 9, 0. Print it, then a newline.`,
   ex: String.raw`-2`,
   code: String.raw`#include <algorithm>
@@ -179,7 +179,7 @@ int main() {
 }`,
   why: String.raw`std::min_element returns an iterator to the smallest element, which is dereferenced to print the value.` },
 
-{ n: 6, d: "easy", t: "Index of the largest value", idiom: "std::max_element",
+{ n: 6, d: "easy", t: "Position of the top value",
   p: String.raw`In the vector 3, 9, 2, 9, print the index of the first occurrence of the largest value. Print the index, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -194,7 +194,7 @@ int main() {
 }`,
   why: String.raw`std::max_element returns the first of several equal largest elements, so distance gives the earliest index.` },
 
-{ n: 7, d: "easy", t: "Checking every value", idiom: "std::all_of",
+{ n: 7, d: "easy", t: "Every value positive?",
   p: String.raw`Print 1 if every value in the vector 1, 2, 0 is positive, and 0 otherwise. Print the result, then a newline.`,
   ex: String.raw`0`,
   code: String.raw`#include <algorithm>
@@ -207,7 +207,7 @@ int main() {
 }`,
   why: String.raw`std::all_of is true when the predicate holds for every element, including the empty range.` },
 
-{ n: 8, d: "easy", t: "Checking for one match", idiom: "std::any_of",
+{ n: 8, d: "easy", t: "Any value above a limit?",
   p: String.raw`Print 1 if any value in the vector 3, 12, 5 is greater than 10, and 0 otherwise. Print the result, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -220,7 +220,7 @@ int main() {
 }`,
   why: String.raw`std::any_of stops as soon as one element satisfies the predicate.` },
 
-{ n: 9, d: "easy", t: "Checking for no match", idiom: "std::none_of",
+{ n: 9, d: "easy", t: "No zeros present?",
   p: String.raw`Print 1 if no value in the vector 1, 2, 3 is zero, and 0 otherwise. Print the result, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -233,7 +233,7 @@ int main() {
 }`,
   why: String.raw`std::none_of is true only when the predicate fails for every element.` },
 
-{ n: 10, d: "easy", t: "Printing a range", idiom: "std::copy",
+{ n: 10, d: "easy", t: "Printing values",
   p: String.raw`Print the vector 1, 2, 3 with its values separated by spaces, then a newline.`,
   ex: String.raw`1 2 3`,
   code: String.raw`#include <algorithm>
@@ -248,7 +248,7 @@ int main() {
 }`,
   why: String.raw`std::copy writes a range to any output iterator. An ostream_iterator sends each value to the stream with the separator attached.` },
 
-{ n: 11, d: "medium", t: "Sorting in reverse", idiom: "std::sort with a comparator",
+{ n: 11, d: "medium", t: "Largest first",
   p: String.raw`Sort the vector 3, 1, 4, 1, 5 so that the largest values come first. Print the values separated by spaces, then a newline.`,
   ex: String.raw`5 4 3 1 1`,
   code: String.raw`#include <algorithm>
@@ -265,7 +265,7 @@ int main() {
 }`,
   why: String.raw`Passing a comparison object to std::sort changes the order it produces without changing the algorithm.` },
 
-{ n: 12, d: "medium", t: "Keeping equal keys in order", idiom: "std::stable_sort",
+{ n: 12, d: "medium", t: "Order by a number",
   p: String.raw`The pairs (a,2), (b,1), (c,2), (d,1) are listed in that order. Sort them by their number so that pairs with equal numbers keep their original relative order. Print the letters in the resulting order separated by spaces, then a newline.`,
   ex: String.raw`b d a c`,
   code: String.raw`#include <algorithm>
@@ -282,7 +282,7 @@ int main() {
 }`,
   why: String.raw`A stable sort keeps elements that compare equal in their original relative order, which an unstable sort does not promise.` },
 
-{ n: 13, d: "medium", t: "Splitting by condition", idiom: "std::partition",
+{ n: 13, d: "medium", t: "Evens and odds",
   p: String.raw`Rearrange the integers 1 to 8 so that all even numbers come before all odd numbers. Print the number of values in the first group, which are the even numbers, then a newline.`,
   ex: String.raw`4`,
   code: String.raw`#include <algorithm>
@@ -297,7 +297,7 @@ int main() {
 }`,
   why: String.raw`std::partition moves the elements satisfying a predicate to the front and returns the boundary between the two groups.` },
 
-{ n: 14, d: "medium", t: "Removing values", idiom: "remove_if with erase",
+{ n: 14, d: "medium", t: "Only the even values",
   p: String.raw`Remove every odd number from the integers 1 to 9, and print what remains separated by spaces, then a newline.`,
   ex: String.raw`2 4 6 8`,
   code: String.raw`#include <algorithm>
@@ -313,7 +313,7 @@ int main() {
 }`,
   why: String.raw`std::remove_if shuffles the kept elements to the front and returns the new logical end. The container must then be shrunk with erase, which is the erase-remove idiom.` },
 
-{ n: 15, d: "medium", t: "Removing repeats", idiom: "sort, unique, erase",
+{ n: 15, d: "medium", t: "Distinct values",
   p: String.raw`Sort the vector 3, 1, 3, 2, 1 and remove repeated values so that only one copy of each remains. Print the values separated by spaces, then a newline.`,
   ex: String.raw`1 2 3`,
   code: String.raw`#include <algorithm>
@@ -330,7 +330,7 @@ int main() {
 }`,
   why: String.raw`std::unique only removes adjacent duplicates, so the values must be sorted first. Like remove_if, it needs erase to shrink the container.` },
 
-{ n: 16, d: "medium", t: "Applying a function to each value", idiom: "std::transform",
+{ n: 16, d: "medium", t: "Squares of a list",
   p: String.raw`Print the squares of 1, 2, 3 and 4, separated by spaces, then a newline.`,
   ex: String.raw`1 4 9 16`,
   code: String.raw`#include <algorithm>
@@ -346,7 +346,7 @@ int main() {
 }`,
   why: String.raw`std::transform applies a function to each element and writes the results to an output iterator, leaving the input unchanged.` },
 
-{ n: 17, d: "medium", t: "First value at or above a bound", idiom: "std::lower_bound",
+{ n: 17, d: "medium", t: "First value at least five",
   p: String.raw`In the sorted vector 1, 3, 5, 5, 7, print the index of the first value that is at least 5. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -361,7 +361,7 @@ int main() {
 }`,
   why: String.raw`std::lower_bound binary searches a sorted range for the first position where a value could be inserted without breaking the order.` },
 
-{ n: 18, d: "medium", t: "Occurrences in a sorted range", idiom: "std::equal_range",
+{ n: 18, d: "medium", t: "Fives in a sorted list",
   p: String.raw`Print how many times 5 occurs in the sorted vector 1, 3, 5, 5, 5, 7. Print the count, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -376,7 +376,7 @@ int main() {
 }`,
   why: String.raw`equal_range returns the pair of bounds around a value in a sorted range. The distance between them is the number of matches.` },
 
-{ n: 19, d: "medium", t: "Selecting by rank", idiom: "std::nth_element",
+{ n: 19, d: "medium", t: "Third smallest",
   p: String.raw`Print the third smallest value in the vector 9, 4, 7, 1, 8. Print it, then a newline.`,
   ex: String.raw`7`,
   code: String.raw`#include <algorithm>
@@ -390,7 +390,7 @@ int main() {
 }`,
   why: String.raw`std::nth_element places the element of a given rank at its position and partitions the rest around it, without sorting everything.` },
 
-{ n: 20, d: "medium", t: "Rotating a sequence", idiom: "std::rotate",
+{ n: 20, d: "medium", t: "Start from the value three",
   p: String.raw`Shift the vector 1, 2, 3, 4, 5 so that it begins with the value 3, with 1 and 2 moved to the end. Print the values separated by spaces, then a newline.`,
   ex: String.raw`3 4 5 1 2`,
   code: String.raw`#include <algorithm>
@@ -406,7 +406,7 @@ int main() {
 }`,
   why: String.raw`std::rotate takes a middle iterator that becomes the new first element, and the elements before it wrap around to the end.` },
 
-{ n: 21, d: "medium", t: "Reversing part of a sequence", idiom: "std::reverse on a subrange",
+{ n: 21, d: "medium", t: "Middle section flipped",
   p: String.raw`Reverse only the values at indices 1 through 3 of the vector 1, 2, 3, 4, 5, leaving the other values in place. Print the values separated by spaces, then a newline.`,
   ex: String.raw`1 4 3 2 5`,
   code: String.raw`#include <algorithm>
@@ -422,7 +422,7 @@ int main() {
 }`,
   why: String.raw`Algorithms take iterator pairs, so passing a subrange works on any part of a container and the end iterator is one past the last element.` },
 
-{ n: 22, d: "medium", t: "Values common to two lists", idiom: "std::set_intersection",
+{ n: 22, d: "medium", t: "Shared values",
   p: String.raw`Print the values that appear in both of the sorted vectors 1, 2, 4, 6 and 2, 3, 4, 7, in increasing order, separated by spaces, then a newline.`,
   ex: String.raw`2 4`,
   code: String.raw`#include <algorithm>
@@ -438,7 +438,7 @@ int main() {
 }`,
   why: String.raw`The set operations walk two sorted ranges together in a single pass, so they are linear in the total number of elements.` },
 
-{ n: 23, d: "hard", t: "Longest word", idiom: "std::max_element with a comparator",
+{ n: 23, d: "hard", t: "Longest word",
   p: String.raw`From the words pear, fig, banana, kiwi, print the longest word. If two words are equally long, print the first of them. Print the word, then a newline.`,
   ex: String.raw`banana`,
   code: String.raw`#include <algorithm>
@@ -454,7 +454,7 @@ int main() {
 }`,
   why: String.raw`Supplying a comparator lets the same search rule apply to any type, here comparing strings by length instead of alphabetically.` },
 
-{ n: 24, d: "hard", t: "Ordering by two keys", idiom: "std::sort with a compound comparator",
+{ n: 24, d: "hard", t: "Score then name",
   p: String.raw`Sort the people (bob,70), (amy,90), (cal,70) and (dan,90) by score from highest to lowest. When two scores are equal, order those people by name alphabetically. Print the names separated by spaces, then a newline.`,
   ex: String.raw`amy dan bob cal`,
   code: String.raw`#include <algorithm>
@@ -474,7 +474,7 @@ int main() {
 }`,
   why: String.raw`A comparator that checks the primary key first and falls back to the secondary key only on ties gives a deterministic order for every input.` },
 
-{ n: 25, d: "hard", t: "Removing short words", idiom: "std::remove_if on strings",
+{ n: 25, d: "hard", t: "Long words only",
   p: String.raw`From the words cat, horse, dog and zebra, remove every word with three or fewer letters. Print the remaining words separated by spaces, then a newline.`,
   ex: String.raw`horse zebra`,
   code: String.raw`#include <algorithm>
@@ -492,7 +492,7 @@ int main() {
 }`,
   why: String.raw`The predicate decides which elements to drop, and the erase-remove pair removes them from the container in one operation.` },
 
-{ n: 26, d: "hard", t: "Boundary in a sorted range", idiom: "std::partition_point",
+{ n: 26, d: "hard", t: "Threshold position",
   p: String.raw`In the sorted vector 1, 2, 4, 6, 8, print the index of the first value that is 5 or more. Print the index, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -507,7 +507,7 @@ int main() {
 }`,
   why: String.raw`partition_point finds the first element where a predicate that is true at the front becomes false, in logarithmic time on a partitioned range.` },
 
-{ n: 27, d: "hard", t: "Stable reordering by condition", idiom: "std::stable_partition",
+{ n: 27, d: "hard", t: "Evens to the front",
   p: String.raw`Move the even numbers from 1 to 8 to the front while keeping their original order among themselves, and keep the odd numbers in their original order after them. Print the values separated by spaces, then a newline.`,
   ex: String.raw`2 4 6 8 1 3 5 7`,
   code: String.raw`#include <algorithm>
@@ -523,7 +523,7 @@ int main() {
 }`,
   why: String.raw`A stable partition keeps the relative order inside each group, which an ordinary partition does not guarantee.` },
 
-{ n: 28, d: "hard", t: "Finding a subsequence", idiom: "std::search",
+{ n: 28, d: "hard", t: "Locating a pattern",
   p: String.raw`Print the index where the pattern 3 4 first appears as consecutive values in the vector 1, 2, 3, 4, 5, 3, 4. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -539,7 +539,7 @@ int main() {
 }`,
   why: String.raw`std::search looks for a whole sequence inside another, returning the start of the first match or the end iterator if there is none.` },
 
-{ n: 29, d: "hard", t: "Dictionary order of two words", idiom: "std::lexicographical_compare",
+{ n: 29, d: "hard", t: "Dictionary order of two words",
   p: String.raw`Print 1 if the word apple comes before the word apply in dictionary order, and 0 otherwise. Print the result, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -552,7 +552,7 @@ int main() {
 }`,
   why: String.raw`Lexicographical comparison checks elements pairwise until the first difference and then compares those, which is how words are ordered in a dictionary.` },
 
-{ n: 30, d: "hard", t: "First difference between sequences", idiom: "std::mismatch",
+{ n: 30, d: "hard", t: "First difference between sequences",
   p: String.raw`Compare the vectors 1, 2, 3, 4 and 1, 2, 5, 4, and print the index of the first position where they differ. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -568,7 +568,7 @@ int main() {
 }`,
   why: String.raw`std::mismatch walks two sequences together and returns the first pair of iterators whose elements differ.` },
 
-{ n: 31, d: "hard", t: "Element-wise combination", idiom: "std::transform with two ranges",
+{ n: 31, d: "hard", t: "Pairwise sums",
   p: String.raw`Add the vectors 1, 2, 3 and 10, 20, 30 element by element, and print the result separated by spaces, then a newline.`,
   ex: String.raw`11 22 33`,
   code: String.raw`#include <algorithm>
@@ -585,7 +585,7 @@ int main() {
 }`,
   why: String.raw`The two-range form of transform reads one element from each input per step and writes the combined value to the output.` },
 
-{ n: 32, d: "extension", t: "Three largest in order", idiom: "std::partial_sort",
+{ n: 32, d: "extension", t: "Top three values",
   p: String.raw`Print the three largest values of 3, 1, 4, 1, 5, 9, 2, 6 in decreasing order, separated by spaces, then a newline.`,
   ex: String.raw`9 6 5`,
   code: String.raw`#include <algorithm>
@@ -601,7 +601,7 @@ int main() {
 }`,
   why: String.raw`partial_sort fully orders only the first part of a range, which is cheaper than sorting everything when only the top few values are needed.` },
 
-{ n: 33, d: "extension", t: "Sorting by a projected member", idiom: "std::ranges::sort with a projection",
+{ n: 33, d: "extension", t: "Sort by second value",
   p: String.raw`Sort the pairs (b,2), (a,1), (d,4) and (c,3) by their second value, and print their first values separated by spaces, then a newline.`,
   ex: String.raw`a b c d`,
   code: String.raw`#include <algorithm>
@@ -617,7 +617,7 @@ int main() {
 }`,
   why: String.raw`A projection tells a ranges algorithm which part of each element to compare, so the element itself stays intact.` },
 
-{ n: 34, d: "extension", t: "Counting with a projection", idiom: "std::ranges::count_if with a projection",
+{ n: 34, d: "extension", t: "Words of even length",
   p: String.raw`Count how many of the words a, bb, ccc, dd and e have an even number of letters. Print the count, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -632,7 +632,7 @@ int main() {
 }`,
   why: String.raw`With a projection, the predicate receives the size of each string rather than the string, so the rule can be written on that value directly.` },
 
-{ n: 35, d: "extension", t: "Limiting values to a range", idiom: "std::clamp",
+{ n: 35, d: "extension", t: "Values kept in range",
   p: String.raw`Limit each value in 5, -3 and 12 so that it lies between 0 and 10 inclusive, and print the results separated by spaces, then a newline.`,
   ex: String.raw`5 0 10`,
   code: String.raw`#include <algorithm>
@@ -648,7 +648,7 @@ int main() {
 }`,
   why: String.raw`std::clamp returns the value itself when it lies in the range, and the nearer bound otherwise.` },
 
-{ n: 36, d: "extension", t: "Searching a descending range", idiom: "std::lower_bound with a comparator",
+{ n: 36, d: "extension", t: "Descending list threshold",
   p: String.raw`In the vector 9, 7, 5, 3, 1, which is sorted from largest to smallest, print the index of the first value that is 5 or less. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -664,7 +664,7 @@ int main() {
 }`,
   why: String.raw`Binary search only needs the ordering to match the comparator, so a descending range works when the comparator says so.` },
 
-{ n: 37, d: "extension", t: "Rearrangement check", idiom: "std::is_permutation",
+{ n: 37, d: "extension", t: "Same values?",
   p: String.raw`Print 1 if the vector 3, 1, 2 contains exactly the same values as 1, 2, 3 in any order, and 0 otherwise. Print the result, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -677,7 +677,7 @@ int main() {
 }`,
   why: String.raw`is_permutation checks that two sequences hold the same multiset of values regardless of order.` },
 
-{ n: 38, d: "extension", t: "Largest by a derived score", idiom: "std::max_element with a computed key",
+{ n: 38, d: "extension", t: "Largest by a derived score",
   p: String.raw`From the vector 4, 17, 8, 23, print the value whose digit sum is largest. If two values tie, print the first one. Print the value, then a newline.`,
   ex: String.raw`17`,
   code: String.raw`#include <algorithm>
@@ -701,7 +701,7 @@ int main() {
 }`,
   why: String.raw`Comparing by a key computed from each element lets a standard search find the best element by a rule the container does not store.` },
 
-{ n: 39, d: "extension", t: "Smallest and largest together", idiom: "std::minmax_element",
+{ n: 39, d: "extension", t: "Smallest and largest together",
   p: String.raw`Print the smallest and the largest values of 7, 2, 9 and 4, separated by a space, then a newline.`,
   ex: String.raw`2 9`,
   code: String.raw`#include <algorithm>
@@ -715,7 +715,7 @@ int main() {
 }`,
   why: String.raw`minmax_element finds both extremes in fewer comparisons than running min_element and max_element separately.` },
 
-{ n: 40, d: "applications", t: "Counting vowels", idiom: "std::count_if on a string",
+{ n: 40, d: "applications", t: "Counting vowels",
   p: String.raw`Count the vowels a, e, i, o and u in the phrase programming language. Print the count, then a newline.`,
   ex: String.raw`7`,
   code: String.raw`#include <algorithm>
@@ -731,7 +731,7 @@ int main() {
 }`,
   why: String.raw`Combining a character predicate with a counting algorithm answers questions about text without writing an explicit loop.` },
 
-{ n: 41, d: "applications", t: "Distinct values in first-seen order", idiom: "std::find to test membership",
+{ n: 41, d: "applications", t: "Distinct values in first-seen order",
   p: String.raw`Print the distinct values of 3, 1, 3, 2, 1 in the order in which they first appear, separated by spaces, then a newline.`,
   ex: String.raw`3 1 2`,
   code: String.raw`#include <algorithm>
@@ -748,7 +748,7 @@ int main() {
 }`,
   why: String.raw`Sorting would lose the first-seen order, so membership is tested against the values already kept, using a search over the output.` },
 
-{ n: 42, d: "applications", t: "Larger of each neighbouring pair", idiom: "std::transform over shifted ranges",
+{ n: 42, d: "applications", t: "Larger of each neighbouring pair",
   p: String.raw`For the vector 1, 3, 2, 5, print the larger of each pair of neighbouring values, separated by spaces, then a newline.`,
   ex: String.raw`3 3 5`,
   code: String.raw`#include <algorithm>
@@ -765,7 +765,7 @@ int main() {
 }`,
   why: String.raw`Passing one range offset by one element pairs each value with its neighbour, so a two-input transform handles the comparison.` },
 
-{ n: 43, d: "applications", t: "Values missing from a list", idiom: "std::set_difference",
+{ n: 43, d: "applications", t: "Values missing from a list",
   p: String.raw`Print the values from 1 to 5 that are not in the vector 2, 4, in increasing order, separated by spaces, then a newline.`,
   ex: String.raw`1 3 5`,
   code: String.raw`#include <algorithm>
@@ -781,7 +781,7 @@ int main() {
 }`,
   why: String.raw`Set difference keeps the elements of the first sorted range that do not appear in the second, in a single pass.` },
 
-{ n: 44, d: "applications", t: "Three smallest in order", idiom: "std::partial_sort",
+{ n: 44, d: "applications", t: "Three smallest in order",
   p: String.raw`Print the three smallest values of 8, 2, 9, 4, 7 and 1 in increasing order, separated by spaces, then a newline.`,
   ex: String.raw`1 2 4`,
   code: String.raw`#include <algorithm>
@@ -796,7 +796,7 @@ int main() {
 }`,
   why: String.raw`Partial sorting leaves the chosen prefix in order and the rest unordered, which suits top-k queries on large data.` },
 
-{ n: 45, d: "applications", t: "Product of a range", idiom: "std::accumulate with std::multiplies",
+{ n: 45, d: "applications", t: "Product of a range",
   p: String.raw`Multiply the integers 1 through 5 together. Print the product, then a newline.`,
   ex: String.raw`120`,
   code: String.raw`#include <functional>
@@ -810,7 +810,7 @@ int main() {
 }`,
   why: String.raw`Replacing the addition in a fold with another operator gives a different reduction over the same range.` },
 
-{ n: 46, d: "applications", t: "Ordering words by length", idiom: "std::stable_sort by length",
+{ n: 46, d: "applications", t: "Shortest words first",
   p: String.raw`Sort the words ccc, a, bb, dd and e by length, keeping words of equal length in their original order. Print the words separated by spaces, then a newline.`,
   ex: String.raw`a e bb dd ccc`,
   code: String.raw`#include <algorithm>
@@ -827,7 +827,7 @@ int main() {
 }`,
   why: String.raw`Stability lets a sort by one key preserve the order from an earlier sort, which is how multi-key ordering is often built.` },
 
-{ n: 47, d: "applications", t: "Sum of squares", idiom: "std::transform_reduce",
+{ n: 47, d: "applications", t: "Sum of squares",
   p: String.raw`Compute the sum of the squares of 1, 2, 3 and 4. Print the sum, then a newline.`,
   ex: String.raw`30`,
   code: String.raw`#include <functional>
@@ -845,7 +845,7 @@ int main() {
 ];
 
 const TOTAL = problems.length;
-const KEY = "cpp-algorithms-v2";
+const KEY = "cpp-algorithms-v3";
 const list = document.getElementById("list");
 const countEl = document.getElementById("count");
 const fillEl = document.getElementById("fill");
