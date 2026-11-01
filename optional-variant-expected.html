@@ -721,177 +721,403 @@ int main() {
 
 
 // ---------- Applications ----------
-{ n: 38, d: "applications", t: "Parse order sizes with a reported error",
-  p: String.raw`Parse the text 100 as an integer and the text x1 as an integer. A successful parse gives its value, and a failure gives the error message bad. Print the two results separated by a space, then a newline.`,
-  ex: String.raw`100 bad`,
+{ n: 38, d: "applications", t: "Decode a venue message feed",
+  p: String.raw`A venue sends one message per line in three forms: NEW id symbol quantity price, CXL id, and FILL id quantity. The price is written in dollars with exactly two decimals, such as 101.50. Decode every line. A line that is not one of the three forms gives unknown_type. A line with too few fields gives missing_field. A number that does not parse, or a price without exactly two decimals, gives bad_number. For each line print ok followed by the message kind (new, cancel or fill), or err followed by the error name, each on its own line.`,
+  ex: String.raw`ok:new
+ok:cancel
+ok:fill
+err:unknown_type
+err:bad_number
+err:missing_field`,
   code: String.raw`#include <charconv>
-#include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <iostream>
+#include <sstream>
 #include <string>
-#include <string_view>
-#include <system_error>
-
-std::expected<int, std::string> parse(std::string_view s) {
-    int v = 0;
-    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
-    return v;
-}
-
-int main() {
-    auto a = parse("100");
-    auto b = parse("x1");
-    std::cout << (a ? std::to_string(*a) : a.error()) << ' ' << (b ? std::to_string(*b) : b.error()) << "\n";
-}`,
-  why: String.raw`from_chars reports both the value and how far it read, so a partial match is caught as an error rather than accepted.` },
-
-{ n: 39, d: "applications", t: "Optional limit with a default",
-  p: String.raw`A risk limit is not configured, so it is an empty optional. Print the limit used, which should be 500 when nothing is configured, then a newline.`,
-  ex: String.raw`500`,
-  code: String.raw`#include <iostream>
-#include <optional>
-
-int main() {
-    std::optional<int> limit;
-    std::cout << limit.value_or(500) << "\n";
-}`,
-  why: String.raw`value_or supplies the fallback only when the optional is empty, leaving configured values alone.` },
-
-{ n: 40, d: "applications", t: "Dispatch on message kind",
-  p: String.raw`A message is either a fill or a cancel, and here it is a cancel for order 7. Print cancel followed by the order id, separated by a space, then a newline.`,
-  ex: String.raw`cancel 7`,
-  code: String.raw`#include <iostream>
 #include <variant>
+#include <vector>
 
-struct Fill { int id; };
-struct Cancel { int id; };
+enum class DecodeError { UnknownType, MissingField, BadNumber };
 
-template <class... Ts>
-struct Overloaded : Ts... { using Ts::operator()...; };
-template <class... Ts>
-Overloaded(Ts...) -> Overloaded<Ts...>;
+struct NewOrder { std::int64_t id; std::string sym; std::int64_t qty; std::int64_t px_cents; };
+struct Cancel { std::int64_t id; };
+struct Fill { std::int64_t id; std::int64_t qty; };
+using Msg = std::variant<NewOrder, Cancel, Fill>;
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+const char* name(DecodeError e) {
+    switch (e) {
+        case DecodeError::UnknownType: return "unknown_type";
+        case DecodeError::MissingField: return "missing_field";
+        case DecodeError::BadNumber: return "bad_number";
+    }
+    return "?";
+}
+
+template <class T>
+std::expected<T, DecodeError> number(const std::string& s) {
+    T v{};
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(DecodeError::BadNumber);
+    return v;
+}
+
+std::expected<std::int64_t, DecodeError> price_cents(const std::string& s) {
+    auto dot = s.find('.');
+    if (dot == std::string::npos || s.size() - dot - 1 != 2) return std::unexpected(DecodeError::BadNumber);
+    auto whole = number<std::int64_t>(s.substr(0, dot));
+    auto frac = number<std::int64_t>(s.substr(dot + 1));
+    if (!whole || !frac) return std::unexpected(DecodeError::BadNumber);
+    return *whole * 100 + *frac;
+}
+
+std::expected<Msg, DecodeError> decode(const std::string& line) {
+    std::istringstream in(line);
+    std::vector<std::string> t;
+    for (std::string w; in >> w;) t.push_back(w);
+    if (t.empty()) return std::unexpected(DecodeError::UnknownType);
+    if (t[0] == "NEW") {
+        if (t.size() < 5) return std::unexpected(DecodeError::MissingField);
+        auto id = number<std::int64_t>(t[1]);
+        auto qty = number<std::int64_t>(t[3]);
+        auto px = price_cents(t[4]);
+        if (!id) return std::unexpected(id.error());
+        if (!qty) return std::unexpected(qty.error());
+        if (!px) return std::unexpected(px.error());
+        return NewOrder{*id, t[2], *qty, *px};
+    }
+    if (t[0] == "CXL") {
+        if (t.size() < 2) return std::unexpected(DecodeError::MissingField);
+        auto id = number<std::int64_t>(t[1]);
+        if (!id) return std::unexpected(id.error());
+        return Cancel{*id};
+    }
+    if (t[0] == "FILL") {
+        if (t.size() < 3) return std::unexpected(DecodeError::MissingField);
+        auto id = number<std::int64_t>(t[1]);
+        auto qty = number<std::int64_t>(t[2]);
+        if (!id) return std::unexpected(id.error());
+        if (!qty) return std::unexpected(qty.error());
+        return Fill{*id, *qty};
+    }
+    return std::unexpected(DecodeError::UnknownType);
+}
 
 int main() {
-    std::variant<Fill, Cancel> msg = Cancel{7};
-    std::visit(Overloaded{
-        [](const Fill& f) { std::cout << "fill " << f.id << "\n"; },
-        [](const Cancel& c) { std::cout << "cancel " << c.id << "\n"; }}, msg);
+    const std::vector<std::string> feed{
+        "NEW 1 AAPL 100 101.50", "CXL 1", "FILL 1 40", "BOGUS", "NEW x AAPL 100 101.50", "FILL 1"};
+    for (const auto& line : feed) {
+        auto r = decode(line);
+        if (!r) { std::cout << "err:" << name(r.error()) << "\n"; continue; }
+        std::visit(Overloaded{
+            [](const NewOrder&) { std::cout << "ok:new\n"; },
+            [](const Cancel&) { std::cout << "ok:cancel\n"; },
+            [](const Fill&) { std::cout << "ok:fill\n"; }}, *r);
+    }
 }`,
-  why: String.raw`Visiting with one overload per alternative forces every kind of message to be handled, and the compiler flags any missing case.` },
+  why: String.raw`Each stage returns either a value or a named reason, so a bad line is reported precisely without throwing, and the variant forces every message kind to be handled.` },
 
-{ n: 41, d: "applications", t: "Chain validation of a quantity",
-  p: String.raw`The text 20 is parsed as an integer and must then be positive. Print the quantity if both steps succeed, then a newline.`,
-  ex: String.raw`20`,
-  code: String.raw`#include <charconv>
+{ n: 39, d: "applications", t: "Resolve settings across configuration layers",
+  p: String.raw`A service reads settings from three layers. The environment layer has highest precedence, then the file layer, then built-in defaults. The environment sets venue to NYSE. The file sets max_orders to 500. The defaults set max_orders to 100 and venue to SIM. For each of the keys max_orders, venue and timeout, print the effective value followed by the layer it came from in brackets, as key=value (layer). If no layer sets the key, print key=unset.`,
+  ex: String.raw`max_orders=500 (file)
+venue=NYSE (env)
+timeout=unset`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Layer {
+    std::string name;
+    std::map<std::string, std::string> values;
+};
+
+std::optional<std::pair<std::string, std::string>> resolve(const std::string& key, const std::vector<Layer>& layers) {
+    for (const auto& layer : layers) {
+        auto it = layer.values.find(key);
+        if (it != layer.values.end()) return std::pair{it->second, layer.name};
+    }
+    return std::nullopt;
+}
+
+int main() {
+    const std::vector<Layer> layers{
+        {"env", {{"venue", "NYSE"}}},
+        {"file", {{"max_orders", "500"}}},
+        {"defaults", {{"max_orders", "100"}, {"venue", "SIM"}}},
+    };
+    for (std::string key : {"max_orders", "venue", "timeout"}) {
+        std::string line = resolve(key, layers)
+            .transform([&](const auto& p) { return key + "=" + p.first + " (" + p.second + ")"; })
+            .value_or(key + "=unset");
+        std::cout << line << "\n";
+    }
+}`,
+  why: String.raw`Looking up each key from highest to lowest precedence gives the value and its origin together, and an absent key falls through to a clear unset result.` },
+
+{ n: 40, d: "applications", t: "Pre-trade risk pipeline",
+  p: String.raw`Orders pass through three pre-trade checks in order. First, the quantity must be positive, otherwise the order is rejected for size. Second, the symbol must be in the tradable universe AAPL or MSFT, otherwise it is rejected for symbol. Third, the notional, meaning quantity times price in cents, must not exceed 2000000 cents, otherwise it is rejected for notional. An order that passes all three is accepted and its notional is reported. Check these four orders, in order: AAPL 100 shares at 10150 cents; AAPL 30000 shares at 10150 cents; ZZZZ 10 shares at 100 cents; AAPL 0 shares at 10150 cents. For each, print ok followed by the notional if accepted, or the rejection reason such as reject size, one per line.`,
+  ex: String.raw`ok 1015000
+reject notional
+reject symbol
+reject size`,
+  code: String.raw`#include <cstdint>
 #include <expected>
 #include <iostream>
+#include <set>
 #include <string>
-#include <string_view>
-#include <system_error>
 
-std::expected<int, std::string> parse(std::string_view s) {
-    int v = 0;
-    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
-    return v;
+enum class RiskError { BadSize, UnknownSymbol, NotionalExceeded };
+
+struct Order { std::string sym; std::int64_t qty; std::int64_t px_cents; };
+
+constexpr std::int64_t kNotionalLimit = 2000000;
+
+std::expected<Order, RiskError> check_size(Order o) {
+    if (o.qty <= 0) return std::unexpected(RiskError::BadSize);
+    return o;
 }
 
-std::expected<int, std::string> positive(int v) {
-    if (v <= 0) return std::unexpected(std::string("not positive"));
-    return v;
+std::expected<Order, RiskError> check_symbol(Order o) {
+    static const std::set<std::string> universe{"AAPL", "MSFT"};
+    if (!universe.contains(o.sym)) return std::unexpected(RiskError::UnknownSymbol);
+    return o;
+}
+
+std::expected<std::int64_t, RiskError> check_notional(Order o) {
+    const std::int64_t notional = o.qty * o.px_cents;
+    if (notional > kNotionalLimit) return std::unexpected(RiskError::NotionalExceeded);
+    return notional;
+}
+
+const char* name(RiskError e) {
+    switch (e) {
+        case RiskError::BadSize: return "reject size";
+        case RiskError::UnknownSymbol: return "reject symbol";
+        case RiskError::NotionalExceeded: return "reject notional";
+    }
+    return "reject";
 }
 
 int main() {
-    auto q = parse("20").and_then(positive);
-    std::cout << (q ? std::to_string(*q) : q.error()) << "\n";
+    const Order orders[] = {
+        {"AAPL", 100, 10150},
+        {"AAPL", 30000, 10150},
+        {"ZZZZ", 10, 100},
+        {"AAPL", 0, 10150},
+    };
+    for (const Order& o : orders) {
+        auto r = check_size(o).and_then(check_symbol).and_then(check_notional);
+        if (r) std::cout << "ok " << *r << "\n";
+        else std::cout << name(r.error()) << "\n";
+    }
 }`,
-  why: String.raw`and_then runs the next check only on success, so the first failure is the one that is reported.` },
+  why: String.raw`Chaining the checks with and_then stops at the first failure and carries its reason out, so each rule stays a small function that is easy to test on its own.` },
 
-{ n: 42, d: "applications", t: "Look up and double a price",
-  p: String.raw`A price table holds the symbol AAPL at 101. Look up the price, double it, and print the result. If the symbol is missing, print none instead. Print the output then a newline.`,
-  ex: String.raw`202`,
+{ n: 41, d: "applications", t: "Quote cache with staleness",
+  p: String.raw`A quote cache stores the latest bid, ask and update time for each symbol. AAPL has bid 100, ask 101 and was updated at time 10. MSFT has bid 200, ask 201 and was updated at time 30. A lookup at the current time 45 returns the quote only if it is no older than 30 time units. Look up AAPL, MSFT and GOOG, which is not in the cache. For a fresh quote print the symbol, bid and ask separated by spaces. For a stale or missing quote print the symbol followed by none.`,
+  ex: String.raw`AAPL none
+MSFT 200 201
+GOOG none`,
   code: String.raw`#include <iostream>
 #include <map>
 #include <optional>
 #include <string>
 
-std::optional<int> find_price(const std::map<std::string, int>& m, const std::string& s) {
-    auto it = m.find(s);
-    if (it == m.end()) return std::nullopt;
+struct Quote { long long bid; long long ask; long long at; };
+
+std::optional<Quote> fresh(const std::map<std::string, Quote>& cache, const std::string& sym, long long now, long long max_age) {
+    auto it = cache.find(sym);
+    if (it == cache.end()) return std::nullopt;
+    if (now - it->second.at > max_age) return std::nullopt;
     return it->second;
 }
 
 int main() {
-    std::map<std::string, int> prices{{"AAPL", 101}};
-    auto doubled = find_price(prices, "AAPL").transform([](int p) { return p * 2; });
-    std::cout << (doubled ? std::to_string(*doubled) : std::string("none")) << "\n";
+    const std::map<std::string, Quote> cache{
+        {"AAPL", {100, 101, 10}},
+        {"MSFT", {200, 201, 30}},
+    };
+    const long long now = 45, max_age = 30;
+    for (std::string sym : {"AAPL", "MSFT", "GOOG"}) {
+        auto q = fresh(cache, sym, now, max_age);
+        if (q) std::cout << sym << ' ' << q->bid << ' ' << q->ask << "\n";
+        else std::cout << sym << " none\n";
+    }
 }`,
-  why: String.raw`transform applies the doubling only to a value that is present, so a missing symbol stays empty all the way through.` },
+  why: String.raw`Treating an old entry as absent at the point of lookup means a caller can never act on a price that has gone stale, without any separate cleanup step.` },
 
-{ n: 43, d: "applications", t: "Count parse failures across lines",
-  p: String.raw`Three lines are parsed as integers: 10, then x, then 30. Print how many of the lines fail to parse, then a newline.`,
-  ex: String.raw`1`,
-  code: String.raw`#include <charconv>
+{ n: 42, d: "applications", t: "Account replay from an event log",
+  p: String.raw`An account starts with 1000 cents of cash and zero rejected events. Events are applied in order. A deposit adds its amount. A withdrawal removes its amount if the cash is sufficient. A buy of a quantity at a price in cents costs quantity times price, and is applied only if the cash is sufficient. An event that cannot be applied because of insufficient cash is rejected and the account is left unchanged. Replay these events: deposit 500, buy 2 shares at 300 cents, withdraw 2000 cents. Print the final cash and the number of rejected events in the form cash=N rejected=M.`,
+  ex: String.raw`cash=900 rejected=1`,
+  code: String.raw`#include <cstdint>
 #include <expected>
 #include <iostream>
-#include <string>
-#include <string_view>
-#include <system_error>
-#include <vector>
-
-std::expected<int, std::string> parse(std::string_view s) {
-    int v = 0;
-    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
-    return v;
-}
-
-int main() {
-    int failures = 0;
-    for (std::string_view line : std::vector<std::string_view>{"10", "x", "30"})
-        if (!parse(line)) ++failures;
-    std::cout << failures << "\n";
-}`,
-  why: String.raw`Each failed parse is an ordinary value you can test, so counting failures needs no exception handling.` },
-
-{ n: 44, d: "applications", t: "Which alternative a value holds",
-  p: String.raw`A variant can hold an int or a string, and here it holds the string hi. Print the index of the alternative currently held, which counts the int as 0 and the string as 1, then a newline.`,
-  ex: String.raw`1`,
-  code: String.raw`#include <iostream>
-#include <string>
 #include <variant>
 
-int main() {
-    std::variant<int, std::string> v = std::string("hi");
-    std::cout << v.index() << "\n";
-}`,
-  why: String.raw`index() reports which alternative is active, so the code can branch on it without a separate tag.` },
+struct Deposit { std::int64_t amt; };
+struct Withdraw { std::int64_t amt; };
+struct Buy { std::int64_t qty; std::int64_t px; };
+using Event = std::variant<Deposit, Withdraw, Buy>;
 
-{ n: 45, d: "applications", t: "Sum of two successful parses",
-  p: String.raw`The texts 5 and 7 are each parsed as integers. If both parse, print their sum, and otherwise print error. Print the output then a newline.`,
-  ex: String.raw`12`,
-  code: String.raw`#include <charconv>
-#include <expected>
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <system_error>
+struct Account { std::int64_t cash; int rejected; };
 
-std::expected<int, std::string> parse(std::string_view s) {
-    int v = 0;
-    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
-    return v;
+enum class Reject { Insufficient };
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+std::expected<Account, Reject> apply(Account a, const Event& e) {
+    return std::visit(Overloaded{
+        [&](const Deposit& d) -> std::expected<Account, Reject> {
+            a.cash += d.amt;
+            return a;
+        },
+        [&](const Withdraw& w) -> std::expected<Account, Reject> {
+            if (w.amt > a.cash) return std::unexpected(Reject::Insufficient);
+            a.cash -= w.amt;
+            return a;
+        },
+        [&](const Buy& b) -> std::expected<Account, Reject> {
+            const std::int64_t cost = b.qty * b.px;
+            if (cost > a.cash) return std::unexpected(Reject::Insufficient);
+            a.cash -= cost;
+            return a;
+        },
+    }, e);
 }
 
 int main() {
-    auto a = parse("5");
-    auto b = parse("7");
-    if (a && b) std::cout << *a + *b << "\n";
-    else std::cout << "error\n";
+    Account acc{1000, 0};
+    const Event events[] = {Deposit{500}, Buy{2, 300}, Withdraw{2000}};
+    for (const Event& e : events) {
+        auto r = apply(acc, e);
+        if (r) acc = *r;
+        else ++acc.rejected;
+    }
+    std::cout << "cash=" << acc.cash << " rejected=" << acc.rejected << "\n";
 }`,
-  why: String.raw`Testing each expected before using its value means a failure in either input never reaches the arithmetic.` },
+  why: String.raw`Each event returns a new account state or a rejection, so a failed event cannot leave the account half-updated.` },
+
+{ n: 43, d: "applications", t: "Parse a tag-value order message",
+  p: String.raw`Parse a message made of tag=value fields separated by vertical bars. An order needs tag 55 for the symbol, 38 for the quantity, 44 for the price in cents and 54 for the side. If any of these tags is missing, the parse fails and the error names the first missing tag as missing tag N. Parse these two messages, in order: 35=D|55=AAPL|38=100|44=10150|54=1 and 35=D|55=MSFT|38=50|44=20000. For a successful parse print ok, the symbol, the quantity and the price, separated by spaces. For a failed parse print err followed by the error text.`,
+  ex: String.raw`ok AAPL 100 10150
+err missing tag 54`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+
+struct Order { std::string sym; long long qty; long long px; };
+
+std::expected<std::string, std::string> field(const std::map<int, std::string>& m, int tag) {
+    auto it = m.find(tag);
+    if (it == m.end()) return std::unexpected("missing tag " + std::to_string(tag));
+    return it->second;
+}
+
+std::expected<Order, std::string> parse(const std::string& msg) {
+    std::map<int, std::string> fields;
+    std::istringstream in(msg);
+    for (std::string kv; std::getline(in, kv, '|');) {
+        auto eq = kv.find('=');
+        fields[std::stoi(kv.substr(0, eq))] = kv.substr(eq + 1);
+    }
+    auto sym = field(fields, 55);
+    if (!sym) return std::unexpected(sym.error());
+    auto qty = field(fields, 38);
+    if (!qty) return std::unexpected(qty.error());
+    auto px = field(fields, 44);
+    if (!px) return std::unexpected(px.error());
+    auto side = field(fields, 54);
+    if (!side) return std::unexpected(side.error());
+    return Order{*sym, std::stoll(*qty), std::stoll(*px)};
+}
+
+int main() {
+    for (std::string msg : {"35=D|55=AAPL|38=100|44=10150|54=1", "35=D|55=MSFT|38=50|44=20000"}) {
+        auto r = parse(msg);
+        if (r) std::cout << "ok " << r->sym << ' ' << r->qty << ' ' << r->px << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Each required field is checked in turn and the first failure is returned, so the caller learns exactly which tag is absent.` },
+
+{ n: 44, d: "applications", t: "Retry a submission until it fills or is rejected",
+  p: String.raw`An order is submitted to a gateway that answers each attempt with one of three responses: a timeout, a rejection with a reason, or a fill with a quantity. Submission stops at the first rejection or fill, and a timeout triggers another attempt, up to a maximum of three attempts. Two scripted sessions are run. The first session answers timeout, timeout, then a fill of 100. The second session answers with a rejection for insufficient margin on its first attempt. For a fill print filled, the quantity, after, the attempt number and attempts, as a single line. For a rejection print rejected: followed by the reason. If every attempt times out, print gave up after retries.`,
+  ex: String.raw`filled 100 after 3 attempts
+rejected: insufficient margin`,
+  code: String.raw`#include <cstddef>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+struct Timeout {};
+struct Rejected { std::string reason; };
+struct Filled { long long qty; };
+using Response = std::variant<Timeout, Rejected, Filled>;
+
+std::expected<std::pair<long long, std::size_t>, std::string> submit(const std::vector<Response>& script, std::size_t max_attempts) {
+    for (std::size_t i = 0; i < max_attempts && i < script.size(); ++i) {
+        const Response& r = script[i];
+        if (std::holds_alternative<Timeout>(r)) continue;
+        if (const auto* rej = std::get_if<Rejected>(&r)) return std::unexpected(rej->reason);
+        return std::pair{std::get<Filled>(r).qty, i + 1};
+    }
+    return std::unexpected(std::string("gave up after retries"));
+}
+
+void report(const std::expected<std::pair<long long, std::size_t>, std::string>& r) {
+    if (r) std::cout << "filled " << r->first << " after " << r->second << " attempts\n";
+    else std::cout << "rejected: " << r.error() << "\n";
+}
+
+int main() {
+    report(submit({Timeout{}, Timeout{}, Filled{100}}, 3));
+    report(submit({Rejected{"insufficient margin"}}, 3));
+}`,
+  why: String.raw`Timeouts are the only response that leads to another attempt, and every other outcome ends the submission with its own value or reason.` },
+
+{ n: 45, d: "applications", t: "Mark price with fallback",
+  p: String.raw`A mark price for a symbol is computed from a snapshot that may be missing fields. The snapshot holds an optional bid, an optional ask and an optional last trade. The mark is the midpoint of bid and ask when both are present and the bid does not exceed the ask. If the bid and ask are present but crossed, or either is missing, the mark falls back to the last trade. If no last trade exists either, there is no mark. Compute the mark for three snapshots, in order: bid 100 and ask 102 with no last trade; bid 105, ask 102 and last trade 99; and a snapshot with no fields at all. For each print price followed by the mark, or price none if there is no mark.`,
+  ex: String.raw`price 101
+price 99
+price none`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Snapshot {
+    std::optional<long long> bid, ask, last;
+};
+
+std::optional<long long> mark(const Snapshot& s) {
+    if (s.bid && s.ask && *s.bid <= *s.ask) return (*s.bid + *s.ask) / 2;
+    if (s.last) return s.last;
+    return std::nullopt;
+}
+
+int main() {
+    const Snapshot snaps[] = {
+        {100, 102, std::nullopt},
+        {105, 102, 99},
+        {std::nullopt, std::nullopt, std::nullopt},
+    };
+    for (const auto& s : snaps) {
+        auto m = mark(s);
+        if (m) std::cout << "price " << *m << "\n";
+        else std::cout << "price none\n";
+    }
+}`,
+  why: String.raw`Each fallback is an optional that is either present or absent, so the rule for choosing a mark reads as a sequence of checks rather than nested flags.` },
 ];
 
 const TOTAL = problems.length;
