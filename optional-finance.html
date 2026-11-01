@@ -1,0 +1,1237 @@
+<title>Optional, Variant and Expected: Finance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.back{display:inline-block;margin:0 0 12px;color:var(--accent);text-decoration:none;font-weight:600}
+.back:hover{text-decoration:underline}
+</style>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">&larr; All topics</a>
+    <p class="kicker">Finance and high-performance applications · 31 problems</p>
+    <h1>Optional, Variant and Expected: Finance Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">31</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="31" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+// ---------- Applications ----------
+{ n: 1, d: "applications", t: "Validate an order against instrument rules",
+  p: String.raw`An instrument trades in ticks of 5 cents and in lots of 100 shares. An order is checked in this order: the price must be positive, otherwise bad price; the price must be a multiple of the tick, otherwise off tick; the quantity must be a positive multiple of the lot, otherwise bad lot. Check these four orders in order, given as price in cents and quantity: 10150 with 200; 10153 with 200; 10150 with 150; 0 with 100. For each print ok if it passes, otherwise the reason, one per line.`,
+  ex: String.raw`ok
+off tick
+bad lot
+bad price`,
+  code: String.raw`#include <expected>
+#include <iostream>
+
+enum class OrderError { BadPrice, OffTick, BadLot };
+struct Order { long long px; long long qty; };
+
+const char* name(OrderError e) {
+    switch (e) {
+        case OrderError::BadPrice: return "bad price";
+        case OrderError::OffTick: return "off tick";
+        case OrderError::BadLot: return "bad lot";
+    }
+    return "?";
+}
+
+std::expected<Order, OrderError> validate(Order o) {
+    if (o.px <= 0) return std::unexpected(OrderError::BadPrice);
+    if (o.px % 5 != 0) return std::unexpected(OrderError::OffTick);
+    if (o.qty <= 0 || o.qty % 100 != 0) return std::unexpected(OrderError::BadLot);
+    return o;
+}
+
+int main() {
+    for (Order o : {Order{10150, 200}, Order{10153, 200}, Order{10150, 150}, Order{0, 100}}) {
+        auto r = validate(o);
+        std::cout << (r ? "ok" : name(r.error())) << "\n";
+    }
+}`,
+  why: String.raw`Each rule returns its own named reason, so a rejected order states exactly which exchange rule it broke.` },
+
+{ n: 2, d: "applications", t: "Round a price to the tick grid",
+  p: String.raw`Round a price in cents to the nearest multiple of a tick size, with halves rounding up. A tick size that is not positive is an error, reported as bad tick. Round these three inputs in order, given as price and tick: 10153 with tick 5; 10152 with tick 5; 10155 with tick 0. Print the rounded price for a valid input, or the error message.`,
+  ex: String.raw`10155
+10150
+bad tick`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+#include <utility>
+
+std::expected<long long, std::string> round_to_tick(long long px, long long tick) {
+    if (tick <= 0) return std::unexpected(std::string("bad tick"));
+    return (px + tick / 2) / tick * tick;
+}
+
+int main() {
+    for (auto [px, tick] : {std::pair{10153LL, 5LL}, std::pair{10152LL, 5LL}, std::pair{10155LL, 0LL}}) {
+        auto r = round_to_tick(px, tick);
+        if (r) std::cout << *r << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Adding half a tick before integer division rounds to nearest without floating point, which keeps prices exact.` },
+
+{ n: 3, d: "applications", t: "Parse exchange execution reports",
+  p: String.raw`An exchange sends execution reports as text lines. FILL id qty price reports a complete fill. PARTIAL id qty price reports a partial fill. REJECT id reason reports a rejected order. Any other first word is an error, reported as unknown report. Parse these four lines in order: FILL 7 100 10150; PARTIAL 7 40 10150; REJECT 7 risk_limit; BOGUS 1. Print filled qty @price for a fill, partial qty for a partial fill, reject reason for a rejection, and the error message otherwise.`,
+  ex: String.raw`filled 100 @10150
+partial 40
+reject risk_limit
+unknown report`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <variant>
+
+struct Fill { long long id, qty, px; };
+struct Partial { long long id, qty, px; };
+struct Reject { long long id; std::string reason; };
+using Report = std::variant<Fill, Partial, Reject>;
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+std::expected<Report, std::string> parse_report(const std::string& line) {
+    std::istringstream in(line);
+    std::string kind;
+    in >> kind;
+    if (kind == "FILL" || kind == "PARTIAL") {
+        long long id = 0, qty = 0, px = 0;
+        if (!(in >> id >> qty >> px)) return std::unexpected(std::string("bad fields"));
+        if (kind == "FILL") return Fill{id, qty, px};
+        return Partial{id, qty, px};
+    }
+    if (kind == "REJECT") {
+        long long id = 0;
+        std::string reason;
+        if (!(in >> id >> reason)) return std::unexpected(std::string("bad fields"));
+        return Reject{id, reason};
+    }
+    return std::unexpected(std::string("unknown report"));
+}
+
+int main() {
+    for (std::string line : {"FILL 7 100 10150", "PARTIAL 7 40 10150", "REJECT 7 risk_limit", "BOGUS 1"}) {
+        auto r = parse_report(line);
+        if (!r) { std::cout << r.error() << "\n"; continue; }
+        std::visit(Overloaded{
+            [](const Fill& f) { std::cout << "filled " << f.qty << " @" << f.px << "\n"; },
+            [](const Partial& p) { std::cout << "partial " << p.qty << "\n"; },
+            [](const Reject& j) { std::cout << "reject " << j.reason << "\n"; }}, *r);
+    }
+}`,
+  why: String.raw`Each report kind is its own type, so handling a new kind of report is a compile-time change rather than a silent fall-through.` },
+
+{ n: 4, d: "applications", t: "Position and average cost from fills",
+  p: String.raw`Track a position in one instrument. A buy adds to the position and updates the average cost as a quantity-weighted average in cents. A sell reduces the position and realises profit or loss against the current average cost, quantity times the difference between sale price and average. When the position returns to zero the average cost no longer exists. Apply these fills in order: buy 100 at 10000; buy 100 at 10200; sell 50 at 10300. Print the remaining position, the average cost and the realised profit, as position=N avg=N realized=N.`,
+  ex: String.raw`position=150 avg=10100 realized=10000`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Position {
+    long long qty = 0;
+    std::optional<long long> avg;
+    long long realized = 0;
+};
+
+void buy(Position& p, long long q, long long px) {
+    if (p.qty == 0) {
+        p.avg = px;
+        p.qty = q;
+        return;
+    }
+    p.avg = (*p.avg * p.qty + px * q) / (p.qty + q);
+    p.qty += q;
+}
+
+void sell(Position& p, long long q, long long px) {
+    p.realized += q * (px - p.avg.value_or(0));
+    p.qty -= q;
+    if (p.qty == 0) p.avg.reset();
+}
+
+int main() {
+    Position p;
+    buy(p, 100, 10000);
+    buy(p, 100, 10200);
+    sell(p, 50, 10300);
+    std::cout << "position=" << p.qty << " avg=" << p.avg.value_or(0) << " realized=" << p.realized << "\n";
+}`,
+  why: String.raw`The average cost is present only while a position is open, so a flat position cannot be mistaken for one with a stale cost.` },
+
+{ n: 5, d: "applications", t: "Classify a two-sided quote",
+  p: String.raw`A quote has an optional bid and an optional ask. If either side is missing the quote is one-sided. If the bid equals the ask the market is locked, if the bid is higher than the ask it is crossed, and otherwise it is normal. Classify these four quotes in order: bid 100 with ask 101; bid 101 with ask 101; bid 102 with ask 101; no bid with ask 101. Print the classification of each, one per line.`,
+  ex: String.raw`normal
+locked
+crossed
+one-sided`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <optional>
+#include <string>
+
+struct Quote { std::optional<long long> bid, ask; };
+
+std::expected<std::string, std::string> classify(const Quote& q) {
+    if (!q.bid || !q.ask) return std::unexpected(std::string("one-sided"));
+    if (*q.bid == *q.ask) return std::string("locked");
+    if (*q.bid > *q.ask) return std::string("crossed");
+    return std::string("normal");
+}
+
+int main() {
+    const Quote quotes[] = {{100, 101}, {101, 101}, {102, 101}, {std::nullopt, 101}};
+    for (const auto& q : quotes) {
+        auto r = classify(q);
+        std::cout << (r ? *r : r.error()) << "\n";
+    }
+}`,
+  why: String.raw`Treating a missing side as a failure, rather than a price of zero, stops a one-sided quote from looking like a valid market.` },
+
+{ n: 6, d: "applications", t: "Option payoff at expiry",
+  p: String.raw`Three instruments are held: a call with strike 100, which pays spot minus strike when spot is above the strike, a put with strike 100, which pays strike minus spot when spot is below the strike, and a digital call with strike 100 and payout 500, which pays 500 when spot is at or above the strike. Each pays zero otherwise. Compute the payoff of each at spot 110 and then at spot 90. For each spot print spot: followed by the three payoffs separated by spaces.`,
+  ex: String.raw`110: 10 0 500
+90: 0 10 0`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Call { long long strike; };
+struct Put { long long strike; };
+struct Digital { long long strike; long long payout; };
+using Instrument = std::variant<Call, Put, Digital>;
+
+long long payoff(const Instrument& i, long long spot) {
+    return std::visit(Overloaded{
+        [&](const Call& c) { return spot > c.strike ? spot - c.strike : 0LL; },
+        [&](const Put& p) { return p.strike > spot ? p.strike - spot : 0LL; },
+        [&](const Digital& d) { return spot >= d.strike ? d.payout : 0LL; }}, i);
+}
+
+int main() {
+    const Instrument book[] = {Call{100}, Put{100}, Digital{100, 500}};
+    for (long long spot : {110LL, 90LL}) {
+        std::cout << spot << ':';
+        for (const auto& i : book) std::cout << ' ' << payoff(i, spot);
+        std::cout << "\n";
+    }
+}`,
+  why: String.raw`Each instrument carries only the fields its payoff needs, and the visitor gives the payoff rule once per kind.` },
+
+{ n: 7, d: "applications", t: "Venue lookup with a default",
+  p: String.raw`A reference table maps some symbols to their primary venue. For each symbol in order, AAPL and XYZ, print the symbol followed by its venue. A symbol missing from the table uses the default venue SIM. Print one line per symbol.`,
+  ex: String.raw`AAPL NYSE
+XYZ SIM`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+std::optional<std::string> venue_of(const std::map<std::string, std::string>& m, const std::string& sym) {
+    auto it = m.find(sym);
+    if (it == m.end()) return std::nullopt;
+    return it->second;
+}
+
+int main() {
+    const std::map<std::string, std::string> venues{{"AAPL", "NYSE"}};
+    for (std::string sym : {"AAPL", "XYZ"})
+        std::cout << sym << ' ' << venue_of(venues, sym).value_or("SIM") << "\n";
+}`,
+  why: String.raw`A missing lookup is an empty optional, and value_or supplies the venue only in that case.` },
+
+{ n: 8, d: "applications", t: "Currency conversion with missing rates",
+  p: String.raw`Convert amounts in cents using a table of rates stored in basis points, where 10000 means a rate of 1. The table has one entry, from USD to EUR at 9000. Convert 10000 USD cents to EUR. Then convert 500 EUR cents to GBP. Converting between the same currency returns the amount unchanged. A missing rate is an error reported as no rate FROM->TO. Print the converted amount, or the error message, one per line.`,
+  ex: String.raw`9000
+no rate EUR->GBP`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <map>
+#include <string>
+#include <utility>
+
+using Rates = std::map<std::pair<std::string, std::string>, long long>;
+
+std::expected<long long, std::string> convert(long long amount, const std::string& from, const std::string& to, const Rates& bps) {
+    if (from == to) return amount;
+    auto it = bps.find({from, to});
+    if (it == bps.end()) return std::unexpected("no rate " + from + "->" + to);
+    return amount * it->second / 10000;
+}
+
+int main() {
+    const Rates rates{{{"USD", "EUR"}, 9000}};
+    auto a = convert(10000, "USD", "EUR", rates);
+    auto b = convert(500, "EUR", "GBP", rates);
+    for (const auto* r : {&a, &b}) {
+        if (*r) std::cout << **r << "\n";
+        else std::cout << (*r).error() << "\n";
+    }
+}`,
+  why: String.raw`A missing rate is reported by pair, so the caller learns which conversion is unavailable instead of getting a zero amount.` },
+
+{ n: 9, d: "applications", t: "Interest accrual with overflow detection",
+  p: String.raw`Compute simple interest in cents as principal times rate in basis points times days, divided by 10000 times 365. Every multiplication must be checked for overflow of a 64-bit signed integer, and an overflow is reported as overflow. Compute the interest for a principal of 1000000 cents at 500 basis points over 365 days, then for a principal of 1000000000000000 cents at the same rate and period. Print the interest, or overflow, one per line.`,
+  ex: String.raw`50000
+overflow`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <limits>
+#include <string>
+
+std::expected<long long, std::string> checked_mul(long long a, long long b) {
+    if (a != 0 && b > std::numeric_limits<long long>::max() / a)
+        return std::unexpected(std::string("overflow"));
+    return a * b;
+}
+
+std::expected<long long, std::string> interest(long long principal, long long rate_bps, long long days) {
+    auto a = checked_mul(principal, rate_bps);
+    if (!a) return std::unexpected(a.error());
+    auto b = checked_mul(*a, days);
+    if (!b) return std::unexpected(b.error());
+    return *b / (10000 * 365);
+}
+
+int main() {
+    for (long long p : {1000000LL, 1000000000000000LL}) {
+        auto r = interest(p, 500, 365);
+        if (r) std::cout << *r << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Checking each product before using it means an oversized principal is reported as an error rather than silently producing a wrong interest figure.` },
+
+{ n: 10, d: "applications", t: "Portfolio margin requirement",
+  p: String.raw`Each holding has a margin requirement. An equity position needs 50 percent of its notional, meaning quantity times price in cents. A future needs its contract count times a fixed initial margin per contract. A long option needs no margin. Compute the margin for these holdings: 100 equity shares at 10000 cents; 3 futures with an initial margin of 20000 each; one long option. Print the total margin as total margin=N.`,
+  ex: String.raw`total margin=560000`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Equity { long long qty, px; };
+struct Future { long long contracts, margin_per; };
+struct LongOption {};
+using Holding = std::variant<Equity, Future, LongOption>;
+
+long long margin(const Holding& h) {
+    return std::visit(Overloaded{
+        [](const Equity& e) { return e.qty * e.px / 2; },
+        [](const Future& f) { return f.contracts * f.margin_per; },
+        [](const LongOption&) { return 0LL; }}, h);
+}
+
+int main() {
+    const Holding book[] = {Equity{100, 10000}, Future{3, 20000}, LongOption{}};
+    long long total = 0;
+    for (const auto& h : book) total += margin(h);
+    std::cout << "total margin=" << total << "\n";
+}`,
+  why: String.raw`Each instrument type has its own margin rule, and the visitor keeps those rules together with the type they apply to.` },
+
+{ n: 11, d: "applications", t: "Circuit breaker price band",
+  p: String.raw`An order price is accepted only if it lies within 10 percent of a reference price of 10000 cents, inclusive. The band runs from 90 percent to 110 percent of the reference, computed with integer division. Check these three prices in order: 10900, 11001 and 8999. For each print ok if it is inside the band, otherwise outside band, one per line.`,
+  ex: String.raw`ok
+outside band
+outside band`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<long long, std::string> check_band(long long px, long long ref) {
+    const long long lo = ref * 90 / 100;
+    const long long hi = ref * 110 / 100;
+    if (px < lo || px > hi) return std::unexpected(std::string("outside band"));
+    return px;
+}
+
+int main() {
+    for (long long px : {10900LL, 11001LL, 8999LL}) {
+        auto r = check_band(px, 10000);
+        std::cout << (r ? std::string("ok") : r.error()) << "\n";
+    }
+}`,
+  why: String.raw`Computing the band once from the reference makes each order check a pair of comparisons, which is cheap enough for every order.` },
+
+{ n: 12, d: "applications", t: "VWAP of a trade set, empty when there is no volume",
+  p: String.raw`Compute the volume-weighted average price in cents of a list of trades, each given as price and quantity. The result is the total notional divided by the total quantity, rounded toward zero. If the total quantity is zero there is no VWAP. Compute it for trades (10000, 100) and (10100, 300), then for an empty list. Print vwap=N for a value and no volume otherwise.`,
+  ex: String.raw`vwap=10075
+no volume`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+struct Trade { long long px, qty; };
+
+std::optional<long long> vwap(const std::vector<Trade>& ts) {
+    long long notional = 0, vol = 0;
+    for (auto [px, q] : ts) { notional += px * q; vol += q; }
+    if (vol == 0) return std::nullopt;
+    return notional / vol;
+}
+
+void show(std::optional<long long> v) {
+    if (v) std::cout << "vwap=" << *v << "\n";
+    else std::cout << "no volume\n";
+}
+
+int main() {
+    show(vwap({{10000, 100}, {10100, 300}}));
+    show(vwap({}));
+}`,
+  why: String.raw`An empty optional separates a real zero price from a window with no trades, which a report would otherwise show as a price.` },
+
+{ n: 13, d: "applications", t: "Detect gaps and reordering in a market data feed",
+  p: String.raw`A feed sends sequence numbers that should increase by one. Track the previous sequence number, which does not exist before the first message. For each message print the sequence and its status: first when there is no previous number, ok when it is the previous plus one, out of order when it is not larger than the previous, and gap N when N numbers are missing. The previous number always becomes the latest one seen. Process the sequence 100, 101, 103, 104, 102.`,
+  ex: String.raw`100: first
+101: ok
+103: gap 1
+104: ok
+102: out of order`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+std::string check(std::optional<long long>& prev, long long seq) {
+    std::string r;
+    if (!prev) r = "first";
+    else if (seq == *prev + 1) r = "ok";
+    else if (seq <= *prev) r = "out of order";
+    else r = "gap " + std::to_string(seq - *prev - 1);
+    prev = seq;
+    return r;
+}
+
+int main() {
+    std::optional<long long> prev;
+    for (long long s : {100LL, 101LL, 103LL, 104LL, 102LL})
+        std::cout << s << ": " << check(prev, s) << "\n";
+}`,
+  why: String.raw`The optional previous sequence makes the first message a distinct case, so a feed that starts mid-stream is not reported as a gap from zero.` },
+
+{ n: 14, d: "applications", t: "Quote freshness with a never-updated case",
+  p: String.raw`A quote's last update time is optional, because a symbol may never have been updated. At time 1000 milliseconds with a freshness limit of 50 milliseconds, a quote is fresh when its age is within the limit and stale otherwise. A quote never updated is reported as never. Classify three quotes in order with last update times 980, 940 and none. Print one status per line.`,
+  ex: String.raw`fresh
+stale
+never`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+const char* status(std::optional<long long> last, long long now, long long limit) {
+    return last.transform([&](long long t) -> const char* {
+        return now - t <= limit ? "fresh" : "stale";
+    }).value_or("never");
+}
+
+int main() {
+    const std::optional<long long> times[] = {980, 940, std::nullopt};
+    for (auto t : times)
+        std::cout << status(t, 1000, 50) << "\n";
+}`,
+  why: String.raw`transform keeps the never-updated case out of the age arithmetic entirely, so no sentinel timestamp can be mistaken for a real one.` },
+
+{ n: 15, d: "applications", t: "Put-call parity check with input validation",
+  p: String.raw`With zero rates and no dividends, a call and a put with the same strike and expiry satisfy call minus put equal to spot minus strike. Check three quotes given as call, put, spot and strike, in cents. Any negative price or non-positive spot or strike is bad input. Otherwise the parity gap is the difference between the two sides, and a zero gap is ok while any other gap is a violation. Check (30, 20, 110, 100), (60, 10, 110, 100) and (-5, 20, 110, 100).`,
+  ex: String.raw`ok
+violation 40
+bad input`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+struct Quote { long long call, put, spot, strike; };
+
+std::expected<long long, std::string> parity_gap(Quote q) {
+    if (q.call < 0 || q.put < 0 || q.spot <= 0 || q.strike <= 0)
+        return std::unexpected(std::string("bad input"));
+    return (q.call - q.put) - (q.spot - q.strike);
+}
+
+int main() {
+    for (Quote q : {Quote{30, 20, 110, 100}, Quote{60, 10, 110, 100}, Quote{-5, 20, 110, 100}}) {
+        auto r = parity_gap(q);
+        if (!r) std::cout << r.error() << "\n";
+        else if (*r == 0) std::cout << "ok\n";
+        else std::cout << "violation " << *r << "\n";
+    }
+}`,
+  why: String.raw`Validation sits before the arithmetic, so a negative price cannot produce a parity result that looks plausible.` },
+
+{ n: 16, d: "applications", t: "Parse a decimal price into cents and check the tick",
+  p: String.raw`Parse a price string with at most two decimal places into integer cents. A leading minus is negative, any character other than digits and one dot is a bad number, and more than two decimal places is also a bad number. After parsing, the price must be a multiple of 5 cents, otherwise off tick. Chain the two steps and print the cents for a valid price or the error. Process 101.50, 101.53, -3 and abc in order.`,
+  ex: String.raw`10150
+off tick
+negative
+bad number`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<long long, std::string> parse_cents(const std::string& s) {
+    if (s.empty() || s[0] == '-') return std::unexpected(std::string("negative"));
+    size_t dot = s.find('.');
+    std::string w = s.substr(0, dot);
+    std::string f = dot == std::string::npos ? "" : s.substr(dot + 1);
+    for (char c : w + f)
+        if ((c < '0' || c > '9') && c != '.') return std::unexpected(std::string("bad number"));
+    if (w.empty() || f.size() > 2 || f.find('.') != std::string::npos)
+        return std::unexpected(std::string("bad number"));
+    long long frac = f.empty() ? 0 : std::stoll(f) * (f.size() == 1 ? 10 : 1);
+    return std::stoll(w) * 100 + frac;
+}
+
+std::expected<long long, std::string> require_tick(long long px) {
+    if (px % 5 != 0) return std::unexpected(std::string("off tick"));
+    return px;
+}
+
+int main() {
+    for (std::string s : {"101.50", "101.53", "-3", "abc"}) {
+        auto r = parse_cents(s).and_then(require_tick);
+        if (r) std::cout << *r << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Each step returns its own error and and_then stops at the first failure, so the tick check only ever sees a price that already parsed.` },
+
+{ n: 17, d: "applications", t: "Order lifecycle as a variant state machine",
+  p: String.raw`An order starts as New. Events are Ack, Fill with a price, and Cancel. From New, Ack moves to Acked and Cancel moves to Cancelled. From Acked, Fill moves to Filled with that price and Cancel moves to Cancelled. Any other combination is an invalid transition, and the state stays as it was. Apply the events Ack, Fill 10150 and Cancel in order. Print the new state after each valid event, or the error. Use Acked, Filled and the price, and Cancelled as the state names.`,
+  ex: String.raw`Acked
+Filled 10150
+invalid transition`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+struct New {};
+struct Acked {};
+struct Filled { long long px; };
+struct Cancelled {};
+using State = std::variant<New, Acked, Filled, Cancelled>;
+
+struct Ack {};
+struct Fill { long long px; };
+struct Cancel {};
+using Event = std::variant<Ack, Fill, Cancel>;
+
+std::expected<State, std::string> step(const State& s, const Event& e) {
+    if (std::holds_alternative<New>(s)) {
+        if (std::holds_alternative<Ack>(e)) return State{Acked{}};
+        if (std::holds_alternative<Cancel>(e)) return State{Cancelled{}};
+    } else if (std::holds_alternative<Acked>(s)) {
+        if (auto* f = std::get_if<Fill>(&e)) return State{Filled{f->px}};
+        if (std::holds_alternative<Cancel>(e)) return State{Cancelled{}};
+    }
+    return std::unexpected(std::string("invalid transition"));
+}
+
+std::string show(const State& s) {
+    if (std::holds_alternative<Acked>(s)) return "Acked";
+    if (auto* f = std::get_if<Filled>(&s)) return "Filled " + std::to_string(f->px);
+    if (std::holds_alternative<Cancelled>(s)) return "Cancelled";
+    return "New";
+}
+
+int main() {
+    State s = New{};
+    std::vector<Event> events{Ack{}, Fill{10150}, Cancel{}};
+    for (const auto& e : events) {
+        auto r = step(s, e);
+        if (r) {
+            s = *r;
+            std::cout << show(s) << "\n";
+        } else {
+            std::cout << r.error() << "\n";
+        }
+    }
+}`,
+  why: String.raw`Making each state a type means a fill can only carry a price when the order is actually filled, and illegal transitions are rejected in one place.` },
+
+{ n: 18, d: "applications", t: "Pre-trade risk checks chained with and_then",
+  p: String.raw`Check an order of quantity and price in cents against three limits in order. The quantity must not exceed 1000. The notional, quantity times price, must not exceed 10000000. The resulting position, current position plus quantity, must not exceed 1500. Each failure has its own message: qty limit, notional limit and position limit. The first failure stops the checks. Run these cases given as quantity, price and current position: (500, 10000, 0), (2000, 10000, 0), (900, 20000, 0), (800, 10000, 1000). Print accepted or the message.`,
+  ex: String.raw`accepted
+qty limit
+notional limit
+position limit`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+struct Order { long long qty, px; };
+using Result = std::expected<Order, std::string>;
+
+Result check_qty(Order o) {
+    if (o.qty > 1000) return std::unexpected(std::string("qty limit"));
+    return o;
+}
+
+Result check_notional(Order o) {
+    if (o.qty * o.px > 10000000) return std::unexpected(std::string("notional limit"));
+    return o;
+}
+
+Result check_position(Order o, long long pos) {
+    if (pos + o.qty > 1500) return std::unexpected(std::string("position limit"));
+    return o;
+}
+
+std::string run(Order o, long long pos) {
+    auto r = check_qty(o)
+                 .and_then(check_notional)
+                 .and_then([&](Order x) { return check_position(x, pos); });
+    return r ? std::string("accepted") : r.error();
+}
+
+int main() {
+    std::cout << run({500, 10000}, 0) << "\n";
+    std::cout << run({2000, 10000}, 0) << "\n";
+    std::cout << run({900, 20000}, 0) << "\n";
+    std::cout << run({800, 10000}, 1000) << "\n";
+}`,
+  why: String.raw`Each limit returns the first failing reason, so a rejected order always reports the rule that stopped it rather than a generic refusal.` },
+
+{ n: 19, d: "applications", t: "Commission tiers by notional",
+  p: String.raw`Commission rates are kept in a map from a notional threshold in cents to a rate in basis points. The rate applies from its threshold upward, so the rate for a notional is the one at the largest threshold not above it. The table has tiers at 0 with 50 basis points, at 100000 with 30 and at 1000000 with 10. Commission is notional times rate divided by 10000, in cents. Compute the commission for notionals 50000, 500000 and 2000000, printing commission=N for each. If no tier applies, use 50 basis points.`,
+  ex: String.raw`commission=250
+commission=1500
+commission=2000`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <map>
+#include <optional>
+
+std::optional<long long> tier_bps(const std::map<long long, long long>& tiers, long long notional) {
+    auto it = tiers.upper_bound(notional);
+    if (it == tiers.begin()) return std::nullopt;
+    return std::prev(it)->second;
+}
+
+int main() {
+    const std::map<long long, long long> tiers{{0, 50}, {100000, 30}, {1000000, 10}};
+    for (long long n : {50000LL, 500000LL, 2000000LL}) {
+        long long bps = tier_bps(tiers, n).value_or(50);
+        std::cout << "commission=" << n * bps / 10000 << "\n";
+    }
+}`,
+  why: String.raw`upper_bound finds the tier in logarithmic time, which keeps the lookup cheap on every order rather than scanning the schedule.` },
+
+{ n: 20, d: "applications", t: "Bounded window of recent trades",
+  p: String.raw`Keep the last three trade prices in a window. Pushing a price returns the evicted oldest price once the window is full, and none before that. Push the prices 1, 2, 3 and 4, printing evicted followed by the result for each. Then pop the window until it is empty, printing popped followed by each value, and finally popped none when it is empty.`,
+  ex: String.raw`evicted none
+evicted none
+evicted none
+evicted 1
+popped 2
+popped 3
+popped 4
+popped none`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <optional>
+
+class Window {
+    std::deque<long long> q_;
+    size_t cap_;
+public:
+    explicit Window(size_t cap) : cap_(cap) {}
+
+    std::optional<long long> push(long long v) {
+        q_.push_back(v);
+        if (q_.size() <= cap_) return std::nullopt;
+        long long old = q_.front();
+        q_.pop_front();
+        return old;
+    }
+
+    std::optional<long long> pop() {
+        if (q_.empty()) return std::nullopt;
+        long long v = q_.front();
+        q_.pop_front();
+        return v;
+    }
+};
+
+void print(std::optional<long long> v) {
+    if (v) std::cout << *v << "\n";
+    else std::cout << "none\n";
+}
+
+int main() {
+    Window w(3);
+    for (long long v : {1LL, 2LL, 3LL, 4LL}) {
+        std::cout << "evicted ";
+        print(w.push(v));
+    }
+    for (int i = 0; i < 4; ++i) {
+        std::cout << "popped ";
+        print(w.pop());
+    }
+}`,
+  why: String.raw`Returning the evicted value from push means the caller can act on the element leaving the window without a second lookup.` },
+
+{ n: 21, d: "applications", t: "Side code parsing with a bad-side error",
+  p: String.raw`Feed messages carry the order side as a single letter. B is buy, S is sell, and any other letter is an error reported as bad side. Parse the letters B, S and X in order, printing buy, sell, or the error for each.`,
+  ex: String.raw`buy
+sell
+bad side`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+enum class Side { Buy, Sell };
+
+std::expected<Side, std::string> parse_side(char c) {
+    switch (c) {
+        case 'B': return Side::Buy;
+        case 'S': return Side::Sell;
+        default: return std::unexpected(std::string("bad side"));
+    }
+}
+
+int main() {
+    for (char c : {'B', 'S', 'X'}) {
+        auto r = parse_side(c);
+        if (!r) std::cout << r.error() << "\n";
+        else std::cout << (*r == Side::Buy ? "buy" : "sell") << "\n";
+    }
+}`,
+  why: String.raw`An enum class with a checked parser keeps the rest of the code from ever handling a side value that was never validated.` },
+
+{ n: 22, d: "applications", t: "Retry a submission with expected results",
+  p: String.raw`Submit an order up to three times. The submit function returns an expected order id, and it fails with timeout on attempts 1 and 2 and succeeds on attempt 3 with order id 42. Print attempt N failed: reason for each failure, and sent on attempt N id=ID on success, then stop retrying.`,
+  ex: String.raw`attempt 1 failed: timeout
+attempt 2 failed: timeout
+sent on attempt 3 id=42`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<long long, std::string> submit(int attempt) {
+    if (attempt < 3) return std::unexpected(std::string("timeout"));
+    return 42LL;
+}
+
+int main() {
+    for (int attempt = 1; attempt <= 3; ++attempt) {
+        auto r = submit(attempt);
+        if (r) {
+            std::cout << "sent on attempt " << attempt << " id=" << *r << "\n";
+            break;
+        }
+        std::cout << "attempt " << attempt << " failed: " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`The error stays a value that the loop inspects, so a retry decision is ordinary control flow rather than an exception that can skip the cleanup code.` },
+
+{ n: 23, d: "applications", t: "Checksum validation of a message",
+  p: String.raw`A message body is valid when the sum of its byte values, taken modulo 256, equals the trailer checksum. Check these messages in order, given as body and trailer: ABC with 198, ABC with 197, and the empty body with 0. Print ok for a match and bad checksum otherwise. The byte values of A, B and C are 65, 66 and 67.`,
+  ex: String.raw`ok
+bad checksum
+ok`,
+  code: String.raw`#include <cstdint>
+#include <expected>
+#include <iostream>
+#include <string_view>
+
+std::expected<void, std::string> validate(std::string_view body, unsigned trailer) {
+    unsigned sum = 0;
+    for (unsigned char c : body) sum += c;
+    if (sum % 256 != trailer) return std::unexpected(std::string("bad checksum"));
+    return {};
+}
+
+int main() {
+    const struct { std::string_view body; unsigned trailer; } msgs[] = {
+        {"ABC", 198}, {"ABC", 197}, {"", 0}};
+    for (auto m : msgs) {
+        auto r = validate(m.body, m.trailer);
+        std::cout << (r ? "ok" : r.error()) << "\n";
+    }
+}`,
+  why: String.raw`The expected type has no value on success, so the function reports only whether the message is intact, which is all the caller needs.` },
+
+{ n: 24, d: "applications", t: "Spread from an optional bid and ask",
+  p: String.raw`A quote's spread is the ask minus the bid, in cents, and exists only when both sides are present. Compute the spread for three quotes in order: bid 10000 with ask 10010, bid 10000 with no ask, and bid 10005 with ask 10010. Print spread=N when it exists, otherwise no spread.`,
+  ex: String.raw`spread=10
+no spread
+spread=5`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Quote { std::optional<long long> bid, ask; };
+
+std::optional<long long> spread(const Quote& q) {
+    return q.bid.and_then([&](long long b) {
+        return q.ask.transform([&](long long a) { return a - b; });
+    });
+}
+
+int main() {
+    const Quote quotes[] = {{10000, 10010}, {10000, std::nullopt}, {10005, 10010}};
+    for (const auto& q : quotes) {
+        auto s = spread(q);
+        if (s) std::cout << "spread=" << *s << "\n";
+        else std::cout << "no spread\n";
+    }
+}`,
+  why: String.raw`and_then with transform keeps the two-sided requirement in the type, so a one-sided quote cannot produce a zero spread by accident.` },
+
+{ n: 25, d: "applications", t: "Average price with a zero-quantity guard",
+  p: String.raw`Compute the average price in cents from total notional and total quantity, using integer division. If the quantity is zero the average is undefined, reported as no quantity. Compute it for notional 1000000 with quantity 100, notional 5 with quantity 0, and notional 1000 with quantity 3. Print the average or the error for each.`,
+  ex: String.raw`10000
+no quantity
+333`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<long long, std::string> avg_price(long long notional, long long qty) {
+    if (qty == 0) return std::unexpected(std::string("no quantity"));
+    return notional / qty;
+}
+
+int main() {
+    for (auto [n, q] : {std::pair{1000000LL, 100LL}, std::pair{5LL, 0LL}, std::pair{1000LL, 3LL}}) {
+        auto r = avg_price(n, q);
+        if (r) std::cout << *r << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`An expected for a division makes the zero-quantity case a reported outcome, rather than a crash that a stray empty fill would trigger.` },
+
+{ n: 26, d: "applications", t: "Latency between send and receive with clock skew",
+  p: String.raw`Compute one-way latency in microseconds from send and receive timestamps in nanoseconds. If the receive time is earlier than the send time the clocks disagree, reported as clock skew. Compute the latency for send 1000000000 with receive 1002500000, then for send 2000 with receive 1000. Print latency_us=N for a valid pair or the error.`,
+  ex: String.raw`latency_us=2500
+clock skew`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<long long, std::string> latency_us(long long send_ns, long long recv_ns) {
+    if (recv_ns < send_ns) return std::unexpected(std::string("clock skew"));
+    return (recv_ns - send_ns) / 1000;
+}
+
+int main() {
+    for (auto [s, r] : {std::pair{1000000000LL, 1002500000LL}, std::pair{2000LL, 1000LL}}) {
+        auto v = latency_us(s, r);
+        if (v) std::cout << "latency_us=" << *v << "\n";
+        else std::cout << v.error() << "\n";
+    }
+}`,
+  why: String.raw`A negative latency is refused instead of being averaged into a histogram, where it would quietly pull the percentiles down.` },
+
+{ n: 27, d: "applications", t: "Last trade lookup returned as an optional view",
+  p: String.raw`A table maps each symbol to its most recent trade, given as price and quantity. For each symbol in order, AAPL and MSFT, print the symbol and its trade as SYM price xQTY, or no trade when the symbol is absent. The AAPL trade is 10150 with quantity 200 and MSFT has no entry. Use transform on the optional result of the lookup.`,
+  ex: String.raw`AAPL 10150 x200
+MSFT no trade`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+#include <unordered_map>
+
+struct Trade { long long px, qty; };
+
+std::optional<Trade> last_trade(const std::unordered_map<std::string, Trade>& t, const std::string& sym) {
+    auto it = t.find(sym);
+    if (it == t.end()) return std::nullopt;
+    return it->second;
+}
+
+int main() {
+    const std::unordered_map<std::string, Trade> table{{"AAPL", {10150, 200}}};
+    for (std::string sym : {"AAPL", "MSFT"}) {
+        auto line = last_trade(table, sym).transform([&](const Trade& t) {
+            return sym + " " + std::to_string(t.px) + " x" + std::to_string(t.qty);
+        });
+        std::cout << line.value_or(sym + " no trade") << "\n";
+    }
+}`,
+  why: String.raw`transform formats only a trade that exists, so a missing symbol falls through to its own message without a special branch.` },
+
+{ n: 28, d: "applications", t: "Apply add, modify and cancel messages to an order book",
+  p: String.raw`Maintain a map of resting orders from id to price and quantity. Three message kinds are applied in order. Add inserts an order with a given id, price and quantity. Modify changes the quantity of an existing id. Cancel removes an existing id. Modify or cancel of an unknown id is an error reported as unknown order id N. After each message print orders=N qty=Q with the number of resting orders and the total quantity, or the error. Apply Add 1 at 10000 for 100, Add 2 at 10100 for 50, Modify 1 to 80, Cancel 2, and Modify 3 to 10.`,
+  ex: String.raw`orders=1 qty=100
+orders=2 qty=150
+orders=2 qty=130
+orders=1 qty=80
+unknown order id 3`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <map>
+#include <string>
+#include <variant>
+#include <vector>
+
+struct Add { long long id, px, qty; };
+struct Modify { long long id, qty; };
+struct Cancel { long long id; };
+using Msg = std::variant<Add, Modify, Cancel>;
+
+struct Order { long long px, qty; };
+using Book = std::map<long long, Order>;
+
+std::expected<void, std::string> apply(Book& b, const Msg& m) {
+    if (auto* a = std::get_if<Add>(&m)) {
+        b[a->id] = {a->px, a->qty};
+        return {};
+    }
+    if (auto* md = std::get_if<Modify>(&m)) {
+        auto it = b.find(md->id);
+        if (it == b.end()) return std::unexpected("unknown order id " + std::to_string(md->id));
+        it->second.qty = md->qty;
+        return {};
+    }
+    const auto& c = std::get<Cancel>(m);
+    if (b.erase(c.id) == 0) return std::unexpected("unknown order id " + std::to_string(c.id));
+    return {};
+}
+
+int main() {
+    Book book;
+    std::vector<Msg> msgs{Add{1, 10000, 100}, Add{2, 10100, 50}, Modify{1, 80}, Cancel{2}, Modify{3, 10}};
+    for (const auto& m : msgs) {
+        auto r = apply(book, m);
+        if (!r) {
+            std::cout << r.error() << "\n";
+            continue;
+        }
+        long long qty = 0;
+        for (const auto& entry : book) qty += entry.second.qty;
+        std::cout << "orders=" << book.size() << " qty=" << qty << "\n";
+    }
+}`,
+  why: String.raw`Each message kind is its own type, so the handler for a message can only touch the fields that message actually carries.` },
+
+{ n: 29, d: "applications", t: "Parse key=value fields from a feed message",
+  p: String.raw`A feed message is a list of key=value pairs separated by semicolons. Look up the px and qty fields and parse each as an integer with from_chars, requiring the whole value to be consumed. A missing key is reported as missing KEY and a malformed value as bad KEY. Process three messages in order: px=10150;qty=200, px=10150;qty=x and px=10150. For a message where both fields parse, print px=N qty=N, otherwise the first error.`,
+  ex: String.raw`px=10150 qty=200
+bad qty
+missing qty`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <system_error>
+
+std::expected<long long, std::string> field(std::string_view msg, std::string_view key) {
+    const std::string prefix = std::string(key) + "=";
+    size_t pos = 0;
+    while (pos <= msg.size()) {
+        size_t end = msg.find(';', pos);
+        if (end == std::string_view::npos) end = msg.size();
+        std::string_view part = msg.substr(pos, end - pos);
+        if (part.starts_with(prefix)) {
+            std::string_view v = part.substr(prefix.size());
+            long long out = 0;
+            auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), out);
+            if (ec != std::errc{} || ptr != v.data() + v.size())
+                return std::unexpected("bad " + std::string(key));
+            return out;
+        }
+        pos = end + 1;
+    }
+    return std::unexpected("missing " + std::string(key));
+}
+
+int main() {
+    for (std::string_view msg : {"px=10150;qty=200", "px=10150;qty=x", "px=10150"}) {
+        auto px = field(msg, "px");
+        if (!px) {
+            std::cout << px.error() << "\n";
+            continue;
+        }
+        auto qty = field(msg, "qty");
+        if (!qty) {
+            std::cout << qty.error() << "\n";
+            continue;
+        }
+        std::cout << "px=" << *px << " qty=" << *qty << "\n";
+    }
+}`,
+  why: String.raw`from_chars with a full-consumption check rejects values like 200abc, which a plain stoll would silently truncate to 200.` },
+
+{ n: 30, d: "applications", t: "Notional by instrument with a contract multiplier",
+  p: String.raw`Three instruments are held. An equity is priced per share with multiplier 1. An option is priced per contract in cents with multiplier 100 shares per contract. A future is priced per unit with multiplier 50. Notional is the price times the quantity times the multiplier. Compute the notional for an equity at 10000 with 100 shares, an option at premium 250 with 10 contracts, and a future at 20000 with 2 contracts. Print notional=N for each.`,
+  ex: String.raw`notional=1000000
+notional=250000
+notional=2000000`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Equity { long long px, qty; };
+struct Option { long long premium, contracts; };
+struct Future { long long px, contracts; };
+using Instrument = std::variant<Equity, Option, Future>;
+
+long long multiplier(const Instrument& i) {
+    return std::visit(Overloaded{
+        [](const Equity&) { return 1LL; },
+        [](const Option&) { return 100LL; },
+        [](const Future&) { return 50LL; }}, i);
+}
+
+long long notional(const Instrument& i) {
+    long long base = std::visit(Overloaded{
+        [](const Equity& e) { return e.px * e.qty; },
+        [](const Option& o) { return o.premium * o.contracts; },
+        [](const Future& f) { return f.px * f.contracts; }}, i);
+    return base * multiplier(i);
+}
+
+int main() {
+    const Instrument book[] = {Equity{10000, 100}, Option{250, 10}, Future{20000, 2}};
+    for (const auto& i : book) std::cout << "notional=" << notional(i) << "\n";
+}`,
+  why: String.raw`Keeping the multiplier beside the instrument type means a future can never be valued with an option's contract size.` },
+
+{ n: 31, d: "applications", t: "Maker and taker fees with rebate",
+  p: String.raw`A fill earns a liquidity role, either maker or taker. A maker receives a rebate of 2 basis points on notional, which is a negative fee. A taker pays 30 basis points on notional. Fee in cents is notional times the rate divided by 10000, with the rebate negated. For a notional of 1000000 cents print maker=N taker=N with the fee for each role, where the maker fee is negative.`,
+  ex: String.raw`maker=-200 taker=3000`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Maker {};
+struct Taker {};
+using Role = std::variant<Maker, Taker>;
+
+long long fee(const Role& r, long long notional) {
+    return std::visit(Overloaded{
+        [&](const Maker&) { return -(notional * 2 / 10000); },
+        [&](const Taker&) { return notional * 30 / 10000; }}, r);
+}
+
+int main() {
+    const long long n = 1000000;
+    std::cout << "maker=" << fee(Maker{}, n) << " taker=" << fee(Taker{}, n) << "\n";
+}`,
+  why: String.raw`A variant for the liquidity role forces every fee calculation to name the role, so a fill cannot be charged without deciding which side it was.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-optional-finance-v1";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 31, label: "Applications", range: "Problems 1–31", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
