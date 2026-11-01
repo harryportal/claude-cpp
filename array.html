@@ -868,7 +868,6 @@ int main() {
 }`,
   why: String.raw`Immediately invoking a lambda inside the initialiser lets the table be filled with a loop at compile time. Lambdas are implicitly constexpr when their body allows it.` },
 
-// ---------- Applications ----------
 { n: 49, d: "medium", t: "Parse an RGB colour from hex",
   p: String.raw`Parse the hex colour string ff8000 into an array of three unsigned chars, one per channel. Print the three channel values separated by spaces, in decimal.`,
   ex: String.raw`255 128 0`,
@@ -1041,122 +1040,132 @@ int main() {
 }`,
   why: String.raw`The table precomputes the mapping for every letter, so encryption is one lookup per character. The modulo wraps the alphabet back to its start.` },
 
-{ n: 59, d: "applications", t: "Average of sensor readings",
-  p: String.raw`A sensor has reported five readings: 12, 15, 9, 20 and 14. Print the integer average of the readings, rounded down, then a newline.`,
-  ex: String.raw`14`,
-  code: String.raw`#include <array>
-#include <iostream>
 
-int main() {
-    std::array<int, 5> readings{12, 15, 9, 20, 14};
-    int sum = 0;
-    for (int r : readings) sum += r;
-    std::cout << sum / static_cast<int>(readings.size()) << "\n";
-}`,
-  why: String.raw`A fixed-size array knows its own length, so the average can divide by size() without a separately stored count.` },
 
-{ n: 60, d: "applications", t: "Checksum of a fixed packet",
-  p: String.raw`A network packet is exactly four bytes long, with the values 0x10, 0x20, 0x30 and 0x40. Print the sum of its byte values in decimal, then a newline.`,
-  ex: String.raw`160`,
-  code: String.raw`#include <array>
-#include <iostream>
-
-int main() {
-    std::array<unsigned char, 4> packet{0x10, 0x20, 0x30, 0x40};
-    int total = 0;
-    for (unsigned char b : packet) total += b;
-    std::cout << total << "\n";
-}`,
-  why: String.raw`A fixed-size array with a known element type is a natural fit for a fixed-size packet, and the checksum loop does not need to know how long it is.` },
-
-{ n: 61, d: "applications", t: "Days in each month",
-  p: String.raw`Store the number of days in each month of a non-leap year, with January first. Print the number of days in March, which is index 2, then the number of months with 31 days, separated by a space, then a newline.`,
-  ex: String.raw`31 7`,
-  code: String.raw`#include <array>
-#include <iostream>
-
-int main() {
-    constexpr std::array<int, 12> days{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int count31 = 0;
-    for (int d : days)
-        if (d == 31) ++count31;
-    std::cout << days[2] << ' ' << count31 << "\n";
-}`,
-  why: String.raw`A constexpr array is a compile-time lookup table, so the data costs nothing at run time and can be indexed directly.` },
-
-{ n: 62, d: "applications", t: "Swapping colour channels",
-  p: String.raw`A colour is stored as three values in the order red, green, blue, with the values 255, 128 and 0. Swap the red and blue values, then print the three values separated by spaces, then a newline.`,
-  ex: String.raw`0 128 255`,
-  code: String.raw`#include <array>
-#include <iostream>
-#include <utility>
-
-int main() {
-    std::array<int, 3> rgb{255, 128, 0};
-    std::swap(rgb[0], rgb[2]);
-    std::cout << rgb[0] << ' ' << rgb[1] << ' ' << rgb[2] << "\n";
-}`,
-  why: String.raw`Elements of an array are ordinary lvalues, so they can be swapped in place without copying the whole colour.` },
-
-{ n: 63, d: "applications", t: "Top three scores",
-  p: String.raw`The scores of six players are 44, 91, 73, 91, 60 and 85. Print the three highest scores in decreasing order, separated by spaces, then a newline. Leave the original scores unchanged.`,
-  ex: String.raw`91 91 85`,
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Spread of the last four mid prices",
+  p: String.raw`Keep the last four mid prices in a fixed array that overwrites the oldest entry. The mid prices arrive in this order: 100, 102, 101, 105, 103. Print the spread of the four prices now stored, meaning the highest minus the lowest, then a newline.`,
+  ex: String.raw`4`,
   code: String.raw`#include <algorithm>
 #include <array>
-#include <functional>
-#include <iostream>
-
-int main() {
-    std::array<int, 6> scores{44, 91, 73, 91, 60, 85};
-    auto ranked = scores;
-    std::sort(ranked.begin(), ranked.end(), std::greater<int>{});
-    std::cout << ranked[0] << ' ' << ranked[1] << ' ' << ranked[2] << "\n";
-}`,
-  why: String.raw`Copying a std::array gives an independent sorted copy, so the original order is kept for any later use.` },
-
-{ n: 64, d: "applications", t: "Fixed-size ring of recent values",
-  p: String.raw`Keep the three most recent values in three slots. Store the values 5, 7, 9 and 11 one after another, where each new value goes into the next slot and the fourth value replaces the oldest one. Print the three slots from first to last, separated by spaces, then a newline.`,
-  ex: String.raw`11 7 9`,
-  code: String.raw`#include <array>
-#include <iostream>
-
-int main() {
-    std::array<int, 3> slots{};
-    const std::array<int, 4> values{5, 7, 9, 11};
-    for (std::size_t i = 0; i < values.size(); ++i)
-        slots[i % slots.size()] = values[i];
-    std::cout << slots[0] << ' ' << slots[1] << ' ' << slots[2] << "\n";
-}`,
-  why: String.raw`A buffer that overwrites its oldest entry needs only an index that wraps around. The array's fixed size makes the wrap a single modulo.` },
-
-{ n: 65, d: "applications", t: "Status message lookup",
-  p: String.raw`Three status messages are stored in order: ok, warn and fail. The status code is 2. Print the message for that code, then a newline.`,
-  ex: String.raw`fail`,
-  code: String.raw`#include <array>
 #include <cstddef>
 #include <iostream>
 
 int main() {
-    std::array<const char*, 3> messages{"ok", "warn", "fail"};
-    std::size_t status = 2;
-    std::cout << messages[status] << "\n";
+    std::array<int, 4> ring{};
+    std::size_t next = 0;
+    for (int m : {100, 102, 101, 105, 103}) {
+        ring[next] = m;
+        next = (next + 1) % ring.size();
+    }
+    std::cout << *std::max_element(ring.begin(), ring.end())
+               - *std::min_element(ring.begin(), ring.end()) << "\n";
 }`,
-  why: String.raw`Mapping small integer codes to messages is a table lookup. An array indexed by the code avoids a chain of comparisons.` },
+  why: String.raw`The fixed array holds exactly the last four values once the write index wraps, so the spread is read straight from the stored slots.` },
 
-{ n: 66, d: "applications", t: "Row totals of a grid",
-  p: String.raw`A grid has two rows: 1, 2, 3 and 4, 5, 6. Print the total of each row, separated by a space, then a newline.`,
-  ex: String.raw`6 15`,
+{ n: 60, d: "applications", t: "Portfolio weights as whole percents",
+  p: String.raw`A portfolio holds three positions of 100, 300 and 600 shares. Print each position's weight as a whole percentage of the total, rounded down, separated by spaces, then a newline.`,
+  ex: String.raw`10 30 60`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    const std::array<int, 3> pos{100, 300, 600};
+    const int total = std::accumulate(pos.begin(), pos.end(), 0);
+    for (int p : pos) std::cout << p * 100 / total << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Multiply before dividing so that integer division keeps the whole-percent precision.` },
+
+{ n: 61, d: "applications", t: "Determinant of a 3x3 matrix",
+  p: String.raw`Compute the determinant of the 3x3 matrix whose rows are 2 0 1, 1 3 2 and 1 1 4, stored in a fixed-size array. Print the determinant, then a newline.`,
+  ex: String.raw`18`,
   code: String.raw`#include <array>
 #include <iostream>
 
 int main() {
-    std::array<std::array<int, 3>, 2> grid{{{1, 2, 3}, {4, 5, 6}}};
-    int first = 0, second = 0;
-    for (int v : grid[0]) first += v;
-    for (int v : grid[1]) second += v;
-    std::cout << first << ' ' << second << "\n";
+    const std::array<std::array<int, 3>, 3> m{{{2, 0, 1}, {1, 3, 2}, {1, 1, 4}}};
+    int det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    std::cout << det << "\n";
 }`,
-  why: String.raw`A std::array of std::array gives a two-dimensional grid with no extra allocation, and each row can be traversed on its own.` },
+  why: String.raw`Nested fixed arrays give direct row and column access, so the expansion along the first row reads each minor by index.` },
+
+{ n: 62, d: "applications", t: "Pre-trade size check",
+  p: String.raw`Three orders with sizes 50, 200 and 30 are checked against a per-order limit of 100. Print ok or reject for each order, separated by spaces, then a newline.`,
+  ex: String.raw`ok reject ok`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    constexpr int limit = 100;
+    const std::array<int, 3> sizes{50, 200, 30};
+    for (std::size_t i = 0; i < sizes.size(); ++i)
+        std::cout << (sizes[i] <= limit ? "ok" : "reject") << (i + 1 < sizes.size() ? ' ' : '\n');
+}`,
+  why: String.raw`A compile-time limit next to a fixed array of orders keeps each check to one comparison.` },
+
+{ n: 63, d: "applications", t: "Order sizes in three buckets",
+  p: String.raw`Order sizes 5, 12, 7, 25, 3 and 18 are counted into three buckets: below 10, from 10 to 19, and 20 or more. Print the three counts separated by spaces, then a newline.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 3> counts{};
+    for (int s : {5, 12, 7, 25, 3, 18})
+        ++counts[std::min(s / 10, 2)];
+    std::cout << counts[0] << ' ' << counts[1] << ' ' << counts[2] << "\n";
+}`,
+  why: String.raw`Integer division by the bucket width gives the bucket index directly, and clamping keeps large values in the last bucket.` },
+
+{ n: 64, d: "applications", t: "Next checkpoint after a given time",
+  p: String.raw`A sorted array holds checkpoint times in minutes after midnight: 600, 720, 900 and 960. Print the first checkpoint strictly later than minute 750, then a newline.`,
+  ex: String.raw`900`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    constexpr std::array<int, 4> checkpoints{600, 720, 900, 960};
+    auto it = std::upper_bound(checkpoints.begin(), checkpoints.end(), 750);
+    std::cout << *it << "\n";
+}`,
+  why: String.raw`Because the array is sorted, a binary search finds the first element past the query without scanning.` },
+
+{ n: 65, d: "applications", t: "Price changes between ticks",
+  p: String.raw`Prices arrive as 100, 103, 101 and 104. Print the change from each price to the next, separated by spaces, then a newline.`,
+  ex: String.raw`3 -2 3`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 4> p{100, 103, 101, 104};
+    for (std::size_t i = 1; i < p.size(); ++i)
+        std::cout << p[i] - p[i - 1] << (i + 1 < p.size() ? ' ' : '\n');
+}`,
+  why: String.raw`Each change needs the previous value, so the loop starts at index one and reads the element before it.` },
+
+{ n: 66, d: "applications", t: "Maximum drawdown of an equity curve",
+  p: String.raw`An equity curve has the values 100, 120, 90, 110, 80 and 130 in order. The drawdown at each point is how far it has fallen below the highest value seen so far. Print the largest drawdown, then a newline.`,
+  ex: String.raw`40`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <iostream>
+
+int main() {
+    const std::array<int, 6> equity{100, 120, 90, 110, 80, 130};
+    int peak = equity[0], worst = 0;
+    for (int e : equity) {
+        peak = std::max(peak, e);
+        worst = std::max(worst, peak - e);
+    }
+    std::cout << worst << "\n";
+}`,
+  why: String.raw`Tracking the running peak as you go lets each point be compared against the best value so far in one pass.` },
 ];
 
 const TOTAL = problems.length;

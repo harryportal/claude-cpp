@@ -1425,125 +1425,151 @@ int main() {
 }`,
   why: String.raw`Each closing bracket must match the most recent unmatched opening one, which is exactly what a stack gives. The lookup table keeps the pairing rule in one place.` },
 
-{ n: 59, d: "applications", t: "Phone book lookup by name",
-  p: String.raw`A phone book maps the names ana, ben and cy to the numbers 555-0101, 555-0102 and 555-0103. Print the number stored for ben, then a newline.`,
-  ex: String.raw`555-0102`,
+
+
+{ n: 59, d: "applications", t: "Average trade price in cents",
+  p: String.raw`AAPL trades execute at 10000 and 10100 cents. Print the average execution price of AAPL in cents, rounded down, then a newline.`,
+  ex: String.raw`AAPL 10050`,
   code: String.raw`#include <iostream>
 #include <string>
 #include <unordered_map>
 
 int main() {
-    std::unordered_map<std::string, std::string> book{
-        {"ana", "555-0101"}, {"ben", "555-0102"}, {"cy", "555-0103"}};
-    std::cout << book["ben"] << "\n";
-}`,
-  why: String.raw`A name is the key and the number is the value, so finding a number takes one lookup rather than a scan of the whole book.` },
-
-{ n: 60, d: "applications", t: "Count of responses per status code",
-  p: String.raw`A server logs the status codes 200, 404, 200, 500 and 200 in that order. Print the number of 200 responses and the number of 404 responses, separated by a space, then a newline.`,
-  ex: String.raw`3 1`,
-  code: String.raw`#include <iostream>
-#include <unordered_map>
-#include <vector>
-
-int main() {
-    std::unordered_map<int, int> counts;
-    for (int code : std::vector<int>{200, 404, 200, 500, 200}) ++counts[code];
-    std::cout << counts[200] << ' ' << counts[404] << "\n";
-}`,
-  why: String.raw`Each status code is a key whose value is a running count, so the tally is built as the log is read.` },
-
-{ n: 61, d: "applications", t: "Feature flags with a default",
-  p: String.raw`A settings map holds only dark_mode set to on. Print the value for dark_mode, then the value for beta, using off when the setting is missing, separated by a space, then a newline.`,
-  ex: String.raw`on off`,
-  code: String.raw`#include <iostream>
-#include <string>
-#include <unordered_map>
-
-int main() {
-    std::unordered_map<std::string, std::string> settings{{"dark_mode", "on"}};
-    auto it = settings.find("beta");
-    std::cout << settings["dark_mode"] << ' '
-              << (it == settings.end() ? std::string("off") : it->second) << "\n";
-}`,
-  why: String.raw`A lookup that finds nothing should not add an entry, so the search uses find and falls back to the default when the key is absent.` },
-
-{ n: 62, d: "applications", t: "Stock left after sales",
-  p: String.raw`The stock map records sku A with 10 units and sku B with 4 units. Two units of sku A are sold. Print the stock left for sku A, then a newline.`,
-  ex: String.raw`8`,
-  code: String.raw`#include <iostream>
-#include <string>
-#include <unordered_map>
-
-int main() {
-    std::unordered_map<std::string, int> stock{{"A", 10}, {"B", 4}};
-    stock["A"] -= 2;
-    std::cout << stock["A"] << "\n";
-}`,
-  why: String.raw`Updating a count by key changes only the entry for that item, and other items in the map are left as they are.` },
-
-{ n: 63, d: "applications", t: "Grouping words by first letter",
-  p: String.raw`Group the words apple, avocado and banana by their first letter. Print the number of words in the group for a, then the number of words in the group for b, separated by a space, then a newline.`,
-  ex: String.raw`2 1`,
-  code: String.raw`#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-int main() {
-    std::unordered_map<char, std::vector<std::string>> groups;
-    for (const char* w : {"apple", "avocado", "banana"})
-        groups[w[0]].push_back(w);
-    std::cout << groups['a'].size() << ' ' << groups['b'].size() << "\n";
-}`,
-  why: String.raw`Using the first letter as the key collects each word into its group in a single pass, and a new group is created on first use.` },
-
-{ n: 64, d: "applications", t: "Expire old sessions",
-  p: String.raw`Four sessions have these expiry times: alice 50, bob 150, cy 90 and dee 200. The current time is 100, and any session that expired before the current time is removed. Print how many sessions remain, then a newline.`,
-  ex: String.raw`2`,
-  code: String.raw`#include <iostream>
-#include <string>
-#include <unordered_map>
-
-int main() {
-    std::unordered_map<std::string, int> expiry{
-        {"alice", 50}, {"bob", 150}, {"cy", 90}, {"dee", 200}};
-    const int now = 100;
-    for (auto it = expiry.begin(); it != expiry.end();) {
-        if (it->second < now) it = expiry.erase(it);
-        else ++it;
+    std::unordered_map<std::string, long long> total;
+    std::unordered_map<std::string, int> count;
+    for (const auto& [sym, px] : {std::pair<const char*, int>{"AAPL", 10000}, {"AAPL", 10100}}) {
+        total[sym] += px;
+        ++count[sym];
     }
-    std::cout << expiry.size() << "\n";
+    std::cout << "AAPL " << total["AAPL"] / count["AAPL"] << "\n";
 }`,
-  why: String.raw`Erasing while walking the map returns the next valid iterator, so expired entries can be dropped without losing the rest of the walk.` },
+  why: String.raw`Keeping a running total and a count per symbol gives the average in one pass.` },
 
-{ n: 65, d: "applications", t: "Votes per candidate",
-  p: String.raw`Votes were cast for x, y, x, z and x, in that order. Print the number of votes for x, then the number of different candidates who received a vote, separated by a space, then a newline.`,
-  ex: String.raw`3 3`,
+// ---------- Applications ----------
+{ n: 60, d: "applications", t: "Net position per symbol from fills",
+  p: String.raw`Fills arrive as AAPL +100, MSFT -50 and AAPL -30, where a positive quantity is a buy and a negative quantity is a sell. Print the net position of each symbol, one per line as symbol then position, sorted by symbol.`,
+  ex: String.raw`AAPL 70
+MSFT -50`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::unordered_map<std::string, int> net;
+    net["AAPL"] += 100;
+    net["MSFT"] += -50;
+    net["AAPL"] += -30;
+    std::vector<std::pair<std::string, int>> rows(net.begin(), net.end());
+    std::sort(rows.begin(), rows.end());
+    for (const auto& [sym, pos] : rows) std::cout << sym << ' ' << pos << "\n";
+}`,
+  why: String.raw`Accumulating into a map keyed by symbol nets buys and sells per symbol, and sorting the copy gives a stable report.` },
+
+{ n: 61, d: "applications", t: "Most traded symbol",
+  p: String.raw`Trades arrive for the symbols AAPL, MSFT, AAPL, GOOG, MSFT and AAPL, in that order. Print the symbol with the most trades and its trade count, separated by a space, then a newline.`,
+  ex: String.raw`AAPL 3`,
   code: String.raw`#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 int main() {
-    std::unordered_map<std::string, int> tally;
-    for (const std::string& v : std::vector<std::string>{"x", "y", "x", "z", "x"}) ++tally[v];
-    std::cout << tally["x"] << ' ' << tally.size() << "\n";
+    std::unordered_map<std::string, int> count;
+    for (const char* s : {"AAPL", "MSFT", "AAPL", "GOOG", "MSFT", "AAPL"}) ++count[s];
+    std::string best;
+    int top = 0;
+    for (const auto& [sym, n] : count)
+        if (n > top) { top = n; best = sym; }
+    std::cout << best << ' ' << top << "\n";
 }`,
-  why: String.raw`The map's size is the number of distinct keys, so the candidate count comes from the same structure that holds the tallies.` },
+  why: String.raw`Keeping the running maximum while scanning the map gives the answer without sorting every symbol.` },
 
-{ n: 66, d: "applications", t: "Cost of a route segment",
-  p: String.raw`Route costs are stored for the segments A-B costing 7, B-C costing 4 and A-C costing 9. Print the cost of the segment B-C, then a newline.`,
-  ex: String.raw`4`,
+{ n: 62, d: "applications", t: "Duplicate order IDs in sorted order",
+  p: String.raw`Order IDs arrive as 7, 9, 4, 9 and 7. Print every ID that appears more than once, in ascending order, separated by spaces, then a newline.`,
+  ex: String.raw`7 9`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::unordered_map<int, int> seen;
+    for (int id : {7, 9, 4, 9, 7}) ++seen[id];
+    std::map<int, int> sorted(seen.begin(), seen.end());
+    for (const auto& [id, n] : sorted)
+        if (n > 1) std::cout << id << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Counting occurrences in a hash map is quick, and copying the duplicates into an ordered map sorts them for output.` },
+
+{ n: 63, d: "applications", t: "Orders still open after updates",
+  p: String.raw`Orders 1, 2 and 3 are all placed as new. Order 1 is then filled and order 2 is cancelled. Print the number of orders still new, then a newline.`,
+  ex: String.raw`1`,
   code: String.raw`#include <iostream>
 #include <string>
 #include <unordered_map>
 
 int main() {
-    std::unordered_map<std::string, int> cost{{"A-B", 7}, {"B-C", 4}, {"A-C", 9}};
-    std::cout << cost.at("B-C") << "\n";
+    std::unordered_map<int, std::string> status{{1, "new"}, {2, "new"}, {3, "new"}};
+    status[1] = "filled";
+    status[2] = "cancelled";
+    int open = 0;
+    for (const auto& [id, s] : status)
+        if (s == "new") ++open;
+    std::cout << open << "\n";
 }`,
-  why: String.raw`A composite string key identifies each segment, and at() returns the stored cost directly for a key known to exist.` },
+  why: String.raw`Updating a status by key replaces the old value in place, so the final state is always the latest update for each order.` },
+
+{ n: 64, d: "applications", t: "Count of a price level in a snapshot",
+  p: String.raw`A book snapshot lists the prices 100, 101, 100, 102, 101 and 100. Print how many times the price 100 appears, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::unordered_map<int, int> levels;
+    for (int p : std::vector<int>{100, 101, 100, 102, 101, 100}) ++levels[p];
+    std::cout << levels[100] << "\n";
+}`,
+  why: String.raw`A map from price to count gives the number of entries at a level directly.` },
+
+{ n: 65, d: "applications", t: "Orders per desk",
+  p: String.raw`Orders arrive as (1, DeskA), (2, DeskB) and (3, DeskA). Print how many orders each desk received, one per line as desk then count, sorted by desk name.`,
+  ex: String.raw`DeskA 2
+DeskB 1`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> perDesk;
+    for (const char* d : {"DeskA", "DeskB", "DeskA"}) ++perDesk[d];
+    std::map<std::string, int> sorted(perDesk.begin(), perDesk.end());
+    for (const auto& [desk, n] : sorted) std::cout << desk << ' ' << n << "\n";
+}`,
+  why: String.raw`Grouping by desk is a count per key, and the sorted copy gives a predictable order for the report.` },
+
+{ n: 66, d: "applications", t: "Latest price per symbol",
+  p: String.raw`Ticks arrive in this order: AAPL 100, MSFT 50, AAPL 101. Print the most recent price of AAPL, then a newline.`,
+  ex: String.raw`101`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::unordered_map<std::string, int> last;
+    for (const auto& [sym, px] : std::vector<std::pair<std::string, int>>{{"AAPL", 100}, {"MSFT", 50}, {"AAPL", 101}})
+        last[sym] = px;
+    std::cout << last["AAPL"] << "\n";
+}`,
+  why: String.raw`Overwriting the stored value on each tick leaves the map holding only the newest price for every symbol.` },
 ];
 
 const TOTAL = problems.length;

@@ -895,162 +895,145 @@ int main() {
 }`,
   why: String.raw`std::forward restores the category of the argument as the caller passed it. That is what lets a generic wrapper pass lvalues on as lvalues and rvalues on as rvalues.` },
 
-{ n: 40, d: "applications", t: "Setter that takes its argument by value",
-  p: String.raw`Using struct Tracer with static int counters copies and moves, where the copy constructor increments copies and the move constructor and move assignment increment moves, define struct Holder with a member Tracer t and a member function set that takes Tracer x by value and assigns std::move(x) to t. Create Holder h and call h.set(Tracer{}). Print copies, a space, and moves. Reset both counters to zero, create a Tracer src, call h.set(src), and print copies, a space, and moves, then a newline. Put both results on one line separated by a space.`,
-  ex: String.raw`0 1 1 1`,
-  code: String.raw`#include <iostream>
-#include <utility>
 
-struct Tracer {
-    static inline int copies = 0, moves = 0;
-    Tracer() = default;
-    Tracer(const Tracer&) { ++copies; }
-    Tracer(Tracer&&) noexcept { ++moves; }
-    Tracer& operator=(const Tracer&) { ++copies; return *this; }
-    Tracer& operator=(Tracer&&) noexcept { ++moves; return *this; }
-};
 
-struct Holder {
-    Tracer t;
-    void set(Tracer x) { t = std::move(x); }
-};
 
-int main() {
-    Holder h;
-    h.set(Tracer{});
-    std::cout << Tracer::copies << " " << Tracer::moves << " ";
-    Tracer::copies = 0;
-    Tracer::moves = 0;
-    Tracer src;
-    h.set(src);
-    std::cout << Tracer::copies << " " << Tracer::moves << "\n";
-}`,
-  why: String.raw`A setter that takes its argument by value lets one function accept both lvalues and rvalues. An rvalue costs only the move into the member, while an lvalue costs a copy and then a move.` },
 
-{ n: 41, d: "applications", t: "Moving elements into an output vector",
-  p: String.raw`Create a vector src of four unique_ptr<int> holding 1, 2, 3 and 4. Create an empty vector dst and reserve space for four elements. Move each element of src into dst using push_back. Print the sum of the values in dst, a space, and the size of src, then a newline.`,
-  ex: String.raw`10 4`,
-  code: String.raw`#include <iostream>
-#include <memory>
-#include <vector>
-
-int main() {
-    std::vector<std::unique_ptr<int>> src;
-    for (int i = 1; i <= 4; ++i) src.push_back(std::make_unique<int>(i));
-    std::vector<std::unique_ptr<int>> dst;
-    dst.reserve(src.size());
-    for (auto& p : src) dst.push_back(std::move(p));
-    int sum = 0;
-    for (auto& p : dst) sum += *p;
-    std::cout << sum << " " << src.size() << "\n";
-}`,
-  why: String.raw`Stages of a data pipeline often hand each item to the next stage. Moving the owning pointers transfers the items without copying them, and the source keeps its slots as nulls.` },
-
-{ n: 42, d: "applications", t: "Builder that changes behavior on temporaries",
-  p: String.raw`Define class Builder holding a std::vector<int>. Give it add(int x) const-free overloads: the & overload appends x and returns a Builder&, and the && overload appends x and returns a Builder&&. Give it build() && that returns the stored vector by moving it out. Evaluate auto v = Builder{}.add(1).add(2).add(3).build(). Print the size of v, a space, and v[2], then a newline.`,
-  ex: String.raw`3 3`,
-  code: String.raw`#include <iostream>
-#include <utility>
-#include <vector>
-
-class Builder {
-    std::vector<int> v_;
-public:
-    Builder& add(int x) & {
-        v_.push_back(x);
-        return *this;
-    }
-    Builder&& add(int x) && {
-        v_.push_back(x);
-        return std::move(*this);
-    }
-    std::vector<int> build() && { return std::move(v_); }
-};
-
-int main() {
-    auto v = Builder{}.add(1).add(2).add(3).build();
-    std::cout << v.size() << " " << v[2] << "\n";
-}`,
-  why: String.raw`A temporary builder can safely give up its contents, while a named builder must keep them. Ref-qualified overloads make that distinction, so chained calls on temporaries stay cheap.` },
-
-{ n: 43, d: "applications", t: "Taking the front element out of a deque",
-  p: String.raw`Create a std::deque of unique_ptr<int> and push back unique_ptrs to 7 and 8. Move the front element into a new variable p, then pop the front element. Print the value p points to, a space, the size of the deque, a space, and the value of the new front element, then a newline.`,
-  ex: String.raw`7 1 8`,
-  code: String.raw`#include <deque>
+// ---------- Applications ----------
+{ n: 40, d: "applications", t: "Hand a packet to a sink without copying",
+  p: String.raw`A packet is a vector holding the four bytes 1, 2, 3 and 4. It is handed to a sink function by value, and the sink returns the number of bytes it received. Print the sink's byte count, a space, then the number of bytes left in the original packet, then a newline.`,
+  ex: String.raw`4 0`,
+  code: String.raw`#include <cstddef>
 #include <iostream>
-#include <memory>
-#include <utility>
-
-int main() {
-    std::deque<std::unique_ptr<int>> d;
-    d.push_back(std::make_unique<int>(7));
-    d.push_back(std::make_unique<int>(8));
-    auto p = std::move(d.front());
-    d.pop_front();
-    std::cout << *p << " " << d.size() << " " << *d.front() << "\n";
-}`,
-  why: String.raw`Removing an element from a queue after moving it out lets the caller own the element without a copy. The pop then only destroys the empty slot.` },
-
-{ n: 44, d: "applications", t: "Taking a batch and leaving an empty buffer",
-  p: String.raw`Create a vector pending holding 1, 2 and 3. Use std::exchange to move its contents into a new vector batch, leaving pending holding an empty vector. Print the size of batch, a space, and the size of pending, then a newline.`,
-  ex: String.raw`3 0`,
-  code: String.raw`#include <iostream>
 #include <utility>
 #include <vector>
 
-int main() {
-    std::vector<int> pending{1, 2, 3};
-    auto batch = std::exchange(pending, std::vector<int>{});
-    std::cout << batch.size() << " " << pending.size() << "\n";
-}`,
-  why: String.raw`A common way to flush a buffer is to take its contents and replace it with an empty value in one step. std::exchange does both without a separate clear and without copying the elements.` },
+std::size_t sink(std::vector<unsigned char> data) { return data.size(); }
 
-{ n: 45, d: "applications", t: "Handing a buffer to a container",
-  p: String.raw`Create a vector of vectors chunks. Create a vector buf holding 1, 2 and 3. Move buf into chunks using push_back. Print the size of the first element of chunks, a space, and the size of buf, then a newline.`,
-  ex: String.raw`3 0`,
+int main() {
+    std::vector<unsigned char> packet{1, 2, 3, 4};
+    std::size_t received = sink(std::move(packet));
+    std::cout << received << ' ' << packet.size() << "\n";
+}`,
+  why: String.raw`Moving the vector into the parameter transfers its buffer, so the sink takes the bytes without copying them and the caller's vector is left empty.` },
+
+{ n: 41, d: "applications", t: "Move-only handle transferred between owners",
+  p: String.raw`A file handle holds descriptor 3. It is moved into a new handle, and the moved-from handle is set to -1 to mark it as empty. Print the descriptor of the new handle, a space, then the descriptor of the old one, then a newline.`,
+  ex: String.raw`3 -1`,
   code: String.raw`#include <iostream>
 #include <utility>
-#include <vector>
 
-int main() {
-    std::vector<std::vector<int>> chunks;
-    std::vector<int> buf{1, 2, 3};
-    chunks.push_back(std::move(buf));
-    std::cout << chunks[0].size() << " " << buf.size() << "\n";
-}`,
-  why: String.raw`Handing a buffer to a container without copying it is the usual way to build up collections of large data. The buffer is left empty, so it can be reused for the next batch.` },
-
-{ n: 46, d: "applications", t: "Handing a unique resource into a collection",
-  p: String.raw`Create a single integer resource holding the value 7 and place it into a vector, transferring ownership rather than copying. Print the value stored in the vector, a space, then empty if the original is now empty, or full otherwise.`,
-  ex: String.raw`7 empty`,
-  code: String.raw`#include <iostream>
-#include <memory>
-#include <vector>
-
-int main() {
-    auto resource = std::make_unique<int>(7);
-    std::vector<std::unique_ptr<int>> pool;
-    pool.push_back(std::move(resource));
-    std::cout << *pool[0] << ' ' << (resource ? "full" : "empty") << "\n";
-}`,
-  why: String.raw`A unique_ptr can only be moved, so handing it to a container transfers ownership and leaves the source without a resource.` },
-
-{ n: 47, d: "applications", t: "Moving a buffer into a record",
-  p: String.raw`A vector holds the numbers 1, 2 and 3. Move the vector into a record's items field, then print the number of items in the record, a space, then the number of items left in the original vector.`,
-  ex: String.raw`3 0`,
-  code: String.raw`#include <iostream>
-#include <vector>
-
-struct Record {
-    std::vector<int> items;
+struct Handle {
+    int fd;
+    explicit Handle(int f) : fd(f) {}
+    Handle(Handle&& other) noexcept : fd(other.fd) { other.fd = -1; }
+    Handle& operator=(Handle&& other) noexcept { fd = other.fd; other.fd = -1; return *this; }
+    Handle(const Handle&) = delete;
+    Handle& operator=(const Handle&) = delete;
 };
 
 int main() {
-    std::vector<int> src{1, 2, 3};
-    Record r{std::move(src)};
-    std::cout << r.items.size() << ' ' << src.size() << "\n";
+    Handle a(3);
+    Handle b(std::move(a));
+    std::cout << b.fd << ' ' << a.fd << "\n";
 }`,
-  why: String.raw`Moving a vector steals its storage, so the record takes over the elements without copying them, and the source is left empty.` },
+  why: String.raw`A custom move constructor that resets the source makes ownership transfer explicit, so only one handle ever refers to the descriptor.` },
+
+{ n: 42, d: "applications", t: "Swap two buffers and report their new sizes",
+  p: String.raw`Buffer A holds the values 1 and 2, and buffer B holds 1, 2 and 3. The two buffers are swapped. Print the size of A, a space, then the size of B, then a newline.`,
+  ex: String.raw`3 2`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<int> a{1, 2};
+    std::vector<int> b{1, 2, 3};
+    std::swap(a, b);
+    std::cout << a.size() << ' ' << b.size() << "\n";
+}`,
+  why: String.raw`Swapping containers exchanges their internal buffers, so no element needs to be moved one by one.` },
+
+{ n: 43, d: "applications", t: "Reset a counter and keep the old value",
+  p: String.raw`A counter currently holds 5. Reset it to 0 and capture the old value in the same step. Print the old value, a space, then the new value, then a newline.`,
+  ex: String.raw`5 0`,
+  code: String.raw`#include <iostream>
+#include <utility>
+
+int main() {
+    int counter = 5;
+    int old = std::exchange(counter, 0);
+    std::cout << old << ' ' << counter << "\n";
+}`,
+  why: String.raw`std::exchange assigns a new value and returns the previous one, so a read and a reset happen as a single operation.` },
+
+{ n: 44, d: "applications", t: "Move strings into a set",
+  p: String.raw`A vector holds the strings b and a. Move each string into a set, then print the size of the set and its first element, separated by a space, then a newline.`,
+  ex: String.raw`2 a`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::string> words{"b", "a"};
+    std::set<std::string> out;
+    for (auto& w : words) out.insert(std::move(w));
+    std::cout << out.size() << ' ' << *out.begin() << "\n";
+}`,
+  why: String.raw`Each string's buffer moves into its set node, and the set keeps them in sorted order as they arrive.` },
+
+{ n: 45, d: "applications", t: "Forward arguments into an emplaced order",
+  p: String.raw`An order has an integer id and a symbol string. It is created in a vector with the id 1 and the symbol AAPL, where the symbol is moved in rather than copied. Print the id, a space, then the length of the stored symbol, then a newline.`,
+  ex: String.raw`1 4`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+struct Order {
+    int id;
+    std::string sym;
+};
+
+int main() {
+    std::vector<Order> orders;
+    std::string s = "AAPL";
+    orders.emplace_back(1, std::move(s));
+    std::cout << orders[0].id << ' ' << orders[0].sym.size() << "\n";
+}`,
+  why: String.raw`emplace_back forwards its arguments to the constructor, so an rvalue string is moved straight into the new order.` },
+
+{ n: 46, d: "applications", t: "Store a moved string in a map value",
+  p: String.raw`A string holding x is moved into the map entry for key 1. Print the value stored under key 1, then a newline.`,
+  ex: String.raw`x`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <utility>
+
+int main() {
+    std::map<int, std::string> m;
+    std::string s = "x";
+    m[1] = std::move(s);
+    std::cout << m[1] << "\n";
+}`,
+  why: String.raw`Assigning from an rvalue moves the string into the map node, which avoids copying its contents.` },
+
+{ n: 47, d: "applications", t: "Move the surviving events out of a list",
+  p: String.raw`A vector holds the events 1, 2 and 3. Move the whole vector into a new vector, then print the new vector's contents separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+int main() {
+    std::vector<int> events{1, 2, 3};
+    std::vector<int> moved = std::move(events);
+    for (int e : moved) std::cout << e << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Moving a vector transfers its storage in constant time, so the new vector sees the same elements.` },
 ];
 
 const TOTAL = problems.length;

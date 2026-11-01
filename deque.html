@@ -880,7 +880,6 @@ int main() {
 }`,
   why: String.raw`erase invalidates the iterator at the removed position, and it returns a valid iterator to the next element. Continuing from that iterator avoids skipping any values.` },
 
-// ---------- Applications ----------
 { n: 49, d: "medium", t: "Browser back and forward",
   p: String.raw`Visit the pages a, b and c in order, recording each in a deque with the newest at the back. Then go back twice and forward once. Print the page now showing, which is the one at the cursor.`,
   ex: String.raw`b`,
@@ -1080,138 +1079,150 @@ int main() {
 }`,
   why: String.raw`Insertion at an arbitrary position in a deque shifts the shorter side, so editing near the cursor stays cheap. Here the cursor sits between a and b, which puts x in the middle.` },
 
-{ n: 59, d: "applications", t: "Undo history with a cap",
-  p: String.raw`Record the actions 1 to 5 in order, but keep only the most recent three. Print the remaining actions from oldest to newest, separated by spaces, then a newline.`,
-  ex: String.raw`3 4 5`,
+
+
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Highest price in each run of three",
+  p: String.raw`Prices arrive as 1, 3, 2, 5 and 4. For each run of three consecutive prices, print the highest price in that run, separated by spaces, then a newline. The method must not re-scan each run from the start.`,
+  ex: String.raw`3 5 5`,
+  code: String.raw`#include <cstddef>
+#include <deque>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const std::vector<int> p{1, 3, 2, 5, 4};
+    const std::size_t k = 3;
+    std::deque<std::size_t> candidates;
+    for (std::size_t i = 0; i < p.size(); ++i) {
+        while (!candidates.empty() && candidates.front() + k <= i) candidates.pop_front();
+        while (!candidates.empty() && p[candidates.back()] <= p[i]) candidates.pop_back();
+        candidates.push_back(i);
+        if (i + 1 >= k) std::cout << p[candidates.front()] << ' ';
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Keeping only indices whose prices are still useful, in decreasing order of price, means the front is always the current maximum.` },
+
+{ n: 60, d: "applications", t: "Rate limiter for orders",
+  p: String.raw`Orders arrive at the times 0, 1, 2, 3, 11, 12 and 13 seconds. At most three orders are allowed in any window of ten seconds, counting the last ten seconds up to and including the current time. An order that arrives while three are already counted is rejected. Print the number of allowed orders and the number of rejected orders, separated by a space, then a newline.`,
+  ex: String.raw`6 1`,
   code: String.raw`#include <deque>
 #include <iostream>
 
 int main() {
-    std::deque<int> history;
-    for (int i = 1; i <= 5; ++i) {
-        history.push_back(i);
-        if (history.size() > 3) history.pop_front();
+    std::deque<int> recent;
+    int allowed = 0, rejected = 0;
+    for (int t : {0, 1, 2, 3, 11, 12, 13}) {
+        while (!recent.empty() && recent.front() <= t - 10) recent.pop_front();
+        if (recent.size() < 3) { recent.push_back(t); ++allowed; }
+        else ++rejected;
     }
-    for (int a : history) std::cout << a << ' ';
+    std::cout << allowed << ' ' << rejected << "\n";
+}`,
+  why: String.raw`Timestamps leave from the front as they age out, and new accepted orders join at the back, so the count is the deque's size.` },
+
+{ n: 61, d: "applications", t: "Work taken from both ends of a queue",
+  p: String.raw`Tasks 1, 2, 3, 4 and 5 are in a double-ended queue. The owner takes tasks from the back two at a time, one after another, then a thief takes one task from the front. Print the tasks in the order they were taken, then the tasks left, separated by spaces, then a newline.`,
+  ex: String.raw`5 4 1 2 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> tasks{1, 2, 3, 4, 5};
+    for (int i = 0; i < 2; ++i) { std::cout << tasks.back() << ' '; tasks.pop_back(); }
+    std::cout << tasks.front() << ' '; tasks.pop_front();
+    for (int t : tasks) std::cout << t << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`A deque removes from the front in constant time, so a capped history can drop its oldest entry cheaply on every push.` },
+  why: String.raw`Both ends of a deque can be consumed independently, which is what lets an owner and a thief share one work list.` },
 
-{ n: 60, d: "applications", t: "Average of the latest window",
-  p: String.raw`Keep the most recent three values from the sequence 1 to 5, discarding older ones as new values arrive. Print the integer average of those three values, then a newline.`,
-  ex: String.raw`4`,
+{ n: 62, d: "applications", t: "Moving average of four prices",
+  p: String.raw`Prices arrive as 10, 20, 30, 40, 50 and 60. Once four prices have arrived, print the average of the latest four at each step, rounded down to a whole number, separated by spaces, then a newline.`,
+  ex: String.raw`25 35 45`,
   code: String.raw`#include <deque>
 #include <iostream>
 
 int main() {
     std::deque<int> window;
-    for (int i = 1; i <= 5; ++i) {
-        window.push_back(i);
-        if (window.size() > 3) window.pop_front();
-    }
     int sum = 0;
-    for (int v : window) sum += v;
-    std::cout << sum / static_cast<int>(window.size()) << "\n";
-}`,
-  why: String.raw`A sliding window needs to add at one end and remove at the other, which is exactly the access pattern a deque supports well.` },
-
-{ n: 61, d: "applications", t: "Urgent task at the front",
-  p: String.raw`A queue of tasks holds A and then B. An urgent task U is added so that it is served before everything else. Print the tasks from front to back, separated by spaces, then a newline.`,
-  ex: String.raw`U A B`,
-  code: String.raw`#include <deque>
-#include <iostream>
-#include <string>
-
-int main() {
-    std::deque<std::string> tasks{"A", "B"};
-    tasks.push_front("U");
-    for (const auto& t : tasks) std::cout << t << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`Inserting at the front lets an urgent item jump the line without moving the rest of the queue.` },
-
-{ n: 62, d: "applications", t: "Going back in history",
-  p: String.raw`Visit the pages a, b and c in that order. Going back removes the most recent visit. After one step back, print the history from oldest to newest, separated by spaces, then a newline.`,
-  ex: String.raw`a b`,
-  code: String.raw`#include <deque>
-#include <iostream>
-#include <string>
-
-int main() {
-    std::deque<std::string> history{"a", "b", "c"};
-    history.pop_back();
-    for (const auto& page : history) std::cout << page << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`Back navigation takes the most recent entry off the end, so a deque holding the visit order handles it directly.` },
-
-{ n: 63, d: "applications", t: "Rotating a playlist",
-  p: String.raw`A playlist holds the tracks 1, 2, 3 and 4. Move the first track to the end twice, then print the tracks in order, separated by spaces, then a newline.`,
-  ex: String.raw`3 4 1 2`,
-  code: String.raw`#include <deque>
-#include <iostream>
-
-int main() {
-    std::deque<int> playlist{1, 2, 3, 4};
-    for (int i = 0; i < 2; ++i) {
-        playlist.push_back(playlist.front());
-        playlist.pop_front();
+    for (int p : {10, 20, 30, 40, 50, 60}) {
+        window.push_back(p);
+        sum += p;
+        if (window.size() > 4) { sum -= window.front(); window.pop_front(); }
+        if (window.size() == 4) std::cout << sum / 4 << ' ';
     }
-    for (int t : playlist) std::cout << t << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`Moving the front element to the back is a rotation, and a deque does both steps without shifting the other elements.` },
+  why: String.raw`Keeping a running sum alongside the deque avoids re-adding the four values at every step.` },
 
-{ n: 64, d: "applications", t: "Trimming both ends",
-  p: String.raw`A deque holds the values 1 to 6. Remove the first and the last value, then print the sum of the values that remain, then a newline.`,
-  ex: String.raw`14`,
+{ n: 63, d: "applications", t: "Keep only recent events",
+  p: String.raw`Events occurred at the times 1, 4, 6, 9 and 15 seconds. The current time is 15 seconds. Keep only the events from the last ten seconds, meaning those strictly after time 5, and print their times separated by spaces, then a newline.`,
+  ex: String.raw`6 9 15`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> events{1, 4, 6, 9, 15};
+    const int now = 15;
+    while (!events.empty() && events.front() <= now - 10) events.pop_front();
+    for (int t : events) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Events are stored in time order, so anything too old sits at the front and can be removed while the front is stale.` },
+
+{ n: 64, d: "applications", t: "Alternate between the two ends",
+  p: String.raw`The numbers 1 to 6 are in a deque. Repeatedly take one value from the front, then one from the back, until the deque is empty. Print the values in the order they are taken, separated by spaces, then a newline.`,
+  ex: String.raw`1 6 2 5 3 4`,
   code: String.raw`#include <deque>
 #include <iostream>
 
 int main() {
     std::deque<int> d{1, 2, 3, 4, 5, 6};
-    d.pop_front();
-    d.pop_back();
-    int sum = 0;
-    for (int v : d) sum += v;
-    std::cout << sum << "\n";
+    bool front = true;
+    while (!d.empty()) {
+        if (front) { std::cout << d.front() << ' '; d.pop_front(); }
+        else { std::cout << d.back() << ' '; d.pop_back(); }
+        front = !front;
+    }
+    std::cout << "\n";
 }`,
-  why: String.raw`Removing from both ends of a deque is constant time at each end, which suits trimming a sequence from both sides.` },
+  why: String.raw`A deque supports removal at both ends in constant time, so alternating between them costs nothing extra.` },
 
-{ n: 65, d: "applications", t: "Ordering arriving packets",
-  p: String.raw`Packets with the sequence numbers 2, 1 and 3 arrive in that order. Store them in a deque so that the smallest is at the front. Each arriving number goes at the front if it is smaller than the current front, and otherwise at the back. Print the deque from front to back, separated by spaces, then a newline.`,
-  ex: String.raw`1 2 3`,
+{ n: 65, d: "applications", t: "Build a sequence from both ends",
+  p: String.raw`Insert the numbers 1 to 5 in order. Odd numbers go at the back and even numbers go at the front. Print the final sequence from front to back, separated by spaces, then a newline.`,
+  ex: String.raw`4 2 1 3 5`,
   code: String.raw`#include <deque>
 #include <iostream>
 
 int main() {
     std::deque<int> d;
-    for (int x : {2, 1, 3}) {
-        if (!d.empty() && x < d.front()) d.push_front(x);
-        else d.push_back(x);
+    for (int i = 1; i <= 5; ++i) {
+        if (i % 2 == 1) d.push_back(i);
+        else d.push_front(i);
     }
     for (int v : d) std::cout << v << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`A deque lets arrivals join at either end, which is what a reordering buffer needs when packets come in out of order.` },
+  why: String.raw`Adding at either end of a deque leaves the existing order untouched, so the final layout depends only on each value's end.` },
 
-{ n: 66, d: "applications", t: "Average of the last samples",
-  p: String.raw`Feed the samples 1 to 10 one at a time into a buffer that holds only the most recent four. Print the average of the values in the buffer at the end, as a decimal number, then a newline.`,
-  ex: String.raw`8.5`,
+{ n: 66, d: "applications", t: "Sum of the outermost items",
+  p: String.raw`The numbers 1 to 8 are in a deque. Remove the first two and the last two, and print the sum of the four removed values, then a newline.`,
+  ex: String.raw`18`,
   code: String.raw`#include <deque>
 #include <iostream>
 
 int main() {
-    std::deque<int> buffer;
-    for (int i = 1; i <= 10; ++i) {
-        buffer.push_back(i);
-        if (buffer.size() > 4) buffer.pop_front();
-    }
+    std::deque<int> d{1, 2, 3, 4, 5, 6, 7, 8};
     int sum = 0;
-    for (int v : buffer) sum += v;
-    std::cout << static_cast<double>(sum) / static_cast<double>(buffer.size()) << "\n";
+    for (int i = 0; i < 2; ++i) {
+        sum += d.front() + d.back();
+        d.pop_front();
+        d.pop_back();
+    }
+    std::cout << sum << "\n";
 }`,
-  why: String.raw`A bounded buffer keeps the newest samples and forgets the oldest, and the average is taken over whatever it currently holds.` },
+  why: String.raw`Reading and removing from both ends in the same loop keeps the operations at the two ends, where a deque is cheapest.` },
 ];
 
 const TOTAL = problems.length;

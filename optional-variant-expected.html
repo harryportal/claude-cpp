@@ -718,196 +718,180 @@ int main() {
 }`,
   why: String.raw`Returning as soon as the answer is found avoids scanning the rest of the vector, and the optional return type expresses that the answer may not exist.` },
 
-{ n: 38, d: "applications", t: "Optional configuration fields",
-  p: String.raw`A configuration has an optional port, which is set to 8080, and an optional name, which is not set. Print the port if it is set and 80 otherwise, then the name if it is set and none otherwise, separated by a space, then a newline.`,
-  ex: String.raw`8080 none`,
-  code: String.raw`#include <iostream>
-#include <optional>
-#include <string>
 
-struct Config {
-    std::optional<int> port;
-    std::optional<std::string> name;
-};
+
+// ---------- Applications ----------
+{ n: 38, d: "applications", t: "Parse order sizes with a reported error",
+  p: String.raw`Parse the text 100 as an integer and the text x1 as an integer. A successful parse gives its value, and a failure gives the error message bad. Print the two results separated by a space, then a newline.`,
+  ex: String.raw`100 bad`,
+  code: String.raw`#include <charconv>
+#include <cstddef>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <system_error>
+
+std::expected<int, std::string> parse(std::string_view s) {
+    int v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
+    return v;
+}
 
 int main() {
-    Config c{8080, std::nullopt};
-    std::cout << c.port.value_or(80) << ' ' << c.name.value_or("none") << "\n";
+    auto a = parse("100");
+    auto b = parse("x1");
+    std::cout << (a ? std::to_string(*a) : a.error()) << ' ' << (b ? std::to_string(*b) : b.error()) << "\n";
 }`,
-  why: String.raw`Optional fields express settings that may be absent, and value_or provides the default at the point of use.` },
+  why: String.raw`from_chars reports both the value and how far it read, so a partial match is caught as an error rather than accepted.` },
 
-{ n: 39, d: "applications", t: "Applying a sequence of commands",
-  p: String.raw`Start a running total at 0. Apply the commands add 5, negate, and add 2 in that order, where negate changes the sign of the total. Print the final total, then a newline.`,
-  ex: String.raw`-3`,
+{ n: 39, d: "applications", t: "Optional limit with a default",
+  p: String.raw`A risk limit is not configured, so it is an empty optional. Print the limit used, which should be 500 when nothing is configured, then a newline.`,
+  ex: String.raw`500`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> limit;
+    std::cout << limit.value_or(500) << "\n";
+}`,
+  why: String.raw`value_or supplies the fallback only when the optional is empty, leaving configured values alone.` },
+
+{ n: 40, d: "applications", t: "Dispatch on message kind",
+  p: String.raw`A message is either a fill or a cancel, and here it is a cancel for order 7. Print cancel followed by the order id, separated by a space, then a newline.`,
+  ex: String.raw`cancel 7`,
   code: String.raw`#include <iostream>
 #include <variant>
-#include <vector>
 
-struct Add { int n; };
-struct Negate {};
-struct Reset {};
+struct Fill { int id; };
+struct Cancel { int id; };
 
 template <class... Ts>
-struct Overloaded : Ts... {
-    using Ts::operator()...;
-};
+struct Overloaded : Ts... { using Ts::operator()...; };
 template <class... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
 
 int main() {
-    int total = 0;
-    std::vector<std::variant<Add, Negate, Reset>> cmds{Add{5}, Negate{}, Add{2}};
-    for (const auto& c : cmds) {
-        std::visit(Overloaded{
-            [&](const Add& a) { total += a.n; },
-            [&](const Negate&) { total = -total; },
-            [&](const Reset&) { total = 0; }}, c);
-    }
-    std::cout << total << "\n";
+    std::variant<Fill, Cancel> msg = Cancel{7};
+    std::visit(Overloaded{
+        [](const Fill& f) { std::cout << "fill " << f.id << "\n"; },
+        [](const Cancel& c) { std::cout << "cancel " << c.id << "\n"; }}, msg);
 }`,
-  why: String.raw`Commands as variants give a closed set of operations, and visit makes the compiler check that each one is handled.` },
+  why: String.raw`Visiting with one overload per alternative forces every kind of message to be handled, and the compiler flags any missing case.` },
 
-{ n: 40, d: "applications", t: "Pipeline that stops at the first failure",
-  p: String.raw`Write three steps: read a whole number from text, double it, and then require the doubled value to be below 100. Run the pipeline on the text 30 and on the text 60, and print the final value or the error message for each, separated by a space, then a newline.`,
-  ex: String.raw`60 too large`,
+{ n: 41, d: "applications", t: "Chain validation of a quantity",
+  p: String.raw`The text 20 is parsed as an integer and must then be positive. Print the quantity if both steps succeed, then a newline.`,
+  ex: String.raw`20`,
   code: String.raw`#include <charconv>
 #include <expected>
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <system_error>
 
-std::expected<int, std::string> read_num(std::string_view s) {
-    int v{};
+std::expected<int, std::string> parse(std::string_view s) {
+    int v = 0;
     auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected("invalid");
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
     return v;
 }
-std::expected<int, std::string> doubled(int x) { return x * 2; }
-std::expected<int, std::string> below_100(int x) {
-    if (x >= 100) return std::unexpected("too large");
-    return x;
+
+std::expected<int, std::string> positive(int v) {
+    if (v <= 0) return std::unexpected(std::string("not positive"));
+    return v;
 }
 
 int main() {
-    auto run = [](std::string_view s) {
-        auto r = read_num(s).and_then(doubled).and_then(below_100);
-        return r ? std::to_string(*r) : r.error();
-    };
-    std::cout << run("30") << ' ' << run("60") << "\n";
+    auto q = parse("20").and_then(positive);
+    std::cout << (q ? std::to_string(*q) : q.error()) << "\n";
 }`,
-  why: String.raw`Each step returns either a value or an error, and and_then links them. The error from the first failing step becomes the result, so no step needs its own error handling.` },
+  why: String.raw`and_then runs the next check only on success, so the first failure is the one that is reported.` },
 
-{ n: 41, d: "applications", t: "Fallback chain for display names",
-  p: String.raw`Two lookup tables exist: nicknames, which maps alice to Al, and first names, which maps bob to Bob. For each of alice, bob and carol, find the nickname if there is one, otherwise the first name, otherwise the text anonymous. Print the three results separated by spaces, then a newline.`,
-  ex: String.raw`Al Bob anonymous`,
+{ n: 42, d: "applications", t: "Look up and double a price",
+  p: String.raw`A price table holds the symbol AAPL at 101. Look up the price, double it, and print the result. If the symbol is missing, print none instead. Print the output then a newline.`,
+  ex: String.raw`202`,
   code: String.raw`#include <iostream>
 #include <map>
 #include <optional>
 #include <string>
 
-std::optional<std::string> find(const std::map<std::string, std::string>& m, const std::string& k) {
-    auto it = m.find(k);
+std::optional<int> find_price(const std::map<std::string, int>& m, const std::string& s) {
+    auto it = m.find(s);
     if (it == m.end()) return std::nullopt;
     return it->second;
 }
 
 int main() {
-    std::map<std::string, std::string> nicknames{{"alice", "Al"}};
-    std::map<std::string, std::string> first_names{{"bob", "Bob"}};
-    for (const std::string user : {"alice", "bob", "carol"}) {
-        auto name = find(nicknames, user)
-                        .or_else([&] { return find(first_names, user); })
-                        .value_or("anonymous");
-        std::cout << name << (user == "carol" ? "\n" : " ");
-    }
+    std::map<std::string, int> prices{{"AAPL", 101}};
+    auto doubled = find_price(prices, "AAPL").transform([](int p) { return p * 2; });
+    std::cout << (doubled ? std::to_string(*doubled) : std::string("none")) << "\n";
 }`,
-  why: String.raw`or_else tries the next source only when the previous one came up empty, which expresses a fallback order without nested ifs.` },
+  why: String.raw`transform applies the doubling only to a value that is present, so a missing symbol stays empty all the way through.` },
 
-{ n: 42, d: "applications", t: "Doubling mixed numeric values",
-  p: String.raw`Two numbers are stored, each as either an int or a double: the int 42 and the double 2.5. Print each one doubled, separated by a space, then a newline.`,
-  ex: String.raw`84 5`,
-  code: String.raw`#include <iostream>
-#include <variant>
-
-int main() {
-    std::variant<int, double> a = 42;
-    std::variant<int, double> b = 2.5;
-    auto twice = [](const std::variant<int, double>& v) {
-        return std::visit([](auto x) { return static_cast<double>(x) * 2; }, v);
-    };
-    std::cout << twice(a) << ' ' << twice(b) << "\n";
-}`,
-  why: String.raw`Generic lambdas let visit apply the same doubling to whichever type is stored, keeping the int exact and the double as a double.` },
-
-{ n: 43, d: "applications", t: "Collecting the numbers that parse",
-  p: String.raw`From the texts 4, x, 9 and y, keep only those that read as whole numbers, using a result that may be empty for each text. Print the sum of the numbers kept, then a newline.`,
-  ex: String.raw`13`,
+{ n: 43, d: "applications", t: "Count parse failures across lines",
+  p: String.raw`Three lines are parsed as integers: 10, then x, then 30. Print how many of the lines fail to parse, then a newline.`,
+  ex: String.raw`1`,
   code: String.raw`#include <charconv>
+#include <expected>
 #include <iostream>
-#include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
-std::optional<int> to_int(std::string_view s) {
-    int v{};
+std::expected<int, std::string> parse(std::string_view s) {
+    int v = 0;
     auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc{} || p != s.data() + s.size()) return std::nullopt;
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
     return v;
 }
 
 int main() {
-    std::vector<std::string> texts{"4", "x", "9", "y"};
-    int sum = 0;
-    for (const auto& t : texts)
-        if (auto v = to_int(t)) sum += *v;
-    std::cout << sum << "\n";
+    int failures = 0;
+    for (std::string_view line : std::vector<std::string_view>{"10", "x", "30"})
+        if (!parse(line)) ++failures;
+    std::cout << failures << "\n";
 }`,
-  why: String.raw`Making the parse result optional lets the caller skip bad input in the same condition that tests for success, instead of checking a separate error code.` },
+  why: String.raw`Each failed parse is an ordinary value you can test, so counting failures needs no exception handling.` },
 
-{ n: 44, d: "applications", t: "Validation report",
-  p: String.raw`Check the ages 17, 25 and -3 with a function that returns the age when it is not negative, and otherwise returns the message negative age. Print each result on its own line, numbers as numbers and messages as text, then a newline.`,
-  ex: String.raw`17
-25
-negative age`,
-  code: String.raw`#include <expected>
-#include <initializer_list>
+{ n: 44, d: "applications", t: "Which alternative a value holds",
+  p: String.raw`A variant can hold an int or a string, and here it holds the string hi. Print the index of the alternative currently held, which counts the int as 0 and the string as 1, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = std::string("hi");
+    std::cout << v.index() << "\n";
+}`,
+  why: String.raw`index() reports which alternative is active, so the code can branch on it without a separate tag.` },
+
+{ n: 45, d: "applications", t: "Sum of two successful parses",
+  p: String.raw`The texts 5 and 7 are each parsed as integers. If both parse, print their sum, and otherwise print error. Print the output then a newline.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <charconv>
+#include <expected>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <system_error>
 
-std::expected<int, std::string> check_age(int a) {
-    if (a < 0) return std::unexpected("negative age");
-    return a;
+std::expected<int, std::string> parse(std::string_view s) {
+    int v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected(std::string("bad"));
+    return v;
 }
 
 int main() {
-    for (int a : {17, 25, -3}) {
-        auto r = check_age(a);
-        std::cout << (r ? std::to_string(*r) : r.error()) << "\n";
-    }
+    auto a = parse("5");
+    auto b = parse("7");
+    if (a && b) std::cout << *a + *b << "\n";
+    else std::cout << "error\n";
 }`,
-  why: String.raw`Each validation result carries its own message, so a report can be built from results without a separate error channel.` },
-
-{ n: 45, d: "applications", t: "Counting lights that are on",
-  p: String.raw`A light is either off, on with a brightness of 80, or blinking with a period of 5. Count how many of the lights On, Off, Blinking and On are on, treating blinking as on, then print the count, then a newline.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
-#include <variant>
-#include <vector>
-
-struct Off {};
-struct On { int brightness; };
-struct Blinking { int period; };
-using Light = std::variant<Off, On, Blinking>;
-
-int main() {
-    std::vector<Light> lights{On{80}, Off{}, Blinking{5}, On{20}};
-    auto n = std::count_if(lights.begin(), lights.end(),
-                           [](const Light& l) { return l.index() != 0; });
-    std::cout << n << "\n";
-}`,
-  why: String.raw`Using the variant's alternative index keeps the state model in the type. Adding a new kind of light forces the code that reads it to be revisited.` },
+  why: String.raw`Testing each expected before using its value means a failure in either input never reaches the arithmetic.` },
 ];
 
 const TOTAL = problems.length;

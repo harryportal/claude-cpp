@@ -894,7 +894,6 @@ int main() {
 }`,
   why: String.raw`Binding the loop variable as a reference lets each element be changed where it is stored.` },
 
-// ---------- Applications ----------
 { n: 49, d: "easy", t: "Reorder browser tabs",
   p: String.raw`Open tabs are A, B, C and D in that order. Move tab C to the front, keeping the others in order, then print the tabs separated by spaces.`,
   ex: String.raw`C A B D`,
@@ -1070,129 +1069,152 @@ int main() {
 }`,
   why: String.raw`A returning visitor's node is moved to the front with splice, so the record is reused rather than rebuilt. The list then reads most recent first.` },
 
-{ n: 59, d: "applications", t: "Recently used first",
-  p: String.raw`A list holds the items 1, 2 and 3 in that order. Item 2 is used, so move it to the front without changing the order of the others. Print the items separated by spaces, then a newline.`,
-  ex: String.raw`2 1 3`,
-  code: String.raw`#include <iostream>
-#include <iterator>
-#include <list>
 
-int main() {
-    std::list<int> items{1, 2, 3};
-    auto it = std::next(items.begin());
-    items.splice(items.begin(), items, it);
-    for (int v : items) std::cout << v << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`splice moves an element from one position to another in constant time without copying it, which suits a recently-used ordering.` },
 
-{ n: 60, d: "applications", t: "Moving a track to the end",
-  p: String.raw`A playlist holds the tracks 1, 2, 3 and 4. Move the first track to the end, then print the playlist separated by spaces, then a newline.`,
-  ex: String.raw`2 3 4 1`,
-  code: String.raw`#include <iostream>
-#include <list>
-
-int main() {
-    std::list<int> playlist{1, 2, 3, 4};
-    playlist.splice(playlist.end(), playlist, playlist.begin());
-    for (int t : playlist) std::cout << t << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`Reordering a list by splicing relinks the nodes, so the tracks keep their identity and no element is copied.` },
-
-{ n: 61, d: "applications", t: "Interleaving two sorted playlists",
-  p: String.raw`Two sorted playlists are 1, 3 and 5, and 2, 4 and 6. Combine them into one sorted playlist, print it separated by spaces, then a newline.`,
-  ex: String.raw`1 2 3 4 5 6`,
-  code: String.raw`#include <iostream>
-#include <list>
-
-int main() {
-    std::list<int> a{1, 3, 5};
-    std::list<int> b{2, 4, 6};
-    a.merge(b);
-    for (int v : a) std::cout << v << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`Merging sorted lists relinks nodes from one list into the other, so the second list ends up empty.` },
-
-{ n: 62, d: "applications", t: "Removing a value everywhere",
-  p: String.raw`A list holds the values 5, 2, 5, 8 and 5, in that order. Remove every occurrence of 5, then print what remains separated by spaces, then a newline.`,
-  ex: String.raw`2 8`,
-  code: String.raw`#include <iostream>
-#include <list>
-
-int main() {
-    std::list<int> values{5, 2, 5, 8, 5};
-    values.remove(5);
-    for (int v : values) std::cout << v << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`Removing by value in a list deletes every match in one pass, and does not invalidate iterators to the other elements.` },
-
-{ n: 63, d: "applications", t: "Bringing one entry forward",
-  p: String.raw`A list holds the values 1, 2, 3, 4 and 5 in order. Take the third value and place it before the first value. Print the list separated by spaces, then a newline.`,
-  ex: String.raw`3 1 2 4 5`,
-  code: String.raw`#include <iostream>
-#include <iterator>
-#include <list>
-
-int main() {
-    std::list<int> values{1, 2, 3, 4, 5};
-    auto third = std::next(values.begin(), 2);
-    values.splice(values.begin(), values, third);
-    for (int v : values) std::cout << v << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`An iterator to a list element stays valid across splices, so the element can be moved using the iterator from earlier.` },
-
-{ n: 64, d: "applications", t: "Sorting scores from highest to lowest",
-  p: String.raw`Three scores are listed as 3, 1 and 2. Sort them from highest to lowest, print them separated by spaces, then a newline.`,
-  ex: String.raw`3 2 1`,
-  code: String.raw`#include <functional>
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Least recently used symbol cache",
+  p: String.raw`A cache holds at most three symbols. Symbols are accessed in the order A, B, C, A, D. When a symbol is accessed it becomes the most recent. When the cache is full and a new symbol arrives, the least recently used symbol is evicted. Print the cached symbols from most recent to least recent, separated by spaces, then a newline.`,
+  ex: String.raw`D A C`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
 #include <iostream>
-#include <list>
-
-int main() {
-    std::list<int> scores{3, 1, 2};
-    scores.sort(std::greater<int>{});
-    for (int s : scores) std::cout << s << ' ';
-    std::cout << "\n";
-}`,
-  why: String.raw`A list supplies its own sort that accepts a comparison, and it does the work by relinking nodes.` },
-
-{ n: 65, d: "applications", t: "Erasing while walking the list",
-  p: String.raw`A list holds the values 1, 2, 3 and 4. Walk through it, erasing every even value as you go. Then print the sum of the values that remain, then a newline.`,
-  ex: String.raw`4`,
-  code: String.raw`#include <iostream>
-#include <list>
-
-int main() {
-    std::list<int> values{1, 2, 3, 4};
-    for (auto it = values.begin(); it != values.end();) {
-        if (*it % 2 == 0) it = values.erase(it);
-        else ++it;
-    }
-    int sum = 0;
-    for (int v : values) sum += v;
-    std::cout << sum << "\n";
-}`,
-  why: String.raw`erase returns the iterator to the next element, so a walk that removes items can continue without invalidating its position.` },
-
-{ n: 66, d: "applications", t: "Unique tags",
-  p: String.raw`A list of tags holds a, b, a and c, in that order. Sort the tags, remove the duplicates, then print the remaining tags separated by spaces, then a newline.`,
-  ex: String.raw`a b c`,
-  code: String.raw`#include <iostream>
 #include <list>
 #include <string>
 
 int main() {
-    std::list<std::string> tags{"a", "b", "a", "c"};
-    tags.sort();
-    tags.unique();
-    for (const auto& t : tags) std::cout << t << ' ';
+    std::list<std::string> cache;
+    const std::size_t cap = 3;
+    for (std::string s : {"A", "B", "C", "A", "D"}) {
+        auto it = std::find(cache.begin(), cache.end(), s);
+        if (it != cache.end()) cache.splice(cache.begin(), cache, it);
+        else {
+            if (cache.size() == cap) cache.pop_back();
+            cache.push_front(s);
+        }
+    }
+    for (const auto& s : cache) std::cout << s << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`unique only removes adjacent duplicates, so the tags are sorted first to bring every copy of a tag next to each other.` },
+  why: String.raw`A list gives constant-time moves between positions, so each hit is spliced to the front and the back is the eviction candidate.` },
+
+{ n: 60, d: "applications", t: "Cancel an order through a kept handle",
+  p: String.raw`A price level holds orders 1, 2 and 3 in that order. A handle to order 2 was kept when it was placed. Cancel order 2 using that handle, then print the remaining orders separated by spaces, then a newline.`,
+  ex: String.raw`1 3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> level{1, 2, 3};
+    auto handle = std::next(level.begin());
+    level.erase(handle);
+    for (int o : level) std::cout << o << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A list iterator stays valid for the other elements, so an order can be removed in constant time using a handle kept from insertion.` },
+
+{ n: 61, d: "applications", t: "Keep the first occurrence of each value",
+  p: String.raw`A list holds 3, 1, 3, 2 and 1 in that order. Remove every later repeat so each value appears only at its first position, and print the remaining values separated by spaces, then a newline.`,
+  ex: String.raw`3 1 2`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <set>
+
+int main() {
+    std::list<int> values{3, 1, 3, 2, 1};
+    std::set<int> seen;
+    for (auto it = values.begin(); it != values.end();) {
+        if (seen.insert(*it).second) ++it;
+        else it = values.erase(it);
+    }
+    for (int v : values) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`The set remembers which values have appeared, and erase returns the next iterator so the walk can continue after each removal.` },
+
+{ n: 62, d: "applications", t: "Split a list at its first negative value",
+  p: String.raw`A list holds 5, 6, -1 and 7 in that order. Move everything from the first negative value onward into a second list, without copying the values. Print the first list, then a vertical bar, then the second list, each as values separated by spaces, then a newline.`,
+  ex: String.raw`5 6 | -1 7`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> l{5, 6, -1, 7};
+    std::list<int> tail;
+    auto it = std::find_if(l.begin(), l.end(), [](int v) { return v < 0; });
+    tail.splice(tail.begin(), l, it, l.end());
+    for (int v : l) std::cout << v << ' ';
+    std::cout << "| ";
+    for (int v : tail) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Splicing a range relinks the nodes into the other list, so the split costs no copies of the values.` },
+
+{ n: 63, d: "applications", t: "Insert market events in time order",
+  p: String.raw`Events with the timestamps 5, 1 and 3 arrive in that order. Insert each into a list so the list stays sorted by timestamp. Print the timestamps separated by spaces, then a newline.`,
+  ex: String.raw`1 3 5`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> events;
+    for (int t : {5, 1, 3}) {
+        auto it = events.begin();
+        while (it != events.end() && *it < t) ++it;
+        events.insert(it, t);
+    }
+    for (int t : events) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Inserting before the first later element keeps the list in order, and the insert itself does not move any other node.` },
+
+{ n: 64, d: "applications", t: "Read a value through a kept iterator",
+  p: String.raw`A list holds 10, 20 and 30. An iterator to 30 is kept. The element 20 is then erased. Print the value the kept iterator still refers to, then a newline.`,
+  ex: String.raw`30`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{10, 20, 30};
+    auto last = std::next(l.begin(), 2);
+    l.erase(std::next(l.begin()));
+    std::cout << *last << "\n";
+}`,
+  why: String.raw`Erasing one node never invalidates iterators to the others, so a handle to 30 still reads 30 after 20 is gone.` },
+
+{ n: 65, d: "applications", t: "Bring the newest item to the top",
+  p: String.raw`A list holds 1, 2, 3 and 4 in that order, with 4 the newest. Move the newest item to the front without changing the order of the rest. Print the list separated by spaces, then a newline.`,
+  ex: String.raw`4 1 2 3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> l{1, 2, 3, 4};
+    l.splice(l.begin(), l, std::prev(l.end()));
+    for (int v : l) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`splice with a single element moves that node to the front in constant time.` },
+
+{ n: 66, d: "applications", t: "Count items between two markers",
+  p: String.raw`A log holds the entries 1, 2, START, 3, 4, END and 5 in that order. Print how many entries lie strictly between START and END, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> log{"1", "2", "START", "3", "4", "END", "5"};
+    auto s = std::find(log.begin(), log.end(), "START");
+    auto e = std::find(log.begin(), log.end(), "END");
+    std::cout << std::distance(std::next(s), e) << "\n";
+}`,
+  why: String.raw`Two iterators from find bound the region, and distance counts the entries between them.` },
 ];
 
 const TOTAL = problems.length;

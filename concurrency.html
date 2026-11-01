@@ -1,4 +1,5 @@
 <title>STL Concurrency Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 113 problems</p>
+    <p class="kicker">Problems by topic · 121 problems</p>
     <h1>STL Concurrency Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">113</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="113" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">121</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="121" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -2927,6 +2928,171 @@ int main() {
     std::cout << pending.size() << '\n';
 }`,
   why: String.raw`Collapsing duplicate notifications into one pending entry per key stops a busy handler from being flooded with repeats.` },
+
+// ---------- Applications ----------
+{ n: 114, d: "applications", t: "Largest value across chunks",
+  p: String.raw`The values 3, 9, 2, 8, 5 and 7 are split into two chunks, the first three and the last three. Each chunk's largest value is found on its own thread, and the overall largest is printed, then a newline.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> v{3, 9, 2, 8, 5, 7};
+    int best1 = 0, best2 = 0;
+    std::thread t1([&] { best1 = *std::max_element(v.begin(), v.begin() + 3); });
+    std::thread t2([&] { best2 = *std::max_element(v.begin() + 3, v.end()); });
+    t1.join();
+    t2.join();
+    std::cout << std::max(best1, best2) << "\n";
+}`,
+  why: String.raw`Each thread writes its own result variable, so no lock is needed, and the join makes both results visible to main.` },
+
+{ n: 115, d: "applications", t: "Total from four workers",
+  p: String.raw`Four threads, numbered 1 to 4, each add their number to a shared total under a lock. Print the final total, then a newline.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    int total = 0;
+    std::mutex m;
+    std::vector<std::thread> ts;
+    for (int id = 1; id <= 4; ++id)
+        ts.emplace_back([&, id] {
+            std::lock_guard lk(m);
+            total += id;
+        });
+    for (auto& t : ts) t.join();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`The lock makes each addition indivisible, and joining every worker before printing gives the complete total.` },
+
+{ n: 116, d: "applications", t: "Worker that stops on request",
+  p: String.raw`A worker thread repeatedly checks an atomic stop flag and exits once the flag is set. The main thread sets the flag, joins the worker, and prints stopped, then a newline.`,
+  ex: String.raw`stopped`,
+  code: String.raw`#include <atomic>
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::atomic<bool> stop{false};
+    std::thread worker([&] {
+        while (!stop.load()) std::this_thread::yield();
+    });
+    stop.store(true);
+    worker.join();
+    std::cout << "stopped\n";
+}`,
+  why: String.raw`Polling an atomic flag lets the worker notice the request without the main thread killing it mid-task.` },
+
+{ n: 117, d: "applications", t: "Alternating output from two threads",
+  p: String.raw`Two threads take turns: the ping thread prints ping, then the pong thread prints pong, repeated two times each, and the turns strictly alternate. Print the words separated by spaces, then a newline.`,
+  ex: String.raw`ping pong ping pong`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex m;
+    std::condition_variable cv;
+    bool ping_turn = true;
+    auto player = [&](bool is_ping) {
+        for (int i = 0; i < 2; ++i) {
+            std::unique_lock lk(m);
+            cv.wait(lk, [&] { return ping_turn == is_ping; });
+            std::cout << (is_ping ? "ping" : "pong") << (i == 1 && !is_ping ? "\n" : " ");
+            ping_turn = !ping_turn;
+            cv.notify_all();
+        }
+    };
+    std::thread a(player, true), b(player, false);
+    a.join();
+    b.join();
+}`,
+  why: String.raw`A shared turn flag and a condition variable make each thread wait for its own turn, which forces the strict order.` },
+
+{ n: 118, d: "applications", t: "Value delivered through a promise",
+  p: String.raw`A promise is fulfilled with the value 42 by a separate thread. The main thread reads the value through the matching future and prints it, then a newline.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::thread t([&] { p.set_value(42); });
+    std::cout << f.get() << "\n";
+    t.join();
+}`,
+  why: String.raw`The future blocks until the promise is fulfilled, so the value can be read safely from another thread.` },
+
+{ n: 119, d: "applications", t: "Lock two mutexes without deadlock",
+  p: String.raw`Two mutexes guard two accounts. A transfer thread locks both at once using a scoped lock that avoids deadlock, and then prints locked. Print the word, then a newline.`,
+  ex: String.raw`locked`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int main() {
+    std::mutex a, b;
+    std::thread t([&] {
+        std::scoped_lock lk(a, b);
+        std::cout << "locked\n";
+    });
+    t.join();
+}`,
+  why: String.raw`scoped_lock acquires both mutexes with a deadlock-avoiding algorithm, so two threads locking in opposite orders cannot hang.` },
+
+{ n: 120, d: "applications", t: "Per-thread accumulator merged at the end",
+  p: String.raw`Two threads each add 5 to a thread-local accumulator, and then each adds its own result to a shared total under a lock. Print the shared total, then a newline.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int total = 0;
+std::mutex m;
+
+void work() {
+    thread_local int local = 0;
+    for (int i = 0; i < 5; ++i) ++local;
+    std::lock_guard lk(m);
+    total += local;
+}
+
+int main() {
+    std::thread a(work), b(work);
+    a.join();
+    b.join();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Each thread builds its partial result privately and touches the shared total only once, which keeps lock time short.` },
+
+{ n: 121, d: "applications", t: "Count evens in two halves",
+  p: String.raw`The numbers 1 to 8 are split into two halves, 1 to 4 and 5 to 8. Each half counts its even numbers on its own thread, and the two counts are added. Print the total count, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <future>
+#include <iostream>
+
+int count_evens(int lo, int hi) {
+    int c = 0;
+    for (int x = lo; x <= hi; ++x)
+        if (x % 2 == 0) ++c;
+    return c;
+}
+
+int main() {
+    auto a = std::async(std::launch::async, count_evens, 1, 4);
+    auto b = std::async(std::launch::async, count_evens, 5, 8);
+    std::cout << a.get() + b.get() << "\n";
+}`,
+  why: String.raw`Splitting the range gives each thread independent work, and the futures combine the partial counts.` },
 ];
 
 const TOTAL = problems.length;
@@ -3031,7 +3197,7 @@ for (const sec of [
   { from: 16, to: 50, label: "Medium", range: "Problems 16–50", badge: "medium" },
   { from: 51, to: 75, label: "Hard", range: "Problems 51–75", badge: "hard" },
   { from: 76, to: 98, label: "Extension", range: "Problems 76–98", badge: null },
-  { from: 99, to: 113, label: "Applications", range: "Problems 99–113", badge: null }
+  { from: 99, to: 121, label: "Applications", range: "Problems 99–121", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

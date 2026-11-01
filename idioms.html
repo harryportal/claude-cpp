@@ -1,4 +1,5 @@
 <title>C++ Idioms Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 120 problems</p>
+    <p class="kicker">Problems by topic · 130 problems</p>
     <h1>C++ Idioms Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">120</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">130</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="130" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -4137,6 +4138,205 @@ int main() {
     }
 }`,
   why: String.raw`The temporary file is removed by the destructor on every path that did not commit, so a failed save leaves no partial output behind. Only a successful commit makes the change visible.` },
+
+// ---------- Applications ----------
+{ n: 121, d: "applications", t: "Cleanup that runs however a block exits",
+  p: String.raw`A guard object runs a cleanup action when it goes out of scope. Inside a block, print body, then leave the block, where the cleanup prints cleanup. Print the two words separated by a space, then a newline.`,
+  ex: String.raw`body cleanup`,
+  code: String.raw`#include <functional>
+#include <iostream>
+
+struct Guard {
+    std::function<void()> f;
+    ~Guard() { f(); }
+};
+
+int main() {
+    {
+        Guard g{[] { std::cout << "cleanup"; }};
+        std::cout << "body ";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Destructors run on every exit path, so cleanup happens without an explicit call on each return or error.` },
+
+{ n: 122, d: "applications", t: "Assignment that cannot leave a half-copied object",
+  p: String.raw`A buffer holds the values 1 and 2. It is assigned from another buffer holding 1, 2 and 3 using a copy-and-swap assignment. Print the size of the buffer after assignment, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <utility>
+#include <vector>
+
+class Buf {
+    std::vector<int> data_;
+public:
+    Buf(std::vector<int> d) : data_(std::move(d)) {}
+    Buf& operator=(Buf other) {
+        std::swap(data_, other.data_);
+        return *this;
+    }
+    std::size_t size() const { return data_.size(); }
+};
+
+int main() {
+    Buf a({1, 2});
+    Buf b({1, 2, 3});
+    a = b;
+    std::cout << a.size() << "\n";
+}`,
+  why: String.raw`Taking the parameter by value makes the copy first, and the swap cannot fail halfway through, so the old contents survive any copy error.` },
+
+{ n: 123, d: "applications", t: "Let the members manage themselves",
+  p: String.raw`A record holds a name string and a vector of numbers. It has no special copy or destruction code of its own. A copy of a record holding the vector 1 and 2 is made. Print the number of elements in the copy, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+struct Rec {
+    std::string name;
+    std::vector<int> v;
+};
+
+int main() {
+    Rec r1{"a", {1, 2}};
+    Rec r2 = r1;
+    std::cout << r2.v.size() << "\n";
+}`,
+  why: String.raw`When every member already manages its own resources correctly, the class does not need to write any of the special members.` },
+
+{ n: 124, d: "applications", t: "Enum with a fixed underlying type",
+  p: String.raw`An enumeration of colours has the underlying type std::uint8_t, with Red as 0, Green as 1 and Blue as 2. Print the name of the value Green in lowercase, then a newline.`,
+  ex: String.raw`green`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <string>
+
+enum class Color : std::uint8_t { Red, Green, Blue };
+
+std::string name(Color c) {
+    switch (c) {
+        case Color::Red: return "red";
+        case Color::Green: return "green";
+        case Color::Blue: return "blue";
+    }
+    return "unknown";
+}
+
+int main() {
+    std::cout << name(Color::Green) << "\n";
+}`,
+  why: String.raw`A scoped enumeration with a fixed type does not leak its names or convert implicitly, and a switch over it can be checked for completeness.` },
+
+{ n: 125, d: "applications", t: "Count instances per derived type",
+  p: String.raw`Each object that derives from a counting base increments a counter kept separately for its own type. Create two objects of type A and one of type B. Print the count for A and the count for B, separated by a space, then a newline.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+
+template <class D>
+struct Counted {
+    static inline int n = 0;
+    Counted() { ++n; }
+};
+
+struct A : Counted<A> {};
+struct B : Counted<B> {};
+
+int main() {
+    A a1, a2;
+    B b1;
+    std::cout << A::n << ' ' << B::n << "\n";
+}`,
+  why: String.raw`Passing the derived type as a template argument gives each derived class its own static counter.` },
+
+{ n: 126, d: "applications", t: "Return two values as one object",
+  p: String.raw`A function returns the minimum and the maximum of the values 3, 9 and 4 as a single struct. The caller unpacks them with a structured binding. Print the minimum and maximum separated by a space, then a newline.`,
+  ex: String.raw`3 9`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <vector>
+
+struct Stats { int mn, mx; };
+
+Stats stats(const std::vector<int>& v) {
+    auto [lo, hi] = std::minmax_element(v.begin(), v.end());
+    return {*lo, *hi};
+}
+
+int main() {
+    auto [a, b] = stats({3, 9, 4});
+    std::cout << a << ' ' << b << "\n";
+}`,
+  why: String.raw`A small struct returned by value names the two results, and the structured binding unpacks them at the call site.` },
+
+{ n: 127, d: "applications", t: "Units that cannot be mixed by accident",
+  p: String.raw`A distance type wraps a double, and its constructor is explicit so a plain number cannot become a distance by accident. Create a distance of 2.5 and print its value, then a newline.`,
+  ex: String.raw`2.5`,
+  code: String.raw`#include <iostream>
+
+struct Meters {
+    double v;
+    explicit Meters(double x) : v(x) {}
+};
+
+int main() {
+    Meters m(2.5);
+    std::cout << m.v << "\n";
+}`,
+  why: String.raw`Making the constructor explicit stops implicit conversions, so passing a bare double where a distance is needed becomes a compile error.` },
+
+{ n: 128, d: "applications", t: "Shared counter created on first use",
+  p: String.raw`A function returns a reference to a counter that starts at 10 and is created the first time the function is called. The function is called once to increment the counter, and the value is then printed, then a newline.`,
+  ex: String.raw`11`,
+  code: String.raw`#include <iostream>
+
+int& counter() {
+    static int c = 10;
+    return c;
+}
+
+int main() {
+    ++counter();
+    std::cout << counter() << "\n";
+}`,
+  why: String.raw`A function-local static is initialised the first time control reaches it, and every later call sees the same object.` },
+
+{ n: 129, d: "applications", t: "Sum that reads each value once",
+  p: String.raw`A function receives a range of the values 1, 2 and 3 and returns their sum. It is called with a temporary list of those values. Print the result, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <initializer_list>
+#include <iostream>
+
+int sum(std::initializer_list<int> xs) {
+    int t = 0;
+    for (int x : xs) t += x;
+    return t;
+}
+
+int main() {
+    std::cout << sum({1, 2, 3}) << "\n";
+}`,
+  why: String.raw`An initializer list lets a call take any number of values inline without building a container.` },
+
+{ n: 130, d: "applications", t: "Pass a temporary into a function that keeps it",
+  p: String.raw`A class stores its name by moving in the string it is given. It is constructed from the temporary string hello. Print the stored name, then a newline.`,
+  ex: String.raw`hello`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <utility>
+
+class Named {
+    std::string name_;
+public:
+    explicit Named(std::string n) : name_(std::move(n)) {}
+    const std::string& name() const { return name_; }
+};
+
+int main() {
+    Named n(std::string("hello"));
+    std::cout << n.name() << "\n";
+}`,
+  why: String.raw`Taking the parameter by value and moving it into the member lets both lvalue and rvalue arguments work with one signature.` },
 ];
 
 const TOTAL = problems.length;
@@ -4241,7 +4441,7 @@ for (const sec of [
   { from: 18, to: 55, label: "Medium", range: "Problems 18–55", badge: "medium" },
   { from: 56, to: 85, label: "Hard", range: "Problems 56–85", badge: "hard" },
   { from: 86, to: 98, label: "Extension", range: "Problems 86–98", badge: null },
-  { from: 99, to: 120, label: "Applications", range: "Problems 99–120", badge: null }
+  { from: 99, to: 130, label: "Applications", range: "Problems 99–130", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

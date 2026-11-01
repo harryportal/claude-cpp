@@ -713,142 +713,137 @@ int main() {
 }`,
   why: String.raw`An alignas request is honoured for automatic objects as well as for heap objects. The compiler places the object at an address that meets the requirement, even though an int pair needs only eight bytes.` },
 
-{ n: 33, d: "applications", t: "Size of a packet header",
-  p: String.raw`A packet header has a one-byte version, a one-byte flags field, a two-byte length and a four-byte sequence number, in that order. Print the size of the header structure, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`8`,
+
+
+
+
+// ---------- Applications ----------
+{ n: 33, d: "applications", t: "Size of a price level record",
+  p: String.raw`A price level stores a 64-bit price, a 32-bit total quantity and a 32-bit order count, in that order. Print the size of the structure, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`16`,
   code: String.raw`#include <cstdint>
 #include <iostream>
 
-struct Header {
-    std::uint8_t version;
-    std::uint8_t flags;
-    std::uint16_t length;
-    std::uint32_t seq;
+struct Level {
+    std::int64_t price;
+    std::uint32_t qty;
+    std::uint32_t orders;
 };
 
 int main() {
-    std::cout << sizeof(Header) << "\n";
+    std::cout << sizeof(Level) << "\n";
 }`,
-  why: String.raw`The fields are ordered from largest to smallest in a way that needs no padding, so the size is exactly the sum of the field sizes.` },
+  why: String.raw`The two 32-bit fields pack together after the 64-bit price, so no padding is needed and the total is 16 bytes.` },
 
-{ n: 34, d: "applications", t: "Offset of a payload in a message",
-  p: String.raw`A message has a four-byte id, a two-byte length and a ten-byte payload array, in that order. Print the offset of the payload from the start of the message, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`6`,
+{ n: 34, d: "applications", t: "Naive tick record against a reordered one",
+  p: String.raw`Two tick records hold the same fields: a one-byte side, an 8-byte price and a 4-byte quantity. The first lists the side, then the price, then the quantity. The second lists the price, then the quantity, then the side. Print the size of the first, a space, then the size of the second, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`24 16`,
+  code: String.raw`#include <iostream>
+
+struct Naive { char side; double px; int qty; };
+struct Packed { double px; int qty; char side; };
+
+int main() {
+    std::cout << sizeof(Naive) << ' ' << sizeof(Packed) << "\n";
+}`,
+  why: String.raw`Ordering fields from widest to narrowest puts the small fields together at the end, where they share one aligned block.` },
+
+{ n: 35, d: "applications", t: "Cache-line sized slot",
+  p: String.raw`A slot holding a single int is declared to align to 64 bytes, a typical cache line. Print the size of the slot, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`64`,
+  code: String.raw`#include <iostream>
+
+struct alignas(64) Slot {
+    int v;
+};
+
+int main() {
+    std::cout << sizeof(Slot) << "\n";
+}`,
+  why: String.raw`alignas raises both the alignment and the size to a whole cache line, so neighbouring slots never share one.` },
+
+{ n: 36, d: "applications", t: "Wire offset of a timestamp",
+  p: String.raw`A wire message has a 2-byte type, a 4-byte length and an 8-byte timestamp, in that order. Print the offset of the timestamp from the start of the message, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`8`,
   code: String.raw`#include <cstddef>
 #include <cstdint>
 #include <iostream>
 
-struct Msg {
-    std::uint32_t id;
-    std::uint16_t len;
-    char payload[10];
+struct Wire {
+    std::uint16_t type;
+    std::uint32_t len;
+    std::uint64_t ts;
 };
 
 int main() {
-    std::cout << offsetof(Msg, payload) << "\n";
+    std::cout << offsetof(Wire, ts) << "\n";
 }`,
-  why: String.raw`The offset of a member is where it begins relative to the start of the object, and the two-byte length ends exactly at offset six.` },
+  why: String.raw`The 8-byte timestamp must start on an 8-byte boundary, which pushes it past the 2-byte type and 4-byte length plus two bytes of padding.` },
 
-{ n: 35, d: "applications", t: "Storage for a pixel array",
-  p: String.raw`A pixel holds three one-byte colour channels and no other data. Print the total size in bytes of an array of 100 pixels, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`300`,
+{ n: 37, d: "applications", t: "Footprint of a quote array",
+  p: String.raw`A quote holds a 64-bit bid, a 64-bit ask and a 32-bit size. Print the total size in bytes of an array of 1000 quotes, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`24000`,
   code: String.raw`#include <cstdint>
 #include <iostream>
 
-struct Pixel {
-    std::uint8_t r, g, b;
+struct Quote {
+    std::int64_t bid;
+    std::int64_t ask;
+    std::uint32_t size;
 };
 
 int main() {
-    std::cout << sizeof(Pixel[100]) << "\n";
+    std::cout << sizeof(Quote[1000]) << "\n";
 }`,
-  why: String.raw`An array stores its elements back to back, so the total size is the element size multiplied by the number of elements.` },
+  why: String.raw`The quote carries four bytes of trailing padding for its 8-byte alignment, and that padding is multiplied across the array.` },
 
-{ n: 36, d: "applications", t: "Empty member that takes no space",
-  p: String.raw`Define an empty type Tag and a structure Pair that holds an int and a Tag member marked so that the empty member may share its address with other data. Print the size of Tag, a space, then the size of Pair, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`1 4`,
-  code: String.raw`#include <iostream>
-
-struct Tag {};
-
-struct Pair {
-    int x;
-    [[no_unique_address]] Tag t;
-};
-
-int main() {
-    std::cout << sizeof(Tag) << ' ' << sizeof(Pair) << "\n";
-}`,
-  why: String.raw`An empty type still occupies one byte on its own, but with no_unique_address it need not add anything to a structure that already has data.` },
-
-{ n: 37, d: "applications", t: "Stride between neighbouring elements",
-  p: String.raw`A structure has a one-byte character followed by a two-byte short. Create an array of two of them and print the distance in bytes between the address of the second element and the address of the first. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`4`,
+{ n: 38, d: "applications", t: "Three flags packed in one byte",
+  p: String.raw`A status byte holds three bit fields of widths 1, 3 and 4. Print the size of the structure in bytes, then a newline.`,
+  ex: String.raw`1`,
   code: String.raw`#include <cstdint>
 #include <iostream>
-
-struct S {
-    char c;
-    short s;
-};
-
-int main() {
-    S arr[2];
-    std::cout << reinterpret_cast<std::uintptr_t>(&arr[1]) - reinterpret_cast<std::uintptr_t>(&arr[0]) << "\n";
-}`,
-  why: String.raw`Adjacent array elements are placed one size apart, so the distance between their addresses is exactly the element's size including its padding.` },
-
-{ n: 38, d: "applications", t: "Size of a tagged value with a union",
-  p: String.raw`A structure holds a one-byte tag followed by a union that contains an int and a double. Print the size of the structure, a space, then the size of the union, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`16 8`,
-  code: String.raw`#include <iostream>
-
-union U {
-    int i;
-    double d;
-};
-
-struct Tagged {
-    char tag;
-    U u;
-};
-
-int main() {
-    std::cout << sizeof(Tagged) << ' ' << sizeof(U) << "\n";
-}`,
-  why: String.raw`The union needs eight-byte alignment because of the double, which pushes it past the tag and leaves seven bytes of padding in front.` },
-
-{ n: 39, d: "applications", t: "Record with a trailing name buffer",
-  p: String.raw`A record holds a four-byte id followed by a five-character name array. Print the size of the record, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`12`,
-  code: String.raw`#include <cstdint>
-#include <iostream>
-
-struct Record {
-    std::int32_t id;
-    char name[5];
-};
-
-int main() {
-    std::cout << sizeof(Record) << "\n";
-}`,
-  why: String.raw`The nine bytes of data are rounded up to a multiple of the four-byte alignment, which adds three bytes of trailing padding.` },
-
-{ n: 40, d: "applications", t: "Three boolean flags in one struct",
-  p: String.raw`A structure holds three bool flags and nothing else. Print its size in bytes, then a newline. Assume the usual 64-bit Linux ABI.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <iostream>
 
 struct Flags {
-    bool a;
-    bool b;
-    bool c;
+    std::uint8_t a : 1;
+    std::uint8_t b : 3;
+    std::uint8_t c : 4;
 };
 
 int main() {
     std::cout << sizeof(Flags) << "\n";
 }`,
-  why: String.raw`Each bool occupies one byte and bools need no extra alignment, so the structure is exactly three bytes.` },
+  why: String.raw`Bit fields share a byte as long as their widths add up to eight or fewer, so the whole status fits in one byte.` },
+
+{ n: 39, d: "applications", t: "Two 32-bit halves over one 64-bit value",
+  p: String.raw`A union holds a 64-bit value and an array of two 32-bit halves that overlay it. Print the size of the union in bytes, then a newline.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+union Pair64 {
+    std::uint64_t v;
+    std::uint32_t half[2];
+};
+
+int main() {
+    std::cout << sizeof(Pair64) << "\n";
+}`,
+  why: String.raw`A union's size is the largest of its members, and both views occupy the same eight bytes.` },
+
+{ n: 40, d: "applications", t: "Aligned trailing member",
+  p: String.raw`A structure holds a one-byte character a followed by a second character b declared with 16-byte alignment. Print the size of the structure, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`32`,
+  code: String.raw`#include <iostream>
+
+struct Pair2 {
+    char a;
+    alignas(16) char b;
+};
+
+int main() {
+    std::cout << sizeof(Pair2) << "\n";
+}`,
+  why: String.raw`The aligned member moves to offset 16, and the total is then rounded up to a multiple of 16, giving 32.` },
 ];
 
 const TOTAL = problems.length;

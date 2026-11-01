@@ -917,7 +917,6 @@ int main() {
 }`,
   why: String.raw`remove_if visits the nodes in order, so a set that records each value as it is first seen can decide which later copies to drop. Insert reports whether the value is new.` },
 
-// ---------- Applications ----------
 { n: 49, d: "medium", t: "Undo stack as a forward_list",
   p: String.raw`Record the states a, then ab, pushing each onto the front of a forward_list. Then undo once by removing the front state. Print the new front state.`,
   ex: String.raw`a`,
@@ -1106,121 +1105,124 @@ int main() {
 }`,
   why: String.raw`A flag toggled at each step tracks whether the position is odd, which needs only a single forward pass.` },
 
-{ n: 59, d: "applications", t: "Reversing a linked playlist",
-  p: String.raw`A playlist is stored as a singly linked list with the tracks 1, 2 and 3 in that order. Reverse the playlist, then print the tracks from first to last, separated by spaces, then a newline.`,
-  ex: String.raw`3 2 1`,
+
+
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Cancel orders from a queue",
+  p: String.raw`A queue holds orders 101 to 106 in that order. Orders 103 and 105 are cancelled and removed. Print the remaining orders separated by spaces, then a newline.`,
+  ex: String.raw`101 102 104 106`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> playlist{1, 2, 3};
-    playlist.reverse();
-    for (int t : playlist) std::cout << t << ' ';
+    std::forward_list<int> q{101, 102, 103, 104, 105, 106};
+    q.remove_if([](int o) { return o == 103 || o == 105; });
+    for (int o : q) std::cout << o << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`A singly linked list can be reversed in place by reversing the direction of each link, with no extra storage for the elements.` },
+  why: String.raw`Removing matching nodes in one pass keeps the order of the survivors, and no element has to be shifted.` },
 
-{ n: 60, d: "applications", t: "Removing finished jobs",
-  p: String.raw`A queue of job numbers from 1 to 9 is processed. Jobs whose number is a multiple of 3 are finished and removed. Print the remaining jobs in order, separated by spaces, then a newline.`,
-  ex: String.raw`1 2 4 5 7 8`,
+{ n: 60, d: "applications", t: "Insert a price into a sorted queue",
+  p: String.raw`A sorted forward list holds the prices 10, 20 and 40. Insert 30 so the list stays sorted. Print the list separated by spaces, then a newline.`,
+  ex: String.raw`10 20 30 40`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> jobs{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    jobs.remove_if([](int j) { return j % 3 == 0; });
-    for (int j : jobs) std::cout << j << ' ';
+    std::forward_list<int> l{10, 20, 40};
+    auto it = l.before_begin();
+    while (std::next(it) != l.end() && *std::next(it) < 30) ++it;
+    l.insert_after(it, 30);
+    for (int v : l) std::cout << v << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`remove_if drops every element matching a condition in one pass, and a forward list does this without shifting anything except the links.` },
+  why: String.raw`With one-directional links you must stop at the node before the insertion point, which is why the search begins at before_begin.` },
 
-{ n: 61, d: "applications", t: "Inserting into the middle",
-  p: String.raw`A list holds 1 and 2. Insert 0 at the very front. Then insert 9 directly after the element 1. Print the list from first to last, separated by spaces, then a newline.`,
-  ex: String.raw`0 1 9 2`,
+{ n: 61, d: "applications", t: "Prepend a rush batch",
+  p: String.raw`A list holds 3 and 4. A rush batch holds 1 and 2 and must be placed in front of the existing items, keeping its own order. Print the combined list separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 4`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> f{1, 2};
-    f.push_front(0);
-    auto it = f.begin();
-    ++it;
-    f.insert_after(it, 9);
-    for (int v : f) std::cout << v << ' ';
+    std::forward_list<int> l{3, 4};
+    std::forward_list<int> rush{1, 2};
+    l.splice_after(l.before_begin(), rush);
+    for (int v : l) std::cout << v << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`A singly linked list inserts after a known position, not before one, so the iterator used for the insertion has to point at the element before the gap.` },
+  why: String.raw`splice_after moves whole runs of nodes without copying, and the rush batch leaves its source list empty.` },
 
-{ n: 62, d: "applications", t: "Merging two sorted feeds",
-  p: String.raw`Two feeds are each already sorted: the first holds 1, 4 and 6, and the second holds 2, 3 and 7. Combine them into a single sorted list, then print it, separated by spaces, then a newline.`,
-  ex: String.raw`1 2 3 4 6 7`,
+{ n: 62, d: "applications", t: "Drop small trades",
+  p: String.raw`Trade sizes 100, 5, 250, 8 and 300 arrive in order. Remove every trade smaller than 10 and print the remaining sizes separated by spaces, then a newline.`,
+  ex: String.raw`100 250 300`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> a{1, 4, 6};
-    std::forward_list<int> b{2, 3, 7};
-    a.merge(b);
-    for (int v : a) std::cout << v << ' ';
+    std::forward_list<int> trades{100, 5, 250, 8, 300};
+    trades.remove_if([](int s) { return s < 10; });
+    for (int s : trades) std::cout << s << ' ';
     std::cout << "\n";
 }`,
-  why: String.raw`Merging two sorted lists takes a single pass over both, and the second list is emptied in the process.` },
+  why: String.raw`Filtering with a predicate drops the small sizes in one pass and keeps the arrival order.` },
 
-{ n: 63, d: "applications", t: "Counting views in a log",
-  p: String.raw`A session log holds the entries login, view, view and logout, in that order. Print how many entries are view, then a newline.`,
-  ex: String.raw`2`,
+{ n: 63, d: "applications", t: "First quote repeated from the previous one",
+  p: String.raw`Quotes arrive as 100, 101, 101 and 102. Print the first quote that is equal to the quote immediately before it, then a newline.`,
+  ex: String.raw`101`,
   code: String.raw`#include <algorithm>
 #include <forward_list>
 #include <iostream>
-#include <string>
 
 int main() {
-    std::forward_list<std::string> log{"login", "view", "view", "logout"};
-    std::cout << std::count(log.begin(), log.end(), "view") << "\n";
+    std::forward_list<int> quotes{100, 101, 101, 102};
+    auto it = std::adjacent_find(quotes.begin(), quotes.end());
+    std::cout << *it << "\n";
 }`,
-  why: String.raw`Counting entries is a read-only pass over the sequence, so it works on any iterator range, including a forward list.` },
+  why: String.raw`adjacent_find compares each element with its successor, which is exactly the "same as the one before" test in forward order.` },
 
-{ n: 64, d: "applications", t: "Collapsing repeated readings",
-  p: String.raw`A sensor produced the readings 1, 1, 2, 2, 2, 3 and 1, in that order. Remove any reading that is the same as the one just before it, then print what remains separated by spaces, then a newline.`,
-  ex: String.raw`1 2 3 1`,
+{ n: 64, d: "applications", t: "Top two of a reversed batch",
+  p: String.raw`A batch of orders 1, 2, 3 and 4 is reversed, and the first two orders of the reversed batch are wanted. Print them separated by a space, then a newline.`,
+  ex: String.raw`4 3`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> readings{1, 1, 2, 2, 2, 3, 1};
-    readings.unique();
-    for (int r : readings) std::cout << r << ' ';
-    std::cout << "\n";
+    std::forward_list<int> batch{1, 2, 3, 4};
+    batch.reverse();
+    auto it = batch.begin();
+    std::cout << *it << ' ';
+    ++it;
+    std::cout << *it << "\n";
 }`,
-  why: String.raw`unique removes only adjacent duplicates, which matches a stream where repeats show up back to back.` },
+  why: String.raw`Reversing a singly linked list rewires its links in place, and reading the first two elements afterwards needs only an iterator.` },
 
-{ n: 65, d: "applications", t: "Keeping even values",
-  p: String.raw`A list holds the values 1 to 6 in order. Remove the odd values, then print what remains separated by spaces, then a newline.`,
-  ex: String.raw`2 4 6`,
+{ n: 65, d: "applications", t: "Last order of a session",
+  p: String.raw`A session recorded the order numbers 5, 8 and 13 in that order. Print the last order number recorded, then a newline. A forward list cannot be read backwards.`,
+  ex: String.raw`13`,
   code: String.raw`#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> values{1, 2, 3, 4, 5, 6};
-    values.remove_if([](int v) { return v % 2 != 0; });
-    for (int v : values) std::cout << v << ' ';
-    std::cout << "\n";
+    std::forward_list<int> session{5, 8, 13};
+    int last = 0;
+    for (int o : session) last = o;
+    std::cout << last << "\n";
 }`,
-  why: String.raw`Filtering a sequence by a predicate keeps the original order of the elements that survive.` },
+  why: String.raw`Without a back pointer you must walk to the end once and remember the last value you saw.` },
 
-{ n: 66, d: "applications", t: "Ordering durations",
-  p: String.raw`Four track durations in minutes are 30, 5, 12 and 7. Sort them from shortest to longest, print them separated by spaces, then a newline.`,
-  ex: String.raw`5 7 12 30`,
-  code: String.raw`#include <forward_list>
+{ n: 66, d: "applications", t: "Check whether a sequence is in order",
+  p: String.raw`A list of sequence numbers holds 1, 3 and 2 in that order. Print yes if the numbers are in non-decreasing order, otherwise print no, then a newline.`,
+  ex: String.raw`no`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
 #include <iostream>
 
 int main() {
-    std::forward_list<int> durations{30, 5, 12, 7};
-    durations.sort();
-    for (int d : durations) std::cout << d << ' ';
-    std::cout << "\n";
+    std::forward_list<int> seq{1, 3, 2};
+    std::cout << (std::is_sorted(seq.begin(), seq.end()) ? "yes" : "no") << "\n";
 }`,
-  why: String.raw`A forward list has its own sort member, because the generic sort algorithm needs random access that a singly linked list does not provide.` },
+  why: String.raw`is_sorted only needs forward iterators, so it works directly on a singly linked list.` },
 ];
 
 const TOTAL = problems.length;

@@ -1,4 +1,5 @@
 <title>STL Set Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 56 problems</p>
     <h1>STL Set Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">56</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="56" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -940,157 +941,53 @@ int main() {
 }`,
   why: String.raw`Only the non-duplicate node moves across. The shared value remains in the source set, which is why its size is not zero.` },
 
+
+
 // ---------- Applications ----------
-{ n: 49, d: "applications", t: "Distinct words",
-  p: String.raw`The sentence "the cat and the hat" contains repeated words. Count the distinct words and print the number.`,
-  ex: String.raw`4`,
+{ n: 49, d: "applications", t: "Best bid and best ask",
+  p: String.raw`Bid prices 99, 101 and 100 and ask prices 103 and 102 are in an order book. Print the best bid, meaning the highest bid, and the best ask, meaning the lowest ask, separated by a space, then a newline.`,
+  ex: String.raw`101 102`,
   code: String.raw`#include <iostream>
 #include <set>
-#include <sstream>
-#include <string>
 
 int main() {
-    std::istringstream in("the cat and the hat");
-    std::set<std::string> words;
-    for (std::string w; in >> w;) words.insert(w);
-    std::cout << words.size() << '\n';
+    std::set<int> bids{99, 101, 100};
+    std::set<int> asks{103, 102};
+    std::cout << *bids.rbegin() << ' ' << *asks.begin() << "\n";
 }`,
-  why: String.raw`Deduplicating a stream of tokens is a common use of a set. Insertion does the membership check and the storage in one step.` },
+  why: String.raw`An ordered set keeps prices sorted, so the best bid and best ask sit at its two ends.` },
 
-{ n: 50, d: "applications", t: "Unique IDs in a range",
-  p: String.raw`The IDs 5, 1, 9, 5 and 3 were recorded, possibly with repeats. Count how many distinct IDs lie between 2 and 6 inclusive, and print that number.`,
-  ex: String.raw`2`,
-  code: String.raw`#include <iostream>
-#include <iterator>
-#include <set>
-
-int main() {
-    const std::set<int> ids{5, 1, 9, 5, 3};
-    auto lo = ids.lower_bound(2);
-    auto hi = ids.upper_bound(6);
-    std::cout << std::distance(lo, hi) << '\n';
-}`,
-  why: String.raw`Storing IDs in a set both removes repeats and makes range queries a pair of bound lookups.` },
-
-{ n: 51, d: "applications", t: "Free time between meetings",
-  p: String.raw`A working day runs from 9 to 17. Busy periods are [9,10] and [12,13]. Print the free gaps within the day, each as [start,end], separated by spaces.`,
-  ex: String.raw`[10,12] [13,17]`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
-#include <set>
-#include <utility>
-
-int main() {
-    const std::set<std::pair<int, int>> busy{{9, 10}, {12, 13}};   // sorted by start
-    int cursor = 9;
-    bool first = true;
-    auto gap = [&](int a, int b) {
-        std::cout << (first ? "" : " ") << '[' << a << ',' << b << ']';
-        first = false;
-    };
-    for (const auto& [s, e] : busy) {
-        if (s > cursor) gap(cursor, s);
-        cursor = std::max(cursor, e);
-    }
-    if (cursor < 17) gap(cursor, 17);
-    std::cout << '\n';
-}`,
-  why: String.raw`With busy periods sorted by start, the free time is whatever lies between the running end of the last busy period and the next start.` },
-
-{ n: 52, d: "applications", t: "Unique visitors across days",
-  p: String.raw`Day one visitors were a and b. Day two visitors were b and c. Day three visitors were a and d. Count the number of distinct visitors over the three days and print it.`,
-  ex: String.raw`4`,
+{ n: 50, d: "applications", t: "Best ask after a cancellation",
+  p: String.raw`Asks at 102 and 103 are on the book. The order at 102 is cancelled and its price level removed. Print the new best ask, then a newline.`,
+  ex: String.raw`103`,
   code: String.raw`#include <iostream>
 #include <set>
-#include <string>
-#include <vector>
 
 int main() {
-    const std::vector<std::vector<std::string>> days{{"a", "b"}, {"b", "c"}, {"a", "d"}};
-    std::set<std::string> all;
-    for (const auto& day : days)
-        for (const auto& v : day) all.insert(v);
-    std::cout << all.size() << '\n';
+    std::set<int> asks{102, 103};
+    asks.erase(102);
+    std::cout << *asks.begin() << "\n";
 }`,
-  why: String.raw`A running set gives the union across any number of groups without tracking which group each visitor came from.` },
+  why: String.raw`Erasing a level keeps the set ordered, so the new best ask is simply the first element.` },
 
-{ n: 53, d: "applications", t: "Longest run without repeats",
-  p: String.raw`Find the length of the longest substring of abcabcbb that contains no repeated character. Print that length.`,
+{ n: 51, d: "applications", t: "Count prices inside a band",
+  p: String.raw`Prices 95, 100, 105, 110 and 120 are stored in sorted order. Print how many prices lie in the inclusive band from 100 to 110, then a newline.`,
   ex: String.raw`3`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
-#include <set>
-#include <string>
-
-int main() {
-    const std::string s = "abcabcbb";
-    std::set<char> window;
-    std::size_t best = 0, left = 0;
-    for (std::size_t right = 0; right < s.size(); ++right) {
-        while (window.contains(s[right])) {
-            window.erase(s[left]);
-            ++left;
-        }
-        window.insert(s[right]);
-        best = std::max(best, window.size());
-    }
-    std::cout << best << '\n';
-}`,
-  why: String.raw`The window holds exactly the characters of the current substring. Growing it on the right and shrinking it on the left keeps the set free of repeats.` },
-
-{ n: 54, d: "applications", t: "Normalised tags",
-  p: String.raw`Tags were entered as Python, java, python and Go. Treat tags that differ only in letter case as the same, convert each to lowercase, then print the distinct tags in alphabetical order separated by spaces.`,
-  ex: String.raw`go java python`,
-  code: String.raw`#include <cctype>
-#include <iostream>
-#include <set>
-#include <string>
-
-int main() {
-    std::set<std::string> tags;
-    for (std::string t : {"Python", "java", "python", "Go"}) {
-        for (char& c : t) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        tags.insert(t);
-    }
-    bool first = true;
-    for (const auto& t : tags) {
-        std::cout << (first ? "" : " ") << t;
-        first = false;
-    }
-    std::cout << '\n';
-}`,
-  why: String.raw`Normalising before insertion means the set's ordinary string comparison handles the deduplication and the sorting together.` },
-
-{ n: 55, d: "applications", t: "Visit order without revisits",
-  p: String.raw`An undirected graph has edges 0-1, 0-2 and 1-3. Starting from node 0, visit nodes breadth-first, always taking neighbours in increasing order, and never visiting a node twice. Print the visit order separated by spaces.`,
-  ex: String.raw`0 1 2 3`,
   code: String.raw`#include <iostream>
-#include <queue>
+#include <iterator>
 #include <set>
-#include <vector>
 
 int main() {
-    const std::vector<std::vector<int>> adj{{1, 2}, {0, 3}, {0}, {1}};
-    std::set<int> visited{0};
-    std::queue<int> q;
-    q.push(0);
-    bool first = true;
-    while (!q.empty()) {
-        const int u = q.front();
-        q.pop();
-        std::cout << (first ? "" : " ") << u;
-        first = false;
-        for (int v : adj[u]) {
-            if (visited.insert(v).second) q.push(v);
-        }
-    }
-    std::cout << '\n';
+    std::set<int> prices{95, 100, 105, 110, 120};
+    auto lo = prices.lower_bound(100);
+    auto hi = prices.upper_bound(110);
+    std::cout << std::distance(lo, hi) << "\n";
 }`,
-  why: String.raw`A visited set records every node the search has already claimed, so each node joins the frontier exactly once.` },
+  why: String.raw`lower_bound and upper_bound mark the ends of a range in a sorted set, so the count is the distance between them.` },
 
-{ n: 56, d: "applications", t: "Shared letters",
-  p: String.raw`Form a set of the distinct letters in hello and another set of the distinct letters in world. Print the letters found in both sets, in alphabetical order, with no separators.`,
-  ex: String.raw`lo`,
+{ n: 52, d: "applications", t: "Symbols on both watchlists",
+  p: String.raw`One watchlist holds AAPL, MSFT and GOOG. Another holds MSFT and AMZN. Print the symbols that appear on both lists, separated by spaces, then a newline.`,
+  ex: String.raw`MSFT`,
   code: String.raw`#include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -1098,19 +995,48 @@ int main() {
 #include <string>
 
 int main() {
-    const std::string a = "hello", b = "world";
-    const std::set<char> sa(a.begin(), a.end()), sb(b.begin(), b.end());
-    std::set<char> common;
-    std::set_intersection(sa.begin(), sa.end(), sb.begin(), sb.end(),
-                          std::inserter(common, common.end()));
-    for (char c : common) std::cout << c;
-    std::cout << '\n';
+    std::set<std::string> a{"AAPL", "MSFT", "GOOG"};
+    std::set<std::string> b{"MSFT", "AMZN"};
+    std::set<std::string> both;
+    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(),
+                          std::inserter(both, both.begin()));
+    for (const auto& s : both) std::cout << s << ' ';
+    std::cout << "\n";
 }`,
-  why: String.raw`Building a set from a string gives its distinct characters directly, and intersection then finds the letters they share.` },
+  why: String.raw`Both sets are sorted, so the common elements can be found by walking them together.` },
 
-{ n: 57, d: "applications", t: "Mutual friends",
-  p: String.raw`Alice's friends are bob, carol and dan. Erin's friends are carol, dan and frank. Print the names of the friends they have in common, in alphabetical order, separated by spaces.`,
-  ex: String.raw`carol dan`,
+{ n: 53, d: "applications", t: "Unique alert IDs in order",
+  p: String.raw`Alert IDs 5, 2, 5, 9 and 2 arrive in that order. Print each distinct ID once, in ascending order, separated by spaces, then a newline.`,
+  ex: String.raw`2 5 9`,
+  code: String.raw`#include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> ids;
+    for (int id : {5, 2, 5, 9, 2}) ids.insert(id);
+    for (int id : ids) std::cout << id << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A set discards duplicates on insert and stores what remains in sorted order.` },
+
+{ n: 54, d: "applications", t: "Check that required symbols are loaded",
+  p: String.raw`Required symbols are AAPL and MSFT. The loaded symbols are GOOG, MSFT, AAPL and AMZN. Print yes if every required symbol is loaded, otherwise no, then a newline.`,
+  ex: String.raw`yes`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <set>
+#include <string>
+
+int main() {
+    std::set<std::string> required{"AAPL", "MSFT"};
+    std::set<std::string> loaded{"GOOG", "MSFT", "AAPL", "AMZN"};
+    std::cout << (std::includes(loaded.begin(), loaded.end(), required.begin(), required.end()) ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`std::includes checks subset membership by walking two sorted sequences, one step each.` },
+
+{ n: 55, d: "applications", t: "Symbols that differ between two watchlists",
+  p: String.raw`One watchlist holds A, B and C. Another holds B and D. Print the symbols that are on exactly one of the two lists, separated by spaces, then a newline.`,
+  ex: String.raw`A C D`,
   code: String.raw`#include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -1118,34 +1044,29 @@ int main() {
 #include <string>
 
 int main() {
-    const std::set<std::string> alice{"bob", "carol", "dan"};
-    const std::set<std::string> erin{"carol", "dan", "frank"};
-    std::set<std::string> mutual;
-    std::set_intersection(alice.begin(), alice.end(), erin.begin(), erin.end(),
-                          std::inserter(mutual, mutual.end()));
-    bool first = true;
-    for (const auto& name : mutual) {
-        std::cout << (first ? "" : " ") << name;
-        first = false;
-    }
-    std::cout << '\n';
+    std::set<std::string> a{"A", "B", "C"};
+    std::set<std::string> b{"B", "D"};
+    std::set<std::string> diff;
+    std::set_symmetric_difference(a.begin(), a.end(), b.begin(), b.end(),
+                                  std::inserter(diff, diff.begin()));
+    for (const auto& s : diff) std::cout << s << ' ';
+    std::cout << "\n";
 }`,
-  why: String.raw`Mutual connections are the intersection of two neighbourhoods. Keeping each neighbourhood as a set makes that intersection a single ordered pass.` },
+  why: String.raw`Symmetric difference keeps only the elements that appear in exactly one of two sorted sets.` },
 
-{ n: 58, d: "applications", t: "Top distinct scores",
-  p: String.raw`Scores 50, 90, 50 and 70 were recorded. Print the two highest distinct scores, highest first, separated by a space.`,
-  ex: String.raw`90 70`,
-  code: String.raw`#include <functional>
-#include <iostream>
-#include <iterator>
+{ n: 56, d: "applications", t: "Drop stale price levels below a floor",
+  p: String.raw`Price levels 98, 99, 100 and 101 are on the book. Every level below 100 is stale and must be removed. Print the remaining levels separated by spaces, then a newline.`,
+  ex: String.raw`100 101`,
+  code: String.raw`#include <iostream>
 #include <set>
 
 int main() {
-    std::set<int, std::greater<>> scores{50, 90, 50, 70};
-    auto it = scores.begin();
-    std::cout << *it << ' ' << *std::next(it) << '\n';
+    std::set<int> levels{98, 99, 100, 101};
+    levels.erase(levels.begin(), levels.lower_bound(100));
+    for (int p : levels) std::cout << p << ' ';
+    std::cout << "\n";
 }`,
-  why: String.raw`Keeping distinct scores in descending order means the best ones are simply the first elements of the set.` },
+  why: String.raw`Erasing a range of the sorted set removes everything below the floor in one call.` },
 ];
 
 const TOTAL = problems.length;
@@ -1250,7 +1171,7 @@ for (const sec of [
   { from: 11, to: 20, label: "Medium", range: "Problems 11–20", badge: "medium" },
   { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" },
   { from: 31, to: 48, label: "Extension", range: "Problems 31–48", badge: null },
-  { from: 49, to: 58, label: "Applications", range: "Problems 49–58", badge: null }
+  { from: 49, to: 56, label: "Applications", range: "Problems 49–56", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

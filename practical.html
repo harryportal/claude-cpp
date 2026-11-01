@@ -1,4 +1,5 @@
 <title>C++ Practical Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -1663,195 +1664,110 @@ int main() {
 }`,
   why: String.raw`Explicit template parameters on lambdas let a generic function name its type, which is useful when the parameters are not deduced from the arguments alone.` },
 
+
+
 // ---------- Applications ----------
-{ n: 63, d: "applications", t: "Level-filtered logger",
-  p: String.raw`A logger drops messages below its minimum level, which is Warn. Log a Debug message, an Info message and an Error message. Print how many messages were actually written.`,
+{ n: 63, d: "applications", t: "Notional of a fill in cents",
+  p: String.raw`A fill is 100 shares at a price of 101.50 dollars. Money is kept in integer cents to avoid rounding error. Print the notional of the fill in cents, then a newline.`,
+  ex: String.raw`1015000`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const long long qty = 100;
+    const long long price_cents = 10150;
+    std::cout << qty * price_cents << "\n";
+}`,
+  why: String.raw`Converting the price to cents first keeps every step exact integer arithmetic.` },
+
+{ n: 64, d: "applications", t: "Volume-weighted average price",
+  p: String.raw`Two trades are 100 shares at 10000 cents and 200 shares at 10100 cents. Print the volume-weighted average price in cents, rounded down, then a newline.`,
+  ex: String.raw`10066`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const long long q1 = 100, p1 = 10000;
+    const long long q2 = 200, p2 = 10100;
+    std::cout << (q1 * p1 + q2 * p2) / (q1 + q2) << "\n";
+}`,
+  why: String.raw`The average weights each price by its volume, so the total cost is divided by the total volume.` },
+
+{ n: 65, d: "applications", t: "Round-trip profit and loss",
+  p: String.raw`A position buys 100 shares at 10000 cents and later sells all 100 shares at 10200 cents. Print the profit in cents, then a newline.`,
+  ex: String.raw`20000`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const long long qty = 100, buy = 10000, sell = 10200;
+    std::cout << qty * (sell - buy) << "\n";
+}`,
+  why: String.raw`The profit is the sale proceeds minus the cost, which here is the price difference times the quantity.` },
+
+{ n: 66, d: "applications", t: "Net position after a reversal",
+  p: String.raw`A position buys 100 shares and then sells 150 shares. Print the resulting position, where a negative number means a short position, then a newline.`,
+  ex: String.raw`-50`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int position = 0;
+    position += 100;
+    position -= 150;
+    std::cout << position << "\n";
+}`,
+  why: String.raw`Signed quantities let one running total carry both longs and shorts without a separate flag.` },
+
+{ n: 67, d: "applications", t: "Reject an oversized order",
+  p: String.raw`An order for 5000 shares is checked against a maximum order size of 1000 shares. Print accept if it is within the limit, otherwise reject, then a newline.`,
+  ex: String.raw`reject`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    const int size = 5000;
+    const int max_size = 1000;
+    std::cout << (size <= max_size ? "accept" : "reject") << "\n";
+}`,
+  why: String.raw`A single comparison against a configured limit is the simplest guard against fat-finger orders.` },
+
+{ n: 68, d: "applications", t: "Count error lines in a log",
+  p: String.raw`A log has the lines "INFO a", "ERROR b" and "INFO c". Print how many lines have the level ERROR, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <iostream>
-#include <string>
-
-enum class Level { Debug, Info, Warn, Error };
-
-class Logger {
-    Level min;
-
-public:
-    int written = 0;
-    explicit Logger(Level m) : min(m) {}
-    void log(Level l, const std::string& msg) {
-        (void)msg;
-        if (l < min) return;
-        ++written;
-    }
-};
-
-int main() {
-    Logger lg(Level::Warn);
-    lg.log(Level::Debug, "a");
-    lg.log(Level::Info, "b");
-    lg.log(Level::Error, "c");
-    std::cout << lg.written << '\n';
-}`,
-  why: String.raw`Filtering by level at the call site keeps verbose output out of production logs without changing the code that logs.` },
-
-{ n: 64, d: "applications", t: "Layered configuration merge",
-  p: String.raw`Start with the defaults host=localhost and port=80. Apply the overrides port=8080. Print the host and port, separated by a space.`,
-  ex: String.raw`localhost 8080`,
-  code: String.raw`#include <iostream>
-#include <map>
+#include <sstream>
 #include <string>
 
 int main() {
-    std::map<std::string, std::string> defaults{{"host", "localhost"}, {"port", "80"}};
-    std::map<std::string, std::string> overrides{{"port", "8080"}};
-    auto merged = defaults;
-    for (auto& [k, v] : overrides) merged[k] = v;
-    std::cout << merged["host"] << ' ' << merged["port"] << '\n';
+    std::istringstream log("INFO a\nERROR b\nINFO c\n");
+    std::string line;
+    int errors = 0;
+    while (std::getline(log, line))
+        if (line.rfind("ERROR", 0) == 0) ++errors;
+    std::cout << errors << "\n";
 }`,
-  why: String.raw`Applying overrides on top of defaults in one loop gives each layer a clear place in the precedence order.` },
+  why: String.raw`Checking the start of each line for the level keyword reads the level without splitting the whole line.` },
 
-{ n: 65, d: "applications", t: "Token bucket rate limiter",
-  p: String.raw`A rate limiter holds at most 2 tokens and gains 1 token per time step, up to that cap. It starts full at time 0. Requests arrive at times 0, 0, 0 and 1. Each request that finds a token is allowed and uses one token. Print how many requests were allowed.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
-#include <vector>
-
-int main() {
-    const int cap = 2;
-    int tokens = cap;
-    int last = 0;
-    int allowed = 0;
-    const std::vector<int> times{0, 0, 0, 1};
-    for (int t : times) {
-        tokens = std::min(cap, tokens + (t - last));
-        last = t;
-        if (tokens > 0) {
-            --tokens;
-            ++allowed;
-        }
-    }
-    std::cout << allowed << '\n';
-}`,
-  why: String.raw`A token bucket allows short bursts up to its capacity while holding the long-run rate to the refill rate. Refilling lazily from the elapsed time avoids a timer.` },
-
-{ n: 66, d: "applications", t: "Undo and redo for a text buffer",
-  p: String.raw`A text buffer starts empty. Append a, then append b. Undo the last append, then redo it. Print the final text.`,
-  ex: String.raw`ab`,
+{ n: 69, d: "applications", t: "Compound interest in integer cents",
+  p: String.raw`An account holds 10000 cents and earns 5 percent interest compounded once a year, with each year's interest rounded down to whole cents. Print the balance in cents after two years, then a newline.`,
+  ex: String.raw`11025`,
   code: String.raw`#include <iostream>
-#include <string>
-#include <vector>
 
 int main() {
-    std::string text;
-    std::vector<std::string> history, redo;
-    auto edit = [&](const std::string& s) {
-        history.push_back(text);
-        text += s;
-        redo.clear();
-    };
-    auto undo = [&] {
-        if (!history.empty()) {
-            redo.push_back(text);
-            text = history.back();
-            history.pop_back();
-        }
-    };
-    auto redo_op = [&] {
-        if (!redo.empty()) {
-            history.push_back(text);
-            text = redo.back();
-            redo.pop_back();
-        }
-    };
-    edit("a");
-    edit("b");
-    undo();
-    redo_op();
-    std::cout << text << '\n';
+    long long balance = 10000;
+    for (int year = 0; year < 2; ++year)
+        balance = balance * 105 / 100;
+    std::cout << balance << "\n";
 }`,
-  why: String.raw`Keeping a stack of previous states, and a second stack of undone states that is cleared by any new edit, is the usual undo model in editors.` },
+  why: String.raw`Using a rate expressed as a fraction of 100 keeps interest in integer cents, and the rounding rule is explicit.` },
 
-{ n: 67, d: "applications", t: "Length of the longest common subsequence",
-  p: String.raw`Find the length of the longest sequence of characters that appears in both abcde and ace, keeping their order but not requiring them to be adjacent. Print that length.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
-#include <string>
-#include <vector>
-
-int main() {
-    const std::string a = "abcde", b = "ace";
-    std::vector<std::vector<int>> dp(a.size() + 1, std::vector<int>(b.size() + 1, 0));
-    for (std::size_t i = 1; i <= a.size(); ++i)
-        for (std::size_t j = 1; j <= b.size(); ++j)
-            dp[i][j] = a[i - 1] == b[j - 1] ? dp[i - 1][j - 1] + 1
-                                            : std::max(dp[i - 1][j], dp[i][j - 1]);
-    std::cout << dp[a.size()][b.size()] << '\n';
-}`,
-  why: String.raw`Diff tools compare files by their longest common subsequence of lines. The same table works on characters, and fills in one cell at a time.` },
-
-{ n: 68, d: "applications", t: "Matrix product",
-  p: String.raw`Multiply the 2 by 2 matrix [[1,2],[3,4]] by the matrix [[5,6],[7,8]]. Print the four entries of the result, row by row, separated by spaces.`,
-  ex: String.raw`19 22 43 50`,
+{ n: 70, d: "applications", t: "Round lot quantity",
+  p: String.raw`An order for 1234 shares must be trimmed to whole lots of 100 shares, rounding down. Print the tradable quantity, then a newline.`,
+  ex: String.raw`1200`,
   code: String.raw`#include <iostream>
-#include <vector>
 
 int main() {
-    std::vector<std::vector<int>> A{{1, 2}, {3, 4}}, B{{5, 6}, {7, 8}};
-    std::vector<std::vector<int>> C(2, std::vector<int>(2, 0));
-    for (int i = 0; i < 2; ++i)
-        for (int j = 0; j < 2; ++j)
-            for (int k = 0; k < 2; ++k) C[i][j] += A[i][k] * B[k][j];
-    for (int i = 0; i < 2; ++i)
-        for (int j = 0; j < 2; ++j)
-            std::cout << C[i][j] << (i == 1 && j == 1 ? '\n' : ' ');
+    const int requested = 1234;
+    const int lot = 100;
+    std::cout << requested / lot * lot << "\n";
 }`,
-  why: String.raw`Linear algebra in graphics and physics engines is built from this triple loop. Cache-friendly versions reorder it, but the arithmetic is the same.` },
-
-{ n: 69, d: "applications", t: "Balance from an event log",
-  p: String.raw`An account's history is a list of events: deposit 10, withdraw 3, deposit 5. Replay them in order, starting from a balance of 0, and print the final balance.`,
-  ex: String.raw`12`,
-  code: String.raw`#include <iostream>
-#include <type_traits>
-#include <variant>
-#include <vector>
-
-struct Deposit { int amount; };
-struct Withdraw { int amount; };
-using Event = std::variant<Deposit, Withdraw>;
-
-int main() {
-    const std::vector<Event> log{Deposit{10}, Withdraw{3}, Deposit{5}};
-    long balance = 0;
-    for (const auto& e : log)
-        std::visit([&](auto ev) {
-            if constexpr (std::is_same_v<decltype(ev), Deposit>) balance += ev.amount;
-            else balance -= ev.amount;
-        }, e);
-    std::cout << balance << '\n';
-}`,
-  why: String.raw`Event sourcing stores what happened rather than the current state. Replaying the log rebuilds any state, and makes audits possible.` },
-
-{ n: 70, d: "applications", t: "Run-length encoding",
-  p: String.raw`Encode the text aaabcc by replacing each run of a repeated character with its length followed by the character. Print the encoded text.`,
-  ex: String.raw`3a1b2c`,
-  code: String.raw`#include <iostream>
-#include <string>
-
-int main() {
-    const std::string s = "aaabcc";
-    std::string out;
-    for (std::size_t i = 0; i < s.size();) {
-        std::size_t j = i;
-        while (j < s.size() && s[j] == s[i]) ++j;
-        out += std::to_string(j - i);
-        out += s[i];
-        i = j;
-    }
-    std::cout << out << '\n';
-}`,
-  why: String.raw`Run-length encoding is the simplest compression scheme, and it appears in image formats and in the storage of sparse data.` },
+  why: String.raw`Integer division by the lot size discards the remainder, and multiplying back gives the rounded-down quantity.` },
 ];
 
 const TOTAL = problems.length;

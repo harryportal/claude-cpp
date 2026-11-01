@@ -1064,7 +1064,6 @@ int main() {
 }`,
   why: String.raw`Equality depends only on what the queues contain now, not on the history of operations that produced them.` },
 
-// ---------- Applications ----------
 { n: 49, d: "easy", t: "Next customer at the counter",
   p: String.raw`Customers A, B and C join a ticket queue in that order. The first customer is served. Print the customer now at the front of the line.`,
   ex: String.raw`B`,
@@ -1276,23 +1275,122 @@ int main() {
 }`,
   why: String.raw`Items arrive in one pass and are removed one at a time, so the backlog is the number pushed minus the number processed.` },
 
-{ n: 59, d: "applications", t: "Next print job",
-  p: String.raw`Four print jobs 1, 2, 3 and 4 are sent in that order. The first job is printed and removed from the line. Print the number of the job now at the front, then a newline.`,
-  ex: String.raw`2`,
+
+
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Bounded message bus that drops newest",
+  p: String.raw`A message bus holds at most three messages. Messages 1, 2, 3, 4 and 5 are published in that order. A message published while the bus is full is dropped. Print the messages still held from first to last, separated by spaces, then the number of dropped messages, separated by a space, then a newline.`,
+  ex: String.raw`1 2 3 2`,
   code: String.raw`#include <iostream>
 #include <queue>
 
 int main() {
-    std::queue<int> jobs;
-    for (int j = 1; j <= 4; ++j) jobs.push(j);
-    jobs.pop();
-    std::cout << jobs.front() << "\n";
+    std::queue<int> bus;
+    int dropped = 0;
+    for (int m = 1; m <= 5; ++m) {
+        if (bus.size() < 3) bus.push(m);
+        else ++dropped;
+    }
+    while (!bus.empty()) { std::cout << bus.front() << ' '; bus.pop(); }
+    std::cout << dropped << "\n";
 }`,
-  why: String.raw`Jobs are served in the order they arrived, so the first one in is the first one out.` },
+  why: String.raw`A bounded queue refuses new arrivals when full, and the count of refusals is the difference between offered and accepted messages.` },
 
-{ n: 60, d: "applications", t: "Round-robin time slices",
-  p: String.raw`Three tasks need 2, 1 and 3 units of work, and they are listed in the order A, B, C. The processor runs one unit of the task at the front of the line, then sends that task to the back of the line if it still has work left. Print the task letter for each unit run, separated by spaces, then a newline.`,
-  ex: String.raw`A B C A C C`,
+{ n: 60, d: "applications", t: "Batch messages into groups of three",
+  p: String.raw`Messages 1 to 7 arrive in order and are grouped into batches of three, with the last batch possibly smaller. Print each batch as its values separated by spaces, with batches separated by a vertical bar, then a newline.`,
+  ex: String.raw`1 2 3|4 5 6|7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> incoming;
+    for (int m = 1; m <= 7; ++m) incoming.push(m);
+    bool first = true;
+    while (!incoming.empty()) {
+        if (!first) std::cout << '|';
+        first = false;
+        for (int i = 0; i < 3 && !incoming.empty(); ++i) {
+            std::cout << incoming.front();
+            incoming.pop();
+            if (i < 2 && !incoming.empty()) std::cout << ' ';
+        }
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Taking up to three items from the front in each round preserves arrival order across batches.` },
+
+{ n: 61, d: "applications", t: "Dependency levels from a root",
+  p: String.raw`A graph has the edges a to b, a to c, b to d and c to d. Starting from a, visit every node, following edges, where each node is visited at most once. Print each node followed by its distance from a, with no spaces inside each pair, separated by spaces, then a newline.`,
+  ex: String.raw`a0 b1 c1 d2`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+#include <string>
+#include <vector>
+
+int main() {
+    std::map<std::string, std::vector<std::string>> edges{
+        {"a", {"b", "c"}}, {"b", {"d"}}, {"c", {"d"}}};
+    std::queue<std::string> todo;
+    std::map<std::string, int> dist{{"a", 0}};
+    todo.push("a");
+    while (!todo.empty()) {
+        std::string n = todo.front();
+        todo.pop();
+        std::cout << n << dist[n] << ' ';
+        for (const auto& next : edges[n]) {
+            if (!dist.count(next)) {
+                dist[next] = dist[n] + 1;
+                todo.push(next);
+            }
+        }
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Visiting nodes in the order they were found means every node is reached by its shortest route first.` },
+
+{ n: 62, d: "applications", t: "Total waiting time at a single server",
+  p: String.raw`Three customers arrive at times 0, 1 and 2 minutes. The server takes 3 minutes per customer, serving them in arrival order and starting each one as soon as the server is free and the customer has arrived. Print the total waiting time of all three customers in minutes, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> arrivals;
+    for (int t : {0, 1, 2}) arrivals.push(t);
+    int free_at = 0, total_wait = 0;
+    while (!arrivals.empty()) {
+        int arrive = arrivals.front();
+        arrivals.pop();
+        int start = std::max(arrive, free_at);
+        total_wait += start - arrive;
+        free_at = start + 3;
+    }
+    std::cout << total_wait << "\n";
+}`,
+  why: String.raw`Each customer starts at the later of their arrival and the moment the server frees up, and that gap is their wait.` },
+
+{ n: 63, d: "applications", t: "Copy a queue to total it",
+  p: String.raw`A queue holds 4, 5 and 6. Make a copy of it, empty the copy while adding its values, then print the sum of the values and the front value of the original queue, separated by a space, then a newline.`,
+  ex: String.raw`15 4`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> q;
+    for (int v : {4, 5, 6}) q.push(v);
+    std::queue<int> copy = q;
+    int sum = 0;
+    while (!copy.empty()) { sum += copy.front(); copy.pop(); }
+    std::cout << sum << ' ' << q.front() << "\n";
+}`,
+  why: String.raw`Copying the queue gives an independent sequence, so draining the copy leaves the original's front in place.` },
+
+{ n: 64, d: "applications", t: "Retry jobs until they finish",
+  p: String.raw`Three jobs A, B and C need 2, 1 and 1 attempts respectively. The scheduler runs one attempt of the job at the front of the line. A job that still needs attempts goes to the back of the line. Print the jobs in the order they finish, separated by spaces, then a newline.`,
+  ex: String.raw`B C A`,
   code: String.raw`#include <iostream>
 #include <queue>
 #include <string>
@@ -1302,137 +1400,53 @@ int main() {
     std::queue<std::pair<std::string, int>> line;
     line.push({"A", 2});
     line.push({"B", 1});
-    line.push({"C", 3});
+    line.push({"C", 1});
     while (!line.empty()) {
         auto [name, left] = line.front();
         line.pop();
-        std::cout << name << ' ';
         if (left > 1) line.push({name, left - 1});
+        else std::cout << name << ' ';
     }
     std::cout << "\n";
 }`,
-  why: String.raw`Putting an unfinished task at the back of the line means each task gets a turn in the order they arrived, without any task being skipped.` },
+  why: String.raw`Sending unfinished work to the back gives every job a turn in order, and a job is reported only when its last attempt completes.` },
 
-{ n: 61, d: "applications", t: "Visit order through a friend network",
-  p: String.raw`Person 1 is friends with 2 and 3. Person 2 is friends with 4. Person 3 is friends with 4 and 5. Starting from person 1, visit everyone in the network, going through each person's friends in the order they were first found, and never visiting anyone twice. Print the order of visits separated by spaces, then a newline.`,
-  ex: String.raw`1 2 3 4 5`,
-  code: String.raw`#include <iostream>
-#include <queue>
-#include <set>
-#include <map>
-#include <vector>
-
-int main() {
-    std::map<int, std::vector<int>> friends{{1, {2, 3}}, {2, {4}}, {3, {4, 5}}};
-    std::queue<int> todo;
-    std::set<int> seen{1};
-    todo.push(1);
-    while (!todo.empty()) {
-        int p = todo.front();
-        todo.pop();
-        std::cout << p << ' ';
-        for (int f : friends[p]) {
-            if (seen.insert(f).second) todo.push(f);
-        }
-    }
-    std::cout << "\n";
-}`,
-  why: String.raw`People discovered earlier are visited earlier, so a queue of people waiting to be visited keeps the order of discovery.` },
-
-{ n: 62, d: "applications", t: "Who is still waiting",
-  p: String.raw`Customers ann, bob, cy and dee join a support line in that order. The first two are served and leave the line. Print the names still waiting, separated by spaces, then a newline.`,
-  ex: String.raw`cy dee`,
+{ n: 65, d: "applications", t: "Interleave two lanes",
+  p: String.raw`Lane X holds x1 and x2. Lane Y holds y1, y2 and y3. Take one item from X and then one from Y, repeating while items remain, and when one lane is empty keep taking from the other. Print the items in the order taken, separated by spaces, then a newline.`,
+  ex: String.raw`x1 y1 x2 y2 y3`,
   code: String.raw`#include <iostream>
 #include <queue>
 #include <string>
 
 int main() {
-    std::queue<std::string> line;
-    for (const char* name : {"ann", "bob", "cy", "dee"}) line.push(name);
-    line.pop();
-    line.pop();
-    while (!line.empty()) {
-        std::cout << line.front() << ' ';
-        line.pop();
+    std::queue<std::string> x, y;
+    x.push("x1"); x.push("x2");
+    y.push("y1"); y.push("y2"); y.push("y3");
+    while (!x.empty() || !y.empty()) {
+        if (!x.empty()) { std::cout << x.front() << ' '; x.pop(); }
+        if (!y.empty()) { std::cout << y.front() << ' '; y.pop(); }
     }
     std::cout << "\n";
 }`,
-  why: String.raw`Customers are served in arrival order, so the people still waiting are simply the ones at the back of the line after the first served.` },
+  why: String.raw`Each lane keeps its own order, and the loop simply skips a lane that has run dry.` },
 
-{ n: 63, d: "applications", t: "Total waiting time",
-  p: String.raw`Three jobs take 3, 1 and 4 minutes to finish, and they are processed one after another in that order. A job waits until every job before it has finished. Print the total waiting time of all three jobs, in minutes, then a newline.`,
-  ex: String.raw`7`,
+{ n: 66, d: "applications", t: "Time to drain a work list",
+  p: String.raw`Jobs needing 2, 3 and 5 seconds of processing time are queued in that order and handled one at a time. Print the total time in seconds until the queue is empty, then a newline.`,
+  ex: String.raw`10`,
   code: String.raw`#include <iostream>
 #include <queue>
 
 int main() {
     std::queue<int> jobs;
-    jobs.push(3);
-    jobs.push(1);
-    jobs.push(4);
-    int elapsed = 0, total = 0;
+    for (int s : {2, 3, 5}) jobs.push(s);
+    int clock = 0;
     while (!jobs.empty()) {
-        total += elapsed;
-        elapsed += jobs.front();
+        clock += jobs.front();
         jobs.pop();
     }
-    std::cout << total << "\n";
+    std::cout << clock << "\n";
 }`,
-  why: String.raw`Each job's wait is the time already used by the jobs ahead of it, and that running total is kept as the line is drained.` },
-
-{ n: 64, d: "applications", t: "Keeping only recent log lines",
-  p: String.raw`A log keeps only its two most recent lines. Write the lines a, b and c into the log in that order. Print the lines still kept from oldest to newest, separated by spaces, then a newline.`,
-  ex: String.raw`b c`,
-  code: String.raw`#include <iostream>
-#include <queue>
-#include <string>
-
-int main() {
-    std::queue<std::string> log;
-    for (const char* line : {"a", "b", "c"}) {
-        log.push(line);
-        if (log.size() > 2) log.pop();
-    }
-    while (!log.empty()) {
-        std::cout << log.front() << ' ';
-        log.pop();
-    }
-    std::cout << "\n";
-}`,
-  why: String.raw`When the log is full, the oldest line leaves from the front while the newest joins at the back, which is the standard first-in, first-out order.` },
-
-{ n: 65, d: "applications", t: "Events due by a deadline",
-  p: String.raw`Events with the timestamps 10, 20 and 30 arrive in that order. Process the events that are due at or before time 25, taking them in arrival order and stopping at the first event that is not yet due. Print how many events are still waiting, then a newline.`,
-  ex: String.raw`1`,
-  code: String.raw`#include <iostream>
-#include <queue>
-
-int main() {
-    std::queue<int> events;
-    for (int t : {10, 20, 30}) events.push(t);
-    while (!events.empty() && events.front() <= 25) events.pop();
-    std::cout << events.size() << "\n";
-}`,
-  why: String.raw`Events are handled strictly in arrival order, so the first event that is not yet due holds back every event behind it.` },
-
-{ n: 66, d: "applications", t: "Handing work from one stage to the next",
-  p: String.raw`A producer pushes the numbers 1 to 5 into a buffer. A consumer then removes the first two numbers. Print the numbers left in the buffer from first to last, separated by spaces, then a newline.`,
-  ex: String.raw`3 4 5`,
-  code: String.raw`#include <iostream>
-#include <queue>
-
-int main() {
-    std::queue<int> buffer;
-    for (int i = 1; i <= 5; ++i) buffer.push(i);
-    buffer.pop();
-    buffer.pop();
-    while (!buffer.empty()) {
-        std::cout << buffer.front() << ' ';
-        buffer.pop();
-    }
-    std::cout << "\n";
-}`,
-  why: String.raw`A buffer between two stages preserves the order the items were produced in, so the consumer always takes the oldest item first.` },
+  why: String.raw`With one job at a time, the finish time is the running total of the service times in arrival order.` },
 ];
 
 const TOTAL = problems.length;

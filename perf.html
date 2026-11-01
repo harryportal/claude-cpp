@@ -1,4 +1,5 @@
 <title>C++ High-Performance Patterns</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 88 problems</p>
+    <p class="kicker">Problems by topic · 95 problems</p>
     <h1>C++ High-Performance Patterns Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">88</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="88" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">95</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="95" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -2300,6 +2301,105 @@ int main() {
     }
 }`,
   why: String.raw`Working through data in blocks that fit in cache is a standard way to get speed from large arrays. Views make the blocks cheap to create, because a span is only a pointer and a length.` },
+
+// ---------- Applications ----------
+{ n: 89, d: "applications", t: "Capacity after reserving ahead",
+  p: String.raw`A vector reserves room for 10 elements and then receives 10 values. Print its capacity, then a newline.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    v.reserve(10);
+    for (int i = 0; i < 10; ++i) v.push_back(i);
+    std::cout << v.capacity() << "\n";
+}`,
+  why: String.raw`Reserving once means the ten pushes never trigger a reallocation, so the capacity stays exactly what was reserved.` },
+
+{ n: 90, d: "applications", t: "Sum of a column in a row-major grid",
+  p: String.raw`A 3 by 3 grid is stored row by row with the values 1 to 9. Print the sum of all values by walking the memory in its stored order, then a newline.`,
+  ex: String.raw`45`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+    std::vector<int> grid{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::cout << std::accumulate(grid.begin(), grid.end(), 0) << "\n";
+}`,
+  why: String.raw`Visiting elements in memory order walks contiguous storage, which is the access pattern the cache handles best.` },
+
+{ n: 91, d: "applications", t: "Branch-free select of the larger value",
+  p: String.raw`Two pairs of integers are compared, and the larger of each pair is selected with a conditional expression. The pairs are (3, 8) and (9, 4). Print the two selected values separated by a space, then a newline.`,
+  ex: String.raw`8 9`,
+  code: String.raw`#include <iostream>
+
+int main() {
+    int a1 = 3, b1 = 8;
+    int a2 = 9, b2 = 4;
+    int m1 = a1 > b1 ? a1 : b1;
+    int m2 = a2 > b2 ? a2 : b2;
+    std::cout << m1 << ' ' << m2 << "\n";
+}`,
+  why: String.raw`A conditional expression with no side effects can usually be compiled into a select instruction instead of a branch.` },
+
+{ n: 92, d: "applications", t: "Struct of arrays summed per field",
+  p: String.raw`Three points are stored as separate arrays of x values 1, 2, 3 and y values 4, 5, 6. Print the sum of the x values and the sum of the y values separated by a space, then a newline.`,
+  ex: String.raw`6 15`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+    std::vector<int> xs{1, 2, 3};
+    std::vector<int> ys{4, 5, 6};
+    std::cout << std::accumulate(xs.begin(), xs.end(), 0) << ' '
+              << std::accumulate(ys.begin(), ys.end(), 0) << "\n";
+}`,
+  why: String.raw`Keeping each field in its own array means a loop over one field reads only that field's bytes.` },
+
+{ n: 93, d: "applications", t: "Avoid copies inside a loop",
+  p: String.raw`A vector holds the strings a, b and c. Print the total length of the strings while reading each one by reference, so none is copied, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::string> names{"a", "b", "c"};
+    std::size_t total = 0;
+    for (const std::string& s : names) total += s.size();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Taking each element by const reference reads it in place, which avoids allocating a copy per iteration.` },
+
+{ n: 94, d: "applications", t: "Pre-sized string building",
+  p: String.raw`A string reserves room for 10 characters and then has the ten letters a to j appended one at a time. Print the result, then a newline.`,
+  ex: String.raw`abcdefghij`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string s;
+    s.reserve(10);
+    for (char c = 'a'; c <= 'j'; ++c) s += c;
+    std::cout << s << "\n";
+}`,
+  why: String.raw`Reserving the capacity first means the appends fill existing storage instead of reallocating as the string grows.` },
+
+{ n: 95, d: "applications", t: "Fixed-size inline storage for a small set",
+  p: String.raw`A fixed-size array holds the three values 1, 2 and 3 inline, with no heap allocation. Print their sum, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <numeric>
+
+int main() {
+    std::array<int, 3> small{1, 2, 3};
+    std::cout << std::accumulate(small.begin(), small.end(), 0) << "\n";
+}`,
+  why: String.raw`A std::array lives directly inside its owner, so small collections avoid the cost of an allocation entirely.` },
 ];
 
 const TOTAL = problems.length;
@@ -2404,7 +2504,7 @@ for (const sec of [
   { from: 9, to: 25, label: "Medium", range: "Problems 9–25", badge: "medium" },
   { from: 26, to: 33, label: "Hard", range: "Problems 26–33", badge: "hard" },
   { from: 34, to: 45, label: "Extension", range: "Problems 34–45", badge: null },
-  { from: 46, to: 88, label: "Applications", range: "Problems 46–88", badge: null }
+  { from: 46, to: 95, label: "Applications", range: "Problems 46–95", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

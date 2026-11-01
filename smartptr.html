@@ -1,4 +1,5 @@
 <title>C++ Smart Pointers Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 80 problems</p>
+    <p class="kicker">Problems by topic · 88 problems</p>
     <h1>C++ Smart Pointers Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">80</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="80" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">88</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="88" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1781,6 +1782,139 @@ int main() {
     if (good) std::cout << "open " << good->port << '\n';
 }`,
   why: String.raw`Returning an empty unique_ptr is a simple way for a factory to signal that no resource was created.` },
+
+// ---------- Applications ----------
+{ n: 81, d: "applications", t: "Shared ownership count after a copy",
+  p: String.raw`A shared pointer owns the value 1. It is copied into a second pointer. Print the number of owners now, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    auto a = std::make_shared<int>(1);
+    auto b = a;
+    std::cout << a.use_count() << "\n";
+}`,
+  why: String.raw`Each copy of a shared pointer adds one to the shared count, and the object is freed only when the count reaches zero.` },
+
+{ n: 82, d: "applications", t: "Cache entry that disappears when its owner leaves",
+  p: String.raw`A cache holds a weak pointer to an object owned by a shared pointer. The owner goes out of scope, and then the cache is checked. Print yes if the cached object is gone, otherwise no, then a newline.`,
+  ex: String.raw`yes`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    std::weak_ptr<int> cache;
+    {
+        auto owner = std::make_shared<int>(42);
+        cache = owner;
+    }
+    std::cout << (cache.expired() ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`A weak pointer does not keep its object alive, so it can tell when the last owner has gone.` },
+
+{ n: 83, d: "applications", t: "Custom release action counted",
+  p: String.raw`A unique pointer to an integer has a custom deleter that counts how many times it runs. The pointer is reset while the counter is zero. Print the number of times the deleter has run, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int releases = 0;
+
+struct CountingDelete {
+    void operator()(int* p) const { ++releases; delete p; }
+};
+
+int main() {
+    std::unique_ptr<int, CountingDelete> p(new int(7));
+    p.reset();
+    std::cout << releases << "\n";
+}`,
+  why: String.raw`The deleter is part of the pointer's type and runs exactly when the owned object is released.` },
+
+{ n: 84, d: "applications", t: "Array of integers owned by a unique pointer",
+  p: String.raw`A unique pointer owns an array of the values 1, 2 and 3. Print the last element of the array, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+int main() {
+    std::unique_ptr<int[]> arr(new int[3]{1, 2, 3});
+    std::cout << arr[2] << "\n";
+}`,
+  why: String.raw`The array form of unique_ptr calls delete[] when it is released, which matches how the array was allocated.` },
+
+{ n: 85, d: "applications", t: "Transfer ownership into a function",
+  p: String.raw`A unique pointer holds the value 7 and is handed to a function that takes ownership and returns the value it received. Print the returned value, then a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <utility>
+
+int consume(std::unique_ptr<int> p) { return *p; }
+
+int main() {
+    auto p = std::make_unique<int>(7);
+    std::cout << consume(std::move(p)) << "\n";
+}`,
+  why: String.raw`Taking the pointer by value makes the function the new owner, so the caller can no longer use it after the move.` },
+
+{ n: 86, d: "applications", t: "Pointer to a field that keeps its owner alive",
+  p: String.raw`A shared pair holds the values 8 and 9. A shared pointer to its second value is created, which also keeps the pair alive. Print the value through the new pointer, then the number of owners of the pair, separated by a space, then a newline.`,
+  ex: String.raw`9 2`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Pair { int first; int second; };
+
+int main() {
+    auto owner = std::make_shared<Pair>(Pair{8, 9});
+    std::shared_ptr<int> field(owner, &owner->second);
+    std::cout << *field << ' ' << owner.use_count() << "\n";
+}`,
+  why: String.raw`The aliasing constructor shares the owner's control block but points at a member, so the whole object stays alive while the field pointer exists.` },
+
+{ n: 87, d: "applications", t: "Parent and child without a leak",
+  p: String.raw`A parent holds a shared pointer to a child, and the child holds a weak pointer back to the parent. The parent is kept in a shared pointer. Print how many owners the parent has, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+
+struct Child;
+struct Parent { std::shared_ptr<Child> child; };
+struct Child { std::weak_ptr<Parent> parent; };
+
+int main() {
+    auto p = std::make_shared<Parent>();
+    auto c = std::make_shared<Child>();
+    c->parent = p;
+    p->child = c;
+    std::cout << p.use_count() << "\n";
+}`,
+  why: String.raw`The back pointer is weak, so it does not add to the parent's count and the two objects can be freed together.` },
+
+{ n: 88, d: "applications", t: "Polymorphic collection of owned objects",
+  p: String.raw`A base class has a virtual value function. Derived classes return 1 and 2. A vector of unique pointers to base objects holds one of each, along with a third object that returns 0 from its own derived class. Print the sum of the values, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <vector>
+
+struct Base { virtual ~Base() = default; virtual int value() const = 0; };
+struct One : Base { int value() const override { return 1; } };
+struct Two : Base { int value() const override { return 2; } };
+struct Zero : Base { int value() const override { return 0; } };
+
+int main() {
+    std::vector<std::unique_ptr<Base>> items;
+    items.push_back(std::make_unique<One>());
+    items.push_back(std::make_unique<Two>());
+    items.push_back(std::make_unique<Zero>());
+    int sum = 0;
+    for (const auto& p : items) sum += p->value();
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`The vector owns each object through a base pointer, and virtual dispatch calls the right value function for each element.` },
 ];
 
 const TOTAL = problems.length;
@@ -1885,7 +2019,7 @@ for (const sec of [
   { from: 15, to: 37, label: "Medium", range: "Problems 15–37", badge: "medium" },
   { from: 38, to: 50, label: "Hard", range: "Problems 38–50", badge: "hard" },
   { from: 51, to: 60, label: "Extension", range: "Problems 51–60", badge: null },
-  { from: 61, to: 80, label: "Applications", range: "Problems 61–80", badge: null }
+  { from: 61, to: 88, label: "Applications", range: "Problems 61–88", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

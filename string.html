@@ -828,7 +828,6 @@ int main() {
 }`,
   why: String.raw`find_first_not_of finds the first digit that is not zero, and substr keeps everything from there. An all-zero string is special-cased to 0.` },
 
-// ---------- Applications ----------
 { n: 49, d: "medium", t: "Read a CSV field",
   p: String.raw`Take the line name,age,city and print its third field, which is the text after the second comma.`,
   ex: String.raw`city`,
@@ -995,132 +994,145 @@ int main() {
 }`,
   why: String.raw`Converting the number to text makes each digit a character, and subtracting '0' turns it into an index into the name table.` },
 
-{ n: 59, d: "applications", t: "Cleaning a username",
-  p: String.raw`A user typed the name "   alice   " with spaces before and after it. Remove the spaces at both ends and print the result, then a newline.`,
-  ex: String.raw`alice`,
+
+
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Read a field from a FIX-style message",
+  p: String.raw`A trading message is written as tag=value pairs separated by vertical bars: 35=D|55=AAPL|44=101.5|54=1. Print the value of tag 44, then a newline.`,
+  ex: String.raw`101.5`,
   code: String.raw`#include <iostream>
 #include <string>
 
 int main() {
-    std::string name = "   alice   ";
-    auto first = name.find_first_not_of(' ');
-    auto last = name.find_last_not_of(' ');
-    std::cout << name.substr(first, last - first + 1) << "\n";
+    const std::string msg = "35=D|55=AAPL|44=101.5|54=1";
+    const std::string key = "44=";
+    auto start = msg.find(key);
+    auto end = msg.find('|', start);
+    std::cout << msg.substr(start + key.size(), end - start - key.size()) << "\n";
 }`,
-  why: String.raw`Form fields often carry stray spaces, and a string's positions of the first and last non-space characters give the trimmed part directly.` },
+  why: String.raw`Finding the tag by its exact text and reading up to the next separator extracts one field without splitting the whole message.` },
 
-{ n: 60, d: "applications", t: "Reading a file extension",
-  p: String.raw`Print the extension of the file name report.final.pdf, meaning the part after its last dot, then a newline.`,
-  ex: String.raw`pdf`,
-  code: String.raw`#include <iostream>
-#include <string>
-
-int main() {
-    std::string file = "report.final.pdf";
-    auto dot = file.rfind('.');
-    std::cout << file.substr(dot + 1) << "\n";
-}`,
-  why: String.raw`A file name can contain several dots, so the search has to start from the end of the name to find the one that separates the extension.` },
-
-{ n: 61, d: "applications", t: "Building a CSV row",
-  p: String.raw`Build a single comma-separated line containing the three fields a, b and c, with no spaces. Print the line, then a newline.`,
-  ex: String.raw`a,b,c`,
+{ n: 60, d: "applications", t: "Parse a CSV line with a quoted field",
+  p: String.raw`Parse the CSV line a,"b,c",d where a field inside double quotes may contain commas. Print the second field, then a newline.`,
+  ex: String.raw`b,c`,
   code: String.raw`#include <iostream>
 #include <string>
 #include <vector>
 
 int main() {
-    std::vector<std::string> fields{"a", "b", "c"};
-    std::string line;
-    for (std::size_t i = 0; i < fields.size(); ++i) {
-        if (i > 0) line += ',';
-        line += fields[i];
+    const std::string line = "a,\"b,c\",d";
+    std::vector<std::string> fields;
+    std::string cur;
+    bool quoted = false;
+    for (char c : line) {
+        if (c == '"') quoted = !quoted;
+        else if (c == ',' && !quoted) { fields.push_back(cur); cur.clear(); }
+        else cur += c;
     }
-    std::cout << line << "\n";
+    fields.push_back(cur);
+    std::cout << fields[1] << "\n";
 }`,
-  why: String.raw`Joining fields needs the separator only between items, so the loop adds it before every field except the first.` },
+  why: String.raw`A flag that tracks whether you are inside quotes stops commas there from ending a field.` },
 
-{ n: 62, d: "applications", t: "Counting vowels in a word",
-  p: String.raw`Count the vowels a, e, i, o and u in the word programming, treating each occurrence as one vowel. Print the count, then a newline.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <iostream>
-#include <string>
-
-int main() {
-    std::string word = "programming";
-    int count = 0;
-    for (char c : word)
-        if (std::string("aeiou").find(c) != std::string::npos) ++count;
-    std::cout << count << "\n";
-}`,
-  why: String.raw`Looking up each character in a string of vowels is a simple membership test, and find returns npos when the character is absent.` },
-
-{ n: 63, d: "applications", t: "Masking a card number",
-  p: String.raw`A card number is 4111111111111111. Replace every digit except the last four with the character *, then print the result, then a newline.`,
-  ex: String.raw`************1111`,
-  code: String.raw`#include <iostream>
-#include <string>
-
-int main() {
-    std::string card = "4111111111111111";
-    std::string masked = std::string(card.size() - 4, '*') + card.substr(card.size() - 4);
-    std::cout << masked << "\n";
-}`,
-  why: String.raw`Only the last four characters are shown to the user, so the rest of the string is built from a run of stars followed by the visible tail.` },
-
-{ n: 64, d: "applications", t: "Splitting a path into parts",
-  p: String.raw`Split the path usr/local/bin at each slash and print the parts separated by spaces, then a newline.`,
-  ex: String.raw`usr local bin`,
-  code: String.raw`#include <iostream>
-#include <string>
-
-int main() {
-    std::string path = "usr/local/bin";
-    std::string out;
-    std::size_t start = 0;
-    while (true) {
-        auto slash = path.find('/', start);
-        out += path.substr(start, slash - start);
-        if (slash == std::string::npos) break;
-        out += ' ';
-        start = slash + 1;
-    }
-    std::cout << out << "\n";
-}`,
-  why: String.raw`Each part lies between two slashes, so the scan keeps track of where the next part begins and stops when no slash is left.` },
-
-{ n: 65, d: "applications", t: "Checking a reversible code",
-  p: String.raw`Print yes if the string level reads the same forwards and backwards, otherwise print no. Then print the same answer for the string lever, then a newline. Separate the two answers with a space.`,
-  ex: String.raw`yes no`,
+{ n: 61, d: "applications", t: "Normalise a ticker symbol",
+  p: String.raw`A user typed the symbol "  aapl.l  " with spaces around it and lowercase letters. Remove the surrounding spaces and convert the letters to uppercase, then print the result, then a newline.`,
+  ex: String.raw`AAPL.L`,
   code: String.raw`#include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <string>
 
-bool same_both_ways(const std::string& s) {
-    std::string r = s;
-    std::reverse(r.begin(), r.end());
-    return r == s;
+int main() {
+    std::string s = "  aapl.l  ";
+    auto first = s.find_first_not_of(' ');
+    auto last = s.find_last_not_of(' ');
+    s = s.substr(first, last - first + 1);
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    std::cout << s << "\n";
+}`,
+  why: String.raw`Trim first, then transform, so the case conversion only touches the characters that remain.` },
+
+{ n: 62, d: "applications", t: "Format a price from integer cents",
+  p: String.raw`A price is stored as the integer 10150 cents. Print it as dollars with exactly two decimal places, using a point, then a newline.`,
+  ex: String.raw`101.50`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const int cents = 10150;
+    std::string frac = std::to_string(cents % 100);
+    if (frac.size() < 2) frac.insert(0, "0");
+    std::cout << cents / 100 << '.' << frac << "\n";
+}`,
+  why: String.raw`Keeping money in integers avoids rounding error, and the decimal point is produced by splitting the value into whole and fractional parts.` },
+
+{ n: 63, d: "applications", t: "Count valid ticker symbols",
+  p: String.raw`Three symbols are checked: AAPL, bad1 and GOOG. A symbol is valid if it has between one and five characters and every character is an uppercase letter. Print the number of valid symbols, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <string>
+#include <vector>
+
+bool valid(const std::string& s) {
+    return s.size() >= 1 && s.size() <= 5 &&
+           std::all_of(s.begin(), s.end(), [](unsigned char c) { return std::isupper(c); });
 }
 
 int main() {
-    std::cout << (same_both_ways("level") ? "yes" : "no") << ' '
-              << (same_both_ways("lever") ? "yes" : "no") << "\n";
+    std::vector<std::string> symbols{"AAPL", "bad1", "GOOG"};
+    std::cout << std::count_if(symbols.begin(), symbols.end(), valid) << "\n";
 }`,
-  why: String.raw`Comparing a string with a reversed copy of itself tests whether it reads the same in both directions.` },
+  why: String.raw`Each rule becomes a predicate, and count_if applies the whole validity check to every symbol.` },
 
-{ n: 66, d: "applications", t: "Making a URL-friendly slug",
-  p: String.raw`Turn the title hello big world into a slug, where each space becomes an underscore, then print the slug, then a newline.`,
-  ex: String.raw`hello_big_world`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
+{ n: 64, d: "applications", t: "Collapse repeated spaces",
+  p: String.raw`Collapse every run of spaces in the text "a   b  c" into a single space, then print the result, then a newline.`,
+  ex: String.raw`a b c`,
+  code: String.raw`#include <iostream>
 #include <string>
 
 int main() {
-    std::string title = "hello big world";
-    std::replace(title.begin(), title.end(), ' ', '_');
-    std::cout << title << "\n";
+    const std::string text = "a   b  c";
+    std::string out;
+    for (char c : text)
+        if (!(c == ' ' && !out.empty() && out.back() == ' ')) out += c;
+    std::cout << out << "\n";
 }`,
-  why: String.raw`Replacing one character with another across the whole string is a single pass that leaves all other characters untouched.` },
+  why: String.raw`Comparing each character with the last one written removes a space only when it follows another space.` },
+
+{ n: 65, d: "applications", t: "Count distinct words in a headline",
+  p: String.raw`Count how many different words appear in the headline "rates rates cut". Print the count, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
+
+int main() {
+    std::istringstream in("rates rates cut");
+    std::set<std::string> words;
+    std::string w;
+    while (in >> w) words.insert(w);
+    std::cout << words.size() << "\n";
+}`,
+  why: String.raw`A set keeps only one copy of each word, so its size is the number of distinct words.` },
+
+{ n: 66, d: "applications", t: "Parse a number with thousands separators",
+  p: String.raw`Parse the text 1,250,000 as an integer by ignoring its commas. Print the value, then a newline.`,
+  ex: String.raw`1250000`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    const std::string text = "1,250,000";
+    long long value = 0;
+    for (char c : text)
+        if (c >= '0' && c <= '9') value = value * 10 + (c - '0');
+    std::cout << value << "\n";
+}`,
+  why: String.raw`Accumulating digits one at a time while skipping separators builds the number without needing a substring step for each group.` },
 ];
 
 const TOTAL = problems.length;

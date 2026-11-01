@@ -1074,7 +1074,6 @@ int main() {
 }`,
   why: String.raw`Each pop reveals the element beneath, so a single drain examines every value exactly once in the order it comes off.` },
 
-// ---------- Applications ----------
 { n: 49, d: "medium", t: "Browser back navigation",
   p: String.raw`Visit the pages a, b and c in order. Each visit pushes the current page onto a back stack. Going back twice pops two pages from the back stack. Print the page you are on after going back twice.`,
   ex: String.raw`a`,
@@ -1296,176 +1295,201 @@ int main() {
 }`,
   why: String.raw`Each open parenthesis saves the running total and the sign that applies to the group. The closing parenthesis folds the inner total back into the saved value.` },
 
-{ n: 59, d: "applications", t: "Undo the last edit",
-  p: String.raw`Three edits are made in order: a, b and c. The most recent edit is undone. Print the edit that is now the most recent, then a newline.`,
-  ex: String.raw`b`,
+
+
+// ---------- Applications ----------
+{ n: 59, d: "applications", t: "Evaluate an infix expression with precedence",
+  p: String.raw`Evaluate the infix expression 2 + 3 * 4, where multiplication binds more tightly than addition. Print the result, then a newline.`,
+  ex: String.raw`14`,
   code: String.raw`#include <iostream>
 #include <stack>
 #include <string>
 
-int main() {
-    std::stack<std::string> undo;
-    undo.push("a");
-    undo.push("b");
-    undo.push("c");
-    undo.pop();
-    std::cout << undo.top() << "\n";
-}`,
-  why: String.raw`Undo always reverts the most recent change first, so the history is last-in, first-out and a stack holds it directly.` },
+int prec(char op) { return op == '*' ? 2 : 1; }
 
-{ n: 60, d: "applications", t: "Back button on a page history",
-  p: String.raw`A browser visits the pages p1, p2 and p3 in that order. The back button is pressed twice. Print the page now showing, then a newline.`,
-  ex: String.raw`p1`,
-  code: String.raw`#include <iostream>
-#include <stack>
-#include <string>
+int apply(int a, int b, char op) { return op == '*' ? a * b : a + b; }
 
 int main() {
-    std::stack<std::string> history;
-    history.push("p1");
-    history.push("p2");
-    history.push("p3");
-    history.pop();
-    history.pop();
-    std::cout << history.top() << "\n";
-}`,
-  why: String.raw`Going back returns to the page visited most recently before the current one, which is the last entry pushed.` },
-
-{ n: 61, d: "applications", t: "Which function is running",
-  p: String.raw`The function main calls A, A calls B and B calls C. Function C then returns to its caller. Print the name of the function that is now running, then a newline.`,
-  ex: String.raw`B`,
-  code: String.raw`#include <iostream>
-#include <stack>
-#include <string>
-
-int main() {
-    std::stack<std::string> calls;
-    calls.push("main");
-    calls.push("A");
-    calls.push("B");
-    calls.push("C");
-    calls.pop();
-    std::cout << calls.top() << "\n";
-}`,
-  why: String.raw`Each call goes on top of the chain and each return removes it, so the running function is always the most recent unfinished call.` },
-
-{ n: 62, d: "applications", t: "Reversing a word",
-  p: String.raw`Reverse the word stack by reading its letters one at a time and writing them back out in the opposite order. Print the reversed word, then a newline.`,
-  ex: String.raw`kcats`,
-  code: String.raw`#include <iostream>
-#include <stack>
-#include <string>
-
-int main() {
-    std::stack<char> letters;
-    for (char c : std::string("stack")) letters.push(c);
-    std::string out;
-    while (!letters.empty()) {
-        out += letters.top();
-        letters.pop();
+    const std::string tokens = "2+3*4";
+    std::stack<int> values;
+    std::stack<char> ops;
+    auto reduce = [&]() {
+        int b = values.top(); values.pop();
+        int a = values.top(); values.pop();
+        values.push(apply(a, b, ops.top()));
+        ops.pop();
+    };
+    for (char c : tokens) {
+        if (c == '+' || c == '*') {
+            while (!ops.empty() && prec(ops.top()) >= prec(c)) reduce();
+            ops.push(c);
+        } else {
+            values.push(c - '0');
+        }
     }
-    std::cout << out << "\n";
+    while (!ops.empty()) reduce();
+    std::cout << values.top() << "\n";
 }`,
-  why: String.raw`Pushing every letter and then popping them all produces the reverse, because the last letter in is the first one out.` },
+  why: String.raw`Operators wait on a stack until an operator of equal or higher precedence arrives, so the pending work is always the most recent.` },
 
-{ n: 63, d: "applications", t: "Smallest value so far",
-  p: String.raw`Push the values 5, 3 and 8 one at a time. After each push, print the smallest value pushed so far, with the values separated by spaces, then a newline.`,
-  ex: String.raw`5 3 3`,
-  code: String.raw`#include <algorithm>
-#include <iostream>
+{ n: 60, d: "applications", t: "Roll back a transaction to its checkpoint",
+  p: String.raw`A transaction log is built by pushing the entries A, B, CP, C and D in that order, where CP is a checkpoint marker. The transaction is rolled back to the checkpoint, which removes everything after it and the marker itself. Print the remaining entries from first to last, separated by spaces, then a newline.`,
+  ex: String.raw`A B`,
+  code: String.raw`#include <iostream>
 #include <stack>
-
-struct Entry {
-    int value;
-    int smallest;
-};
+#include <string>
+#include <vector>
 
 int main() {
-    std::stack<Entry> s;
-    for (int v : {5, 3, 8}) {
-        int smallest = s.empty() ? v : std::min(v, s.top().smallest);
-        s.push({v, smallest});
-        std::cout << s.top().smallest << ' ';
+    std::stack<std::string> log;
+    for (const char* e : {"A", "B", "CP", "C", "D"}) log.push(e);
+    while (log.top() != "CP") log.pop();
+    log.pop();
+    std::vector<std::string> out;
+    while (!log.empty()) { out.push_back(log.top()); log.pop(); }
+    for (auto it = out.rbegin(); it != out.rend(); ++it) std::cout << *it << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A log that is only ever appended to rolls back by popping until the checkpoint is reached.` },
+
+{ n: 61, d: "applications", t: "Simplify a Unix path",
+  p: String.raw`Simplify the path /a/./b/../c//d. A single dot means the current directory and is removed, two dots mean the parent directory, and repeated slashes count as one. Print the simplified absolute path, then a newline.`,
+  ex: String.raw`/a/c/d`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <vector>
+
+int main() {
+    std::stack<std::string> parts;
+    std::istringstream in("a/./b/../c//d");
+    std::string piece;
+    while (std::getline(in, piece, '/')) {
+        if (piece.empty() || piece == ".") continue;
+        if (piece == "..") { if (!parts.empty()) parts.pop(); }
+        else parts.push(piece);
+    }
+    std::vector<std::string> out;
+    while (!parts.empty()) { out.push_back(parts.top()); parts.pop(); }
+    for (auto it = out.rbegin(); it != out.rend(); ++it) std::cout << '/' << *it;
+    std::cout << "\n";
+}`,
+  why: String.raw`Each ".." cancels the most recent real directory, which is exactly the top of a stack of names.` },
+
+{ n: 62, d: "applications", t: "Days until a warmer day",
+  p: String.raw`Daily temperatures are 73, 74, 75, 71, 69, 72, 76 and 73. For each day, print how many days later the first warmer day occurs, or 0 if none occurs, separated by spaces, then a newline.`,
+  ex: String.raw`1 1 4 2 1 1 0 0`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> t{73, 74, 75, 71, 69, 72, 76, 73};
+    std::vector<int> wait(t.size(), 0);
+    std::stack<std::size_t> pending;
+    for (std::size_t i = 0; i < t.size(); ++i) {
+        while (!pending.empty() && t[pending.top()] < t[i]) {
+            wait[pending.top()] = static_cast<int>(i - pending.top());
+            pending.pop();
+        }
+        pending.push(i);
+    }
+    for (int w : wait) std::cout << w << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Days still waiting for a warmer day stay on the stack, and the first warmer day that arrives resolves them from the top down.` },
+
+{ n: 63, d: "applications", t: "Stock span of each day",
+  p: String.raw`Closing prices are 100, 80, 60, 70, 60, 75 and 85. The span of a day is the number of consecutive days ending that day for which the price was less than or equal to that day's price. Print the span for each day, separated by spaces, then a newline.`,
+  ex: String.raw`1 1 1 2 1 4 6`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> price{100, 80, 60, 70, 60, 75, 85};
+    std::stack<std::size_t> higher;
+    for (std::size_t i = 0; i < price.size(); ++i) {
+        while (!higher.empty() && price[higher.top()] <= price[i]) higher.pop();
+        std::size_t span = higher.empty() ? i + 1 : i - higher.top();
+        std::cout << span << ' ';
+        higher.push(i);
     }
     std::cout << "\n";
 }`,
-  why: String.raw`Storing the smallest value alongside each entry means the answer is always available at the top, even after pops.` },
+  why: String.raw`The stack holds the days that are still higher than the current price, so the gap to the top is the span.` },
 
-{ n: 64, d: "applications", t: "Deepest nesting of tags",
-  p: String.raw`A document has the tags written in this order: a, b, /b, c, d, /d, /c, /a. A tag starts a new level and a tag beginning with / closes the most recent level. Print the deepest level reached, then a newline.`,
-  ex: String.raw`3`,
-  code: String.raw`#include <algorithm>
-#include <cstddef>
-#include <iostream>
-#include <stack>
-#include <string>
-
-int main() {
-    std::stack<std::string> open;
-    std::size_t deepest = 0;
-    for (std::string t : {"a", "b", "/b", "c", "d", "/d", "/c", "/a"}) {
-        if (t[0] == '/') open.pop();
-        else {
-            open.push(t);
-            deepest = std::max(deepest, open.size());
-        }
-    }
-    std::cout << deepest << "\n";
-}`,
-  why: String.raw`Each opening tag is matched by its closing tag in reverse order, so the open tags always form a last-in, first-out chain.` },
-
-{ n: 65, d: "applications", t: "Evaluating a calculation",
-  p: String.raw`Evaluate the expression written as 3 4 + 2 *, where each operator is applied to the two values just before it. Print the result, then a newline.`,
-  ex: String.raw`14`,
+{ n: 64, d: "applications", t: "Reject a malformed postfix calculation",
+  p: String.raw`Evaluate the postfix expression 3 4 + +, where each operator takes the two values before it. If an operator does not have two values available, print error instead of a result, then a newline.`,
+  ex: String.raw`error`,
   code: String.raw`#include <iostream>
 #include <sstream>
 #include <stack>
 #include <string>
 
 int main() {
+    std::istringstream in("3 4 + +");
     std::stack<int> s;
-    std::istringstream in("3 4 + 2 *");
     std::string tok;
-    while (in >> tok) {
-        if (tok == "+" || tok == "*") {
+    bool ok = true;
+    while (ok && in >> tok) {
+        if (tok == "+") {
+            if (s.size() < 2) { ok = false; break; }
             int b = s.top(); s.pop();
             int a = s.top(); s.pop();
-            s.push(tok == "+" ? a + b : a * b);
+            s.push(a + b);
         } else {
             s.push(std::stoi(tok));
         }
     }
-    std::cout << s.top() << "\n";
+    if (ok && s.size() == 1) std::cout << s.top() << "\n";
+    else std::cout << "error\n";
 }`,
-  why: String.raw`Each operator needs the two most recent values, which are the ones on top, so the operands can be read off in the order they were pushed.` },
+  why: String.raw`Checking how many values are on the stack before each operator turns an impossible expression into a clear error.` },
 
-{ n: 66, d: "applications", t: "Checking a nested bracket string",
-  p: String.raw`Check whether the brackets in the string {[()]} are properly balanced, meaning every closing bracket matches the most recent unmatched opening bracket and nothing is left open. Print balanced or unbalanced, then a newline.`,
-  ex: String.raw`balanced`,
+{ n: 65, d: "applications", t: "Cancel opposite moves",
+  p: String.raw`A robot receives the moves N, S, E, W, W and N in that order. Whenever a move directly undoes the most recent surviving move, both are removed. Opposite pairs are N with S and E with W. Print the surviving moves separated by spaces, then a newline.`,
+  ex: String.raw`W N`,
   code: String.raw`#include <iostream>
 #include <stack>
 #include <string>
+#include <vector>
 
 int main() {
-    std::string text = "{[()]}";
-    std::stack<char> open;
-    bool ok = true;
-    for (char c : text) {
-        if (c == '(' || c == '[' || c == '{') {
-            open.push(c);
-            continue;
-        }
-        if (open.empty()) { ok = false; break; }
-        char o = open.top();
-        open.pop();
-        if ((c == ')' && o != '(') || (c == ']' && o != '[') || (c == '}' && o != '{')) {
-            ok = false;
-            break;
-        }
+    std::stack<std::string> moves;
+    auto opposite = [](const std::string& a, const std::string& b) {
+        return (a == "N" && b == "S") || (a == "S" && b == "N") ||
+               (a == "E" && b == "W") || (a == "W" && b == "E");
+    };
+    for (std::string m : {"N", "S", "E", "W", "W", "N"}) {
+        if (!moves.empty() && opposite(moves.top(), m)) moves.pop();
+        else moves.push(m);
     }
-    std::cout << ((ok && open.empty()) ? "balanced" : "unbalanced") << "\n";
+    std::vector<std::string> out;
+    while (!moves.empty()) { out.push_back(moves.top()); moves.pop(); }
+    for (auto it = out.rbegin(); it != out.rend(); ++it) std::cout << *it << ' ';
+    std::cout << "\n";
 }`,
-  why: String.raw`A closing bracket must match the opening bracket that was seen most recently and not yet closed, which is the top of a stack.` },
+  why: String.raw`Only the most recent surviving move can be cancelled, so the surviving moves form a stack.` },
+
+{ n: 66, d: "applications", t: "Buildings visible from the right",
+  p: String.raw`Buildings stand in a row with heights 3, 1, 4, 2 from left to right. A viewer stands at the right end and can see a building only if it is taller than every building between it and the viewer. Print how many buildings the viewer can see, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <vector>
+
+int main() {
+    const std::vector<int> h{3, 1, 4, 2};
+    std::stack<int> visible;
+    for (int i = static_cast<int>(h.size()) - 1; i >= 0; --i) {
+        while (!visible.empty() && visible.top() <= h[i]) visible.pop();
+        visible.push(h[i]);
+    }
+    std::cout << visible.size() << "\n";
+}`,
+  why: String.raw`Scanning from the right, a shorter building is hidden by any taller one in front of it, so the stack keeps only the visible heights.` },
 ];
 
 const TOTAL = problems.length;

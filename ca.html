@@ -1,4 +1,5 @@
 <title>C++ Concurrency in Action</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by chapter · 121 problems</p>
+    <p class="kicker">Problems by chapter · 129 problems</p>
     <h1>C++ Concurrency in Action Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">121</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="121" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">129</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="129" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -3605,6 +3606,178 @@ int main() {
     std::cout << (seq == parts[0] + parts[1] ? "agree " : "disagree ") << seq << "\n";
 }`,
   why: String.raw`A sequential computation is the reference for a parallel one. If the two disagree, the split into halves, or the way results are combined, is wrong.` },
+
+// ---------- Applications ----------
+{ n: 122, d: "applications", t: "Parallel sum of two halves",
+  p: String.raw`The numbers 1 to 10 are split into two halves, 1 to 5 and 6 to 10. Each half is summed on its own thread and the two results are added together. Print the total, then a newline.`,
+  ex: String.raw`55`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+    std::vector<int> v{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    auto left = std::async(std::launch::async, [&] { return std::accumulate(v.begin(), v.begin() + 5, 0); });
+    auto right = std::async(std::launch::async, [&] { return std::accumulate(v.begin() + 5, v.end(), 0); });
+    std::cout << left.get() + right.get() << "\n";
+}`,
+  why: String.raw`Each future holds one half's result, and get waits only for the thread that produces it.` },
+
+{ n: 123, d: "applications", t: "Bounded handoff between producer and consumer",
+  p: String.raw`A producer sends the numbers 1 to 5 to a consumer through a bounded buffer that holds at most two items. The consumer adds up everything it receives. Print the total, then a newline.`,
+  ex: String.raw`15`,
+  code: String.raw`#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+int main() {
+    std::queue<int> buf;
+    std::mutex m;
+    std::condition_variable not_full, not_empty;
+    const std::size_t cap = 2;
+    int total = 0;
+
+    std::thread producer([&] {
+        for (int i = 1; i <= 5; ++i) {
+            std::unique_lock lk(m);
+            not_full.wait(lk, [&] { return buf.size() < cap; });
+            buf.push(i);
+            not_empty.notify_one();
+        }
+    });
+    std::thread consumer([&] {
+        for (int i = 0; i < 5; ++i) {
+            std::unique_lock lk(m);
+            not_empty.wait(lk, [&] { return !buf.empty(); });
+            total += buf.front();
+            buf.pop();
+            not_full.notify_one();
+        }
+    });
+    producer.join();
+    consumer.join();
+    std::cout << total << "\n";
+}`,
+  why: String.raw`The condition variables make the producer wait when the buffer is full and the consumer wait when it is empty, so neither overruns the other.` },
+
+{ n: 124, d: "applications", t: "Atomic counter from two threads",
+  p: String.raw`Two threads each increment one shared atomic counter one thousand times. Print the final value, then a newline.`,
+  ex: String.raw`2000`,
+  code: String.raw`#include <atomic>
+#include <iostream>
+#include <thread>
+
+int main() {
+    std::atomic<int> counter{0};
+    auto work = [&] { for (int i = 0; i < 1000; ++i) ++counter; };
+    std::thread a(work), b(work);
+    a.join();
+    b.join();
+    std::cout << counter.load() << "\n";
+}`,
+  why: String.raw`An atomic increment is indivisible, so updates from both threads are never lost.` },
+
+{ n: 125, d: "applications", t: "Initialise a resource once across threads",
+  p: String.raw`Two threads each try to initialise a shared resource, but the initialisation must run exactly once. Print how many times it ran, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+
+int runs = 0;
+std::once_flag flag;
+
+void init() { ++runs; }
+
+int main() {
+    std::thread a([] { std::call_once(flag, init); });
+    std::thread b([] { std::call_once(flag, init); });
+    a.join();
+    b.join();
+    std::cout << runs << "\n";
+}`,
+  why: String.raw`call_once guarantees that exactly one caller runs the function, and the others wait until it has finished.` },
+
+{ n: 126, d: "applications", t: "Wait for a group of workers",
+  p: String.raw`Two worker threads each count down a shared latch once when they finish. The main thread waits until both have counted down, then prints done, then a newline.`,
+  ex: String.raw`done`,
+  code: String.raw`#include <iostream>
+#include <latch>
+#include <thread>
+
+int main() {
+    std::latch ready(2);
+    std::thread a([&] { ready.count_down(); });
+    std::thread b([&] { ready.count_down(); });
+    ready.wait();
+    std::cout << "done\n";
+    a.join();
+    b.join();
+}`,
+  why: String.raw`A latch starts at a count and releases every waiter once the count reaches zero, which is a one-time barrier.` },
+
+{ n: 127, d: "applications", t: "Ordered results from a single producer",
+  p: String.raw`A worker thread pushes the numbers 1, 2 and 3 into a mutex-protected list in order. After it finishes, the main thread prints the list separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+int main() {
+    std::vector<int> out;
+    std::mutex m;
+    std::thread t([&] {
+        for (int i = 1; i <= 3; ++i) {
+            std::lock_guard lk(m);
+            out.push_back(i);
+        }
+    });
+    t.join();
+    for (int v : out) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A single producer writes in program order, and joining the thread before reading makes the final list visible to main.` },
+
+{ n: 128, d: "applications", t: "Exception carried from a worker",
+  p: String.raw`A background task throws a runtime error with the message boom. The main thread retrieves the result, catches the error and prints caught followed by the message, separated by a space, then a newline.`,
+  ex: String.raw`caught boom`,
+  code: String.raw`#include <future>
+#include <iostream>
+#include <stdexcept>
+
+int main() {
+    auto f = std::async(std::launch::async, []() -> int { throw std::runtime_error("boom"); });
+    try {
+        f.get();
+    } catch (const std::runtime_error& e) {
+        std::cout << "caught " << e.what() << "\n";
+    }
+}`,
+  why: String.raw`A future stores an exception thrown by its task and rethrows it when the result is requested.` },
+
+{ n: 129, d: "applications", t: "Permits limit concurrent access",
+  p: String.raw`A semaphore starts with no permits. A worker thread releases two permits. The main thread then acquires two permits. Print the number of permits acquired, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <semaphore>
+#include <thread>
+
+int main() {
+    std::counting_semaphore<2> sem(0);
+    std::thread t([&] { sem.release(2); });
+    t.join();
+    int acquired = 0;
+    sem.acquire();
+    ++acquired;
+    sem.acquire();
+    ++acquired;
+    std::cout << acquired << "\n";
+}`,
+  why: String.raw`A counting semaphore lets a fixed number of threads through, and each acquire takes one permit that a release has supplied.` },
 ];
 
 const TOTAL = problems.length;
@@ -3709,7 +3882,7 @@ for (const sec of [
   { from: 24, to: 54, label: "Medium", range: "Problems 24–54", badge: "medium" },
   { from: 55, to: 79, label: "Hard", range: "Problems 55–79", badge: "hard" },
   { from: 80, to: 102, label: "Extension", range: "Problems 80–102", badge: null },
-  { from: 103, to: 121, label: "Applications", range: "Problems 103–121", badge: null }
+  { from: 103, to: 129, label: "Applications", range: "Problems 103–129", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

@@ -827,139 +827,135 @@ int main() {
 }`,
   why: String.raw`Joining keeps references into the inner vectors, so a loop can read each element without copying the nested structure.` },
 
-{ n: 47, d: "applications", t: "Sum the numbers in a comma-separated line",
-  p: String.raw`The line 1,2,3 contains numbers separated by commas. Split it at each comma, convert each field to an integer, and print the total, then a newline.`,
-  ex: String.raw`6`,
+
+
+
+
+// ---------- Applications ----------
+{ n: 47, d: "applications", t: "Notional of large trades",
+  p: String.raw`Trades are given as (price, quantity): (100, 10), (50, 2) and (200, 5). Only trades with a quantity of at least 5 count. Print the total notional of those trades, meaning price times quantity summed, then a newline.`,
+  ex: String.raw`2000`,
   code: String.raw`#include <iostream>
+#include <numeric>
 #include <ranges>
-#include <string>
+#include <utility>
+#include <vector>
 
 int main() {
-    std::string line = "1,2,3";
-    int total = 0;
-    for (auto field : line | std::views::split(',')) {
-        std::string t(field.begin(), field.end());
-        total += std::stoi(t);
-    }
-    std::cout << total << "\n";
+    std::vector<std::pair<int, int>> trades{{100, 10}, {50, 2}, {200, 5}};
+    auto big = trades | std::views::filter([](const auto& t) { return t.second >= 5; })
+                      | std::views::transform([](const auto& t) { return t.first * t.second; });
+    std::cout << std::accumulate(big.begin(), big.end(), 0) << "\n";
 }`,
-  why: String.raw`Splitting a line into fields lazily avoids building a vector of strings first. Only one field is converted at a time, which keeps the work proportional to the input.` },
+  why: String.raw`Filter and transform compose into one lazy pipeline, so each trade is checked and priced exactly once as the sum reads it.` },
 
-{ n: 48, d: "applications", t: "Count words in a sentence",
-  p: String.raw`Count the words in the sentence the quick fox, where words are separated by single spaces. Print the count, then a newline.`,
+{ n: 48, d: "applications", t: "First even squares",
+  p: String.raw`Print the first three even numbers' squares, starting from 1, in order, separated by spaces, then a newline. Consider the natural numbers 1, 2, 3 and so on.`,
+  ex: String.raw`4 16 36`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+
+int main() {
+    auto v = std::views::iota(1)
+           | std::views::filter([](int x) { return x % 2 == 0; })
+           | std::views::transform([](int x) { return x * x; })
+           | std::views::take(3);
+    for (int x : v) std::cout << x << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`iota describes an endless sequence and take stops the pipeline after three results, so nothing beyond them is computed.` },
+
+{ n: 49, d: "applications", t: "Spreads between two price lists",
+  p: String.raw`Bid prices are 10, 20 and 30, and ask prices are 12, 19 and 35. Print ask minus bid for each position, separated by spaces, then a newline.`,
+  ex: String.raw`2 -1 5`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <ranges>
+
+int main() {
+    constexpr std::array<int, 3> bid{10, 20, 30};
+    constexpr std::array<int, 3> ask{12, 19, 35};
+    auto spreads = std::views::iota(0, 3)
+                 | std::views::transform([&](int i) { return ask[i] - bid[i]; });
+    for (int s : spreads) std::cout << s << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Indexing both arrays by position inside a transform yields the paired differences without building a third array.` },
+
+{ n: 50, d: "applications", t: "Drop leading zero quantities",
+  p: String.raw`Quantities arrive as 0, 0, 3, 0 and 5. Remove the leading zeros only, keeping any zeros that come later, and print the rest separated by spaces, then a newline.`,
+  ex: String.raw`3 0 5`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> q{0, 0, 3, 0, 5};
+    for (int x : q | std::views::drop_while([](int v) { return v == 0; }))
+        std::cout << x << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`drop_while skips only the prefix that matches, and the rest of the sequence passes through unchanged.` },
+
+{ n: 51, d: "applications", t: "Last three events in reverse",
+  p: String.raw`Events 1, 2, 3, 4 and 5 are recorded in that order. Print the three most recent events, most recent first, separated by spaces, then a newline.`,
+  ex: String.raw`5 4 3`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> events{1, 2, 3, 4, 5};
+    for (int e : events | std::views::reverse | std::views::take(3))
+        std::cout << e << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Reversing is a view over the same storage, so taking three from it gives the newest events without copying anything.` },
+
+{ n: 52, d: "applications", t: "First price above a threshold",
+  p: String.raw`Prices arrive as 98, 101, 103 and 99. Print the first price strictly above 100, then a newline.`,
+  ex: String.raw`101`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector<int> prices{98, 101, 103, 99};
+    auto it = std::ranges::find_if(prices, [](int p) { return p > 100; });
+    std::cout << *it << "\n";
+}`,
+  why: String.raw`The ranges version of find_if takes the container directly, which reads more clearly than passing two iterators.` },
+
+{ n: 53, d: "applications", t: "Count names with an odd length",
+  p: String.raw`The names ann, bo, cyd and dee are listed. Print how many names have an odd number of letters, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <iostream>
 #include <ranges>
 #include <string>
-
-int main() {
-    std::string s = "the quick fox";
-    std::cout << std::ranges::distance(s | std::views::split(' ')) << "\n";
-}`,
-  why: String.raw`A split view yields one subrange per word, so counting words is the same as counting the fields that the split produces.` },
-
-{ n: 49, d: "applications", t: "First two error messages from a log",
-  p: String.raw`Given the log lines INFO a, ERROR b, ERROR c, select the lines that begin with ERROR and take the first two. Print each message, which is the text after the word ERROR and a space, separated by a space, then a newline.`,
-  ex: String.raw`b c`,
-  code: String.raw`#include <iostream>
-#include <ranges>
-#include <string>
-#include <string_view>
 #include <vector>
 
 int main() {
-    std::vector<std::string> log{"INFO a", "ERROR b", "ERROR c"};
-    auto errors = log | std::views::filter([](const std::string& l) {
-                            return std::string_view(l).starts_with("ERROR");
-                        })
-                      | std::views::take(2);
-    for (const auto& l : errors) std::cout << std::string_view(l).substr(6) << " ";
-    std::cout << "\n";
+    std::vector<std::string> names{"ann", "bo", "cyd", "dee"};
+    auto odd = names | std::views::filter([](const std::string& s) { return s.size() % 2 == 1; });
+    std::cout << std::ranges::distance(odd) << "\n";
 }`,
-  why: String.raw`A lazy pipeline reads the log only as far as needed to find two errors, so it can process a stream of any length without holding all of it in memory.` },
+  why: String.raw`A filter view counts matching elements without making a second container.` },
 
-{ n: 50, d: "applications", t: "Sliding window sums over a sensor stream",
-  p: String.raw`Given the readings 1, 2, 3, 4, 5, compute the sum of each pair of consecutive readings, using sliding windows of length two. Print the sums separated by spaces, then a newline.`,
-  ex: String.raw`3 5 7 9`,
-  code: String.raw`#include <iostream>
-#include <ranges>
-#include <vector>
-
-int main() {
-    std::vector<int> readings{1, 2, 3, 4, 5};
-    for (auto w : readings | std::views::slide(2)) {
-        int s = 0;
-        for (int x : w) s += x;
-        std::cout << s << " ";
-    }
-    std::cout << "\n";
-}`,
-  why: String.raw`Windowed statistics such as moving averages are sliding-window computations. A slide view supplies each window without copying the readings.` },
-
-{ n: 51, d: "applications", t: "Average age of adults",
-  p: String.raw`Given the ages 12, 20 and 30, select the ages that are at least 18, and print their average with two decimal places, then a newline.`,
-  ex: String.raw`25.00`,
-  code: String.raw`#include <cstdio>
-#include <ranges>
-#include <vector>
-
-int main() {
-    std::vector<int> ages{12, 20, 30};
-    int sum = 0, count = 0;
-    for (int a : ages | std::views::filter([](int x) { return x >= 18; })) {
-        sum += a;
-        ++count;
-    }
-    std::printf("%.2f\n", static_cast<double>(sum) / count);
-}`,
-  why: String.raw`Filtering and then reducing is the usual shape of an aggregate query. The filter view feeds the reduction without an intermediate list of the adults.` },
-
-{ n: 52, d: "applications", t: "Row sums of a flattened matrix",
-  p: String.raw`A two-by-three matrix is stored row by row in the vector 1, 2, 3, 4, 5, 6. Split the storage into rows of three values and print the sum of each row separated by a space, then a newline.`,
-  ex: String.raw`6 15`,
-  code: String.raw`#include <iostream>
-#include <ranges>
-#include <vector>
-
-int main() {
-    std::vector<int> m{1, 2, 3, 4, 5, 6};
-    for (auto row : m | std::views::chunk(3)) {
-        int s = 0;
-        for (int x : row) s += x;
-        std::cout << s << " ";
-    }
-    std::cout << "\n";
-}`,
-  why: String.raw`Matrices stored in row-major order are a range of values that chunk turns back into rows. This keeps the storage flat while the computation is written row by row.` },
-
-{ n: 53, d: "applications", t: "Counting long lines in a report",
-  p: String.raw`A report has the lines ok, fine, bad and great. Count the lines that have more than three characters, then print the count, then a newline.`,
-  ex: String.raw`2`,
-  code: String.raw`#include <iostream>
-#include <ranges>
-#include <string>
-#include <vector>
-
-int main() {
-    std::vector<std::string> lines{"ok", "fine", "bad", "great"};
-    auto longer = lines | std::views::filter([](const std::string& s) { return s.size() > 3; });
-    std::cout << std::ranges::distance(longer) << "\n";
-}`,
-  why: String.raw`A filtered view describes the long lines without building a second container, and the count walks the view once.` },
-
-{ n: 54, d: "applications", t: "Sum of squares of the first five numbers",
-  p: String.raw`Print the sum of the squares of the numbers 1 to 5, then a newline.`,
-  ex: String.raw`55`,
+{ n: 54, d: "applications", t: "Sum of squares of the odd numbers below ten",
+  p: String.raw`Print the sum of the squares of the odd numbers from 1 up to and including 9, then a newline.`,
+  ex: String.raw`165`,
   code: String.raw`#include <iostream>
 #include <numeric>
 #include <ranges>
 
 int main() {
-    auto squares = std::views::iota(1, 6)
+    auto squares = std::views::iota(1, 10)
+                 | std::views::filter([](int x) { return x % 2 == 1; })
                  | std::views::transform([](int x) { return x * x; });
     std::cout << std::accumulate(squares.begin(), squares.end(), 0) << "\n";
 }`,
-  why: String.raw`iota produces the numbers lazily, so the squares are computed as the sum consumes them, without storing any of the intermediate values.` },
+  why: String.raw`Filtering before squaring keeps the pipeline short, and accumulate consumes the lazy sequence directly.` },
 ];
 
 const TOTAL = problems.length;

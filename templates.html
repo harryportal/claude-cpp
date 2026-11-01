@@ -1,4 +1,5 @@
 <title>C++ Templates Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 98 problems</p>
+    <p class="kicker">Problems by topic · 96 problems</p>
     <h1>C++ Templates Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">98</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="98" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">96</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="96" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1890,277 +1891,151 @@ int main() {
 }`,
   why: String.raw`Tagged wrapper types stop values of different units or meanings from being mixed up, even when the underlying type is the same.` },
 
+
+
 // ---------- Applications ----------
-{ n: 89, d: "applications", t: "Smallest and largest with a comparison",
-  p: String.raw`Write a function template that takes a vector and a comparison, and returns the smallest and largest elements as a pair, ordered according to the comparison. Use it on the vector 4 9 1 7 with the standard less-than comparison, and print the smallest and largest separated by a space.`,
-  ex: String.raw`1 9`,
-  code: String.raw`#include <functional>
-#include <iostream>
-#include <utility>
-#include <vector>
+{ n: 89, d: "applications", t: "Generic clamp for any ordered type",
+  p: String.raw`Write one function that clamps a value into a range for any ordered type. Use it to clamp 7 into [0, 5], then -2 into [0, 5], then the string m into the range from a to k. Print the three results separated by spaces, then a newline.`,
+  ex: String.raw`5 0 k`,
+  code: String.raw`#include <iostream>
+#include <string>
 
-template <typename T, typename Cmp>
-std::pair<T, T> minmax_by(const std::vector<T>& v, Cmp cmp) {
-    T lo = v.front(), hi = v.front();
-    for (const auto& x : v) {
-        if (cmp(x, lo)) lo = x;
-        if (cmp(hi, x)) hi = x;
-    }
-    return {lo, hi};
+template <class T>
+T clamp_to(T v, T lo, T hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
 }
 
 int main() {
-    std::vector<int> v{4, 9, 1, 7};
-    auto [lo, hi] = minmax_by(v, std::less<>{});
-    std::cout << lo << ' ' << hi << '\n';
+    std::cout << clamp_to(7, 0, 5) << ' ' << clamp_to(-2, 0, 5) << ' '
+              << clamp_to(std::string("m"), std::string("a"), std::string("k")) << "\n";
 }`,
-  why: String.raw`Passing the ordering in as a callable lets one routine find extremes for numbers, strings or any type with a suitable comparison.` },
+  why: String.raw`One template covers integers and strings because it uses only the ordering operators that both types provide.` },
 
-{ n: 90, d: "applications", t: "Result holding a value or an error",
-  p: String.raw`Write a class template Result that holds either a value of type T or an error message. Give it a function print that prints the value on its own line when a value is held, or prints error: followed by the message on its own line when an error is held. Create a Result<int> holding 42 and a Result<int> holding the error message not found, and print both.`,
-  ex: String.raw`42
-error: not found`,
+{ n: 90, d: "applications", t: "Units that refuse to mix",
+  p: String.raw`Quantities tagged with a unit type can be added only when their units match. Add 3 shares to 4 shares, and print the total with the unit name shares, then a newline.`,
+  ex: String.raw`7 shares`,
   code: String.raw`#include <iostream>
-#include <string>
-#include <utility>
-#include <variant>
 
-template <typename T>
-class Result {
-    std::variant<T, std::string> data;
-    explicit Result(std::variant<T, std::string> d) : data(std::move(d)) {}
-public:
-    static Result ok(T v) {
-        return Result(std::variant<T, std::string>(std::in_place_index<0>, std::move(v)));
-    }
-    static Result err(std::string m) {
-        return Result(std::variant<T, std::string>(std::in_place_index<1>, std::move(m)));
-    }
-    void print() const {
-        if (data.index() == 0)
-            std::cout << std::get<0>(data) << '\n';
-        else
-            std::cout << "error: " << std::get<1>(data) << '\n';
-    }
+struct Shares {};
+
+template <class Unit>
+struct Qty {
+    double v;
+    Qty operator+(Qty o) const { return Qty{v + o.v}; }
 };
 
 int main() {
-    Result<int>::ok(42).print();
-    Result<int>::err("not found").print();
+    Qty<Shares> total = Qty<Shares>{3} + Qty<Shares>{4};
+    std::cout << total.v << " shares\n";
 }`,
-  why: String.raw`Carrying either a result or an error in one type lets functions report failure without exceptions, and the caller decides how to handle each case.` },
+  why: String.raw`Making the unit part of the type turns a mismatched addition into a compile error rather than a silent bug.` },
 
-{ n: 91, d: "applications", t: "Memoise a function",
-  p: String.raw`Write a function template that takes a function from int to int and returns a new function that remembers the results it has already computed for each argument. Wrap a function that increments a counter each time it runs and returns the square of its input. Call the wrapped function with 3, then with 3 again, then with 4. Print how many times the original function ran.`,
-  ex: String.raw`2`,
+{ n: 91, d: "applications", t: "Factorial known at compile time",
+  p: String.raw`Compute the factorial of 5 at compile time using a class template, then print it, then a newline.`,
+  ex: String.raw`120`,
   code: String.raw`#include <iostream>
-#include <map>
-#include <memory>
 
-int runs = 0;
+template <int N>
+struct Fact {
+    static constexpr int value = N * Fact<N - 1>::value;
+};
 
-template <typename F>
-auto memo(F f) {
-    auto cache = std::make_shared<std::map<int, int>>();
-    return [f, cache](int x) {
-        auto it = cache->find(x);
-        if (it != cache->end()) return it->second;
-        int r = f(x);
-        (*cache)[x] = r;
-        return r;
-    };
-}
-
-int main() {
-    auto sq = memo([](int x) {
-        ++runs;
-        return x * x;
-    });
-    sq(3);
-    sq(3);
-    sq(4);
-    std::cout << runs << '\n';
-}`,
-  why: String.raw`A wrapper that stores results keyed by argument turns repeated calls into lookups, and it works for any function with that signature.` },
-
-{ n: 92, d: "applications", t: "Serialize arithmetic values",
-  p: String.raw`Write a function template that turns an arithmetic value into a string. Integers are written in plain decimal form, and floating-point values are written with exactly two digits after the decimal point. Print the string for 42 and the string for 3.14159, separated by a space.`,
-  ex: String.raw`42 3.14`,
-  code: String.raw`#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <type_traits>
-
-template <typename T>
-std::string serialize(T v) {
-    std::ostringstream out;
-    if constexpr (std::is_integral_v<T>)
-        out << v;
-    else
-        out << std::fixed << std::setprecision(2) << v;
-    return out.str();
-}
-
-int main() {
-    std::cout << serialize(42) << ' ' << serialize(3.14159) << '\n';
-}`,
-  why: String.raw`Choosing the formatting by type at compile time lets one serializer produce the right text for each kind of number.` },
-
-{ n: 93, d: "applications", t: "Parse typed fields from text",
-  p: String.raw`Write a function template that reads one comma-separated field from a stream and converts it to the requested type. Read the text 7,hello,2.5 as an int, then a string, then a double, in that order, and print the three values separated by spaces.`,
-  ex: String.raw`7 hello 2.5`,
-  code: String.raw`#include <iostream>
-#include <sstream>
-#include <string>
-#include <type_traits>
-
-template <typename T>
-T read_field(std::istream& in) {
-    std::string s;
-    std::getline(in, s, ',');
-    if constexpr (std::is_same_v<T, int>)
-        return std::stoi(s);
-    else if constexpr (std::is_same_v<T, double>)
-        return std::stod(s);
-    else
-        return s;
-}
-
-int main() {
-    std::istringstream in("7,hello,2.5");
-    auto a = read_field<int>(in);
-    auto b = read_field<std::string>(in);
-    auto c = read_field<double>(in);
-    std::cout << a << ' ' << b << ' ' << c << '\n';
-}`,
-  why: String.raw`Selecting the conversion from the requested type lets one reader handle a mixed record without a separate function for each field type.` },
-
-{ n: 94, d: "applications", t: "Typed event bus",
-  p: String.raw`Build a small event bus. Listeners subscribe to one event type and receive only events of that type. Subscribe a listener for int events that prints int followed by the value, and a listener for string events that prints string followed by the text. Then publish the int 5, and publish the string hello.`,
-  ex: String.raw`int 5
-string hello`,
-  code: String.raw`#include <any>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <string>
-#include <typeindex>
-#include <utility>
-#include <vector>
-
-class Bus {
-    std::map<std::type_index, std::vector<std::any>> subs;
-public:
-    template <typename E>
-    void subscribe(std::function<void(const E&)> f) {
-        subs[std::type_index(typeid(E))].push_back(std::move(f));
-    }
-    template <typename E>
-    void publish(const E& e) {
-        for (auto& a : subs[std::type_index(typeid(E))])
-            std::any_cast<std::function<void(const E&)>>(a)(e);
-    }
+template <>
+struct Fact<0> {
+    static constexpr int value = 1;
 };
 
 int main() {
-    Bus bus;
-    bus.subscribe<int>([](const int& v) { std::cout << "int " << v << '\n'; });
-    bus.subscribe<std::string>([](const std::string& s) { std::cout << "string " << s << '\n'; });
-    bus.publish(5);
-    bus.publish(std::string("hello"));
+    static_assert(Fact<5>::value == 120);
+    std::cout << Fact<5>::value << "\n";
 }`,
-  why: String.raw`Keying handlers by the event's type lets a single bus dispatch many kinds of event while each handler keeps its own parameter type.` },
+  why: String.raw`Specialising the base case stops the recursion, and the whole computation is resolved by the compiler.` },
 
-{ n: 95, d: "applications", t: "Double a vector in place",
-  p: String.raw`Write a function template that doubles every element of a vector of an arithmetic type, changing the vector itself. Double the vector 1 2 3 and print its elements separated by spaces.`,
-  ex: String.raw`2 4 6`,
-  code: String.raw`#include <cstddef>
+{ n: 92, d: "applications", t: "Sum over any container",
+  p: String.raw`Write one template that sums the elements of any container. Use it on a vector holding 1, 2 and 3, and on an array holding 4 and 5. Print the two sums separated by a space, then a newline.`,
+  ex: String.raw`6 9`,
+  code: String.raw`#include <array>
 #include <iostream>
+#include <numeric>
 #include <vector>
 
-template <typename T>
-void double_all(std::vector<T>& v) {
-    for (auto& x : v) x *= 2;
+template <class C>
+auto total(const C& c) {
+    using T = typename C::value_type;
+    return std::accumulate(c.begin(), c.end(), T{});
 }
 
 int main() {
     std::vector<int> v{1, 2, 3};
-    double_all(v);
-    for (std::size_t i = 0; i < v.size(); ++i)
-        std::cout << v[i] << (i + 1 < v.size() ? ' ' : '\n');
+    std::array<int, 2> a{4, 5};
+    std::cout << total(v) << ' ' << total(a) << "\n";
 }`,
-  why: String.raw`Taking the container by reference lets one template update vectors of any element type without copying them.` },
+  why: String.raw`The container's own value_type tells the template what to accumulate, so the same code works for any container with iterators.` },
 
-{ n: 96, d: "applications", t: "Fixed-length vector addition",
-  p: String.raw`Write a class template for a fixed-length vector of doubles, where adding two vectors of the same length gives a vector of that length. Add the vector 1 2 3 and the vector 4 5 6, and print the three components of the result separated by spaces.`,
-  ex: String.raw`5 7 9`,
-  code: String.raw`#include <array>
-#include <cstddef>
+{ n: 93, d: "applications", t: "Detect a size member at compile time",
+  p: String.raw`Write a concept that is satisfied when a type has a size member function. Print yes for std::vector of int and no for int, separated by a space, then a newline.`,
+  ex: String.raw`yes no`,
+  code: String.raw`#include <iostream>
+#include <vector>
+
+template <class T>
+concept HasSize = requires(const T& t) { t.size(); };
+
+int main() {
+    std::cout << (HasSize<std::vector<int>> ? "yes" : "no") << ' '
+              << (HasSize<int> ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`A requires expression checks that the call is valid, so the answer is decided by the type's interface alone.` },
+
+{ n: 94, d: "applications", t: "Count the arguments of a pack",
+  p: String.raw`Write a constexpr variable that counts the template arguments in a parameter pack. Print the count for the types int, char and double, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+
+template <class... Ts>
+constexpr std::size_t count = sizeof...(Ts);
+
+int main() {
+    std::cout << count<int, char, double> << "\n";
+}`,
+  why: String.raw`sizeof... reports the number of elements in a pack at compile time without expanding it.` },
+
+{ n: 95, d: "applications", t: "Largest of several arguments",
+  p: String.raw`Write a variadic function that returns the largest of its arguments. Call it with 3, 9 and 4, then print the result, then a newline.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <algorithm>
+#include <initializer_list>
+#include <iostream>
+
+template <class... Ts>
+int maxof(Ts... ts) {
+    return std::max({static_cast<int>(ts)...});
+}
+
+int main() {
+    std::cout << maxof(3, 9, 4) << "\n";
+}`,
+  why: String.raw`Expanding the pack into a braced list hands every argument to std::max at once.` },
+
+{ n: 96, d: "applications", t: "Pick a container strategy from a size",
+  p: String.raw`Write a function template that returns the word small when its size argument is below 8 and big otherwise, decided at compile time. Print the result for sizes 4 and 10, separated by a space, then a newline.`,
+  ex: String.raw`small big`,
+  code: String.raw`#include <cstddef>
 #include <iostream>
 
 template <std::size_t N>
-struct Vec {
-    std::array<double, N> a;
-    Vec operator+(const Vec& o) const {
-        Vec r{};
-        for (std::size_t i = 0; i < N; ++i) r.a[i] = a[i] + o.a[i];
-        return r;
-    }
-};
-
-int main() {
-    Vec<3> x{{1, 2, 3}};
-    Vec<3> y{{4, 5, 6}};
-    Vec<3> s = x + y;
-    for (std::size_t i = 0; i < 3; ++i)
-        std::cout << s.a[i] << (i + 1 < 3 ? ' ' : '\n');
-}`,
-  why: String.raw`The length is part of the type, so adding vectors of different lengths is rejected by the compiler instead of failing at run time.` },
-
-{ n: 97, d: "applications", t: "Apply a callable to a map",
-  p: String.raw`Write a function template that applies a two-argument callable to each key and value of a std::map, in key order, and collects the results into a vector. Apply a callable that returns key plus value to a map holding 1 to 10 and 2 to 20. Print the results separated by spaces.`,
-  ex: String.raw`11 22`,
-  code: String.raw`#include <cstddef>
-#include <iostream>
-#include <map>
-#include <type_traits>
-#include <vector>
-
-template <typename K, typename V, typename F>
-auto collect(const std::map<K, V>& m, F f) {
-    std::vector<std::invoke_result_t<F, const K&, const V&>> out;
-    for (const auto& [k, v] : m) out.push_back(f(k, v));
-    return out;
+const char* kind() {
+    if constexpr (N < 8) return "small";
+    else return "big";
 }
 
 int main() {
-    std::map<int, int> m{{1, 10}, {2, 20}};
-    auto r = collect(m, [](int k, int v) { return k + v; });
-    for (std::size_t i = 0; i < r.size(); ++i)
-        std::cout << r[i] << (i + 1 < r.size() ? ' ' : '\n');
+    std::cout << kind<4>() << ' ' << kind<10>() << "\n";
 }`,
-  why: String.raw`Deducing the result type from the callable means the output vector has the right element type with no extra arguments from the caller.` },
-
-{ n: 98, d: "applications", t: "Checked conversion",
-  p: String.raw`Write a function template that converts a value to a target type and returns an optional holding the converted value, or an empty optional when the conversion changes the value. Check the conversion of 300 to unsigned char, then of 200 to unsigned char. Print for each whether a value was produced, as true or false, separated by a space.`,
-  ex: String.raw`false true`,
-  code: String.raw`#include <iostream>
-#include <optional>
-
-template <typename To, typename From>
-std::optional<To> checked_cast(From v) {
-    To t = static_cast<To>(v);
-    if (static_cast<From>(t) != v) return std::nullopt;
-    return t;
-}
-
-int main() {
-    std::cout << std::boolalpha
-              << checked_cast<unsigned char>(300).has_value() << ' '
-              << checked_cast<unsigned char>(200).has_value() << '\n';
-}`,
-  why: String.raw`Converting back and comparing reveals values that do not fit the target type, so callers can handle overflow explicitly.` },
+  why: String.raw`if constexpr discards the branch that does not apply, so each instantiation contains only the code it needs.` },
 ];
 
 const TOTAL = problems.length;
@@ -2265,7 +2140,7 @@ for (const sec of [
   { from: 20, to: 49, label: "Medium", range: "Problems 20–49", badge: "medium" },
   { from: 50, to: 72, label: "Hard", range: "Problems 50–72", badge: "hard" },
   { from: 73, to: 88, label: "Extension", range: "Problems 73–88", badge: null },
-  { from: 89, to: 98, label: "Applications", range: "Problems 89–98", badge: null }
+  { from: 89, to: 96, label: "Applications", range: "Problems 89–96", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");
