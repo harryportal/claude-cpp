@@ -100,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">C++ Optional, Variant, Expected · 45 problems</p>
+    <p class="kicker">C++ Optional, Variant, Expected · 65 problems</p>
     <h1>C++ Optional, Variant and Expected Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">45</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="45" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">65</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="65" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1118,6 +1118,716 @@ int main() {
     }
 }`,
   why: String.raw`Each fallback is an optional that is either present or absent, so the rule for choosing a mark reads as a sequence of checks rather than nested flags.` },
+
+// ---------- Applications ----------
+{ n: 46, d: "applications", t: "Parse command-line arguments",
+  p: String.raw`A command-line tool accepts --port=N, --verbose and a file name. A port that is not a whole number gives the error invalid port followed by the text given. An option starting with -- that is not recognised gives the error unknown option followed by the option. Parse these two argument lists in order: --port=8080, --verbose and file.txt; then --port=abc. For a successful parse print port, the port number, verbose as yes or no, and file, with the file name or - if none was given, all on one line separated by spaces. For a failed parse print error: followed by the message.`,
+  ex: String.raw`port=8080 verbose=yes file=file.txt
+error: invalid port abc`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <vector>
+
+struct Args {
+    int port = 80;
+    bool verbose = false;
+    std::optional<std::string> file;
+};
+
+std::expected<Args, std::string> parse_args(const std::vector<std::string>& argv) {
+    Args a;
+    for (const auto& arg : argv) {
+        if (arg.rfind("--port=", 0) == 0) {
+            std::string v = arg.substr(7);
+            int port = 0;
+            auto [p, ec] = std::from_chars(v.data(), v.data() + v.size(), port);
+            if (ec != std::errc{} || p != v.data() + v.size()) return std::unexpected("invalid port " + v);
+            a.port = port;
+        } else if (arg == "--verbose") {
+            a.verbose = true;
+        } else if (arg.rfind("--", 0) == 0) {
+            return std::unexpected("unknown option " + arg);
+        } else {
+            a.file = arg;
+        }
+    }
+    return a;
+}
+
+int main() {
+    auto ok = parse_args({"--port=8080", "--verbose", "file.txt"});
+    if (ok)
+        std::cout << "port=" << ok->port << " verbose=" << (ok->verbose ? "yes" : "no")
+                  << " file=" << ok->file.value_or("-") << "\n";
+    auto bad = parse_args({"--port=abc"});
+    if (!bad) std::cout << "error: " << bad.error() << "\n";
+}`,
+  why: String.raw`Each argument is classified into one of three cases, and any malformed option returns an error describing exactly what was wrong, instead of silently using a default.` },
+
+{ n: 47, d: "applications", t: "Typed lookup in a heterogeneous config",
+  p: String.raw`A configuration map stores values that are each either an integer, a string or a boolean. Look up server.port and print it as port followed by its value if it is an integer. Look up server.name the same way, but it is a string, so print name missing for a typed integer lookup. Print the two lines in that order.`,
+  ex: String.raw`port 8080
+name missing`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+#include <variant>
+
+using Value = std::variant<long long, std::string, bool>;
+
+std::optional<long long> get_int(const std::map<std::string, Value>& cfg, const std::string& key) {
+    auto it = cfg.find(key);
+    if (it == cfg.end()) return std::nullopt;
+    if (const auto* v = std::get_if<long long>(&it->second)) return *v;
+    return std::nullopt;
+}
+
+int main() {
+    const std::map<std::string, Value> cfg{
+        {"server.port", 8080LL},
+        {"server.name", std::string("api")},
+        {"server.tls", true},
+    };
+    if (auto p = get_int(cfg, "server.port")) std::cout << "port " << *p << "\n";
+    else std::cout << "port missing\n";
+    if (auto n = get_int(cfg, "server.name")) std::cout << "name " << *n << "\n";
+    else std::cout << "name missing\n";
+}`,
+  why: String.raw`get_if checks the held alternative without throwing, so a type mismatch becomes an absent optional the caller can handle.` },
+
+{ n: 48, d: "applications", t: "Parse human-readable durations",
+  p: String.raw`Parse durations written as a whole number followed by a unit, where ms means milliseconds, s means seconds and m means minutes. If the text does not start with digits, the error is bad number. If the unit is not one of those three, the error is bad unit. Parse these five inputs in order: 250ms, 3s, 2m, x5s and 5h. For a valid duration print its length in milliseconds. For an error print err followed by the message, one per line.`,
+  ex: String.raw`250
+3000
+120000
+err bad number
+err bad unit`,
+  code: String.raw`#include <cctype>
+#include <charconv>
+#include <cstdint>
+#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<std::int64_t, std::string> to_millis(const std::string& s) {
+    std::size_t split = 0;
+    while (split < s.size() && std::isdigit(static_cast<unsigned char>(s[split]))) ++split;
+    if (split == 0) return std::unexpected(std::string("bad number"));
+    std::int64_t value = 0;
+    std::from_chars(s.data(), s.data() + split, value);
+    const std::string unit = s.substr(split);
+    if (unit == "ms") return value;
+    if (unit == "s") return value * 1000;
+    if (unit == "m") return value * 60000;
+    return std::unexpected(std::string("bad unit"));
+}
+
+int main() {
+    for (std::string input : {"250ms", "3s", "2m", "x5s", "5h"}) {
+        auto r = to_millis(input);
+        if (r) std::cout << *r << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Splitting the number from the unit lets each part fail with its own message, so a malformed input says which part was wrong.` },
+
+{ n: 49, d: "applications", t: "Connection state machine",
+  p: String.raw`A connection is either idle, connecting with an attempt number, or connected with a session number. From idle, a connect event moves to connecting with attempt 1. From connecting, an acknowledgement carrying a session number moves to connected with that session. A connect event while connected is an error: already connected. Any other event in a state is an error: invalid transition. Apply these events in order to an idle connection: connect, then acknowledgement with session 42, then connect. Each error is printed as error: followed by the message, as soon as it happens. At the end, if the connection is connected, print connected session= followed by the session number.`,
+  ex: String.raw`error: already connected
+connected session=42`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+struct Idle {};
+struct Connecting { int attempt; };
+struct Connected { int session; };
+using State = std::variant<Idle, Connecting, Connected>;
+
+struct Connect {};
+struct Ack { int session; };
+using Event = std::variant<Connect, Ack>;
+
+std::expected<State, std::string> step(const State& s, const Event& e) {
+    if (std::holds_alternative<Idle>(s) && std::holds_alternative<Connect>(e))
+        return Connecting{1};
+    if (std::holds_alternative<Connecting>(s) && std::holds_alternative<Ack>(e))
+        return Connected{std::get<Ack>(e).session};
+    if (std::holds_alternative<Connected>(s) && std::holds_alternative<Connect>(e))
+        return std::unexpected(std::string("already connected"));
+    return std::unexpected(std::string("invalid transition"));
+}
+
+int main() {
+    State s = Idle{};
+    for (const Event& e : std::vector<Event>{Connect{}, Ack{42}, Connect{}}) {
+        auto r = step(s, e);
+        if (r) s = *r;
+        else std::cout << "error: " << r.error() << "\n";
+    }
+    if (const auto* c = std::get_if<Connected>(&s))
+        std::cout << "connected session=" << c->session << "\n";
+}`,
+  why: String.raw`Encoding each state as its own type makes the legal transitions explicit, and anything not listed becomes a reported error instead of a silent change.` },
+
+{ n: 50, d: "applications", t: "Parse log lines with optional fields",
+  p: String.raw`Each log line starts with a level word, followed by optional key=value fields such as user=NAME and code=NUMBER. Lines may contain other words that are not key=value fields, and these are ignored. Parse these two lines in order: ERROR user=alice code=500, and WARN disk almost full. For each line print the level, then the user or - if absent, then the code or - if absent, separated by spaces, one per line.`,
+  ex: String.raw`ERROR alice 500
+WARN - -`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <sstream>
+#include <string>
+
+struct Entry {
+    std::string level;
+    std::optional<std::string> user;
+    std::optional<int> code;
+};
+
+std::optional<Entry> parse_line(const std::string& line) {
+    std::istringstream in(line);
+    Entry e;
+    if (!(in >> e.level)) return std::nullopt;
+    for (std::string tok; in >> tok;) {
+        auto eq = tok.find('=');
+        if (eq == std::string::npos) continue;
+        std::string k = tok.substr(0, eq);
+        std::string v = tok.substr(eq + 1);
+        if (k == "user") e.user = v;
+        else if (k == "code") e.code = std::stoi(v);
+    }
+    return e;
+}
+
+int main() {
+    for (std::string line : {"ERROR user=alice code=500", "WARN disk almost full"}) {
+        auto e = parse_line(line);
+        if (!e) { std::cout << "unparseable\n"; continue; }
+        std::cout << e->level << ' ' << e->user.value_or("-") << ' ';
+        if (e->code) std::cout << *e->code;
+        else std::cout << '-';
+        std::cout << "\n";
+    }
+}`,
+  why: String.raw`Each optional field is either set by the line or left empty, so the output reflects exactly what the log contained.` },
+
+{ n: 51, d: "applications", t: "Config value with a validated fallback",
+  p: String.raw`Read integer settings from a configuration map whose values are text. A missing key gives the error missing. A value that is not a whole number gives the error invalid followed by the text. The setting retries has the value 3 and is printed as retries=3 using its value. The setting timeout has the value soon, which is invalid, so it falls back to 5 and is printed as timeout=5 followed by the error in brackets. Print both lines in that order.`,
+  ex: String.raw`retries=3
+timeout=5 (invalid: soon)`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <map>
+#include <string>
+
+std::expected<int, std::string> read_int(const std::map<std::string, std::string>& cfg, const std::string& key) {
+    auto it = cfg.find(key);
+    if (it == cfg.end()) return std::unexpected(std::string("missing"));
+    int v = 0;
+    auto [p, ec] = std::from_chars(it->second.data(), it->second.data() + it->second.size(), v);
+    if (ec != std::errc{} || p != it->second.data() + it->second.size())
+        return std::unexpected("invalid: " + it->second);
+    return v;
+}
+
+int main() {
+    const std::map<std::string, std::string> cfg{{"retries", "3"}, {"timeout", "soon"}};
+    auto r = read_int(cfg, "retries");
+    std::cout << "retries=" << r.value_or(1) << "\n";
+    auto t = read_int(cfg, "timeout");
+    if (t) std::cout << "timeout=" << *t << "\n";
+    else std::cout << "timeout=5 (" << t.error() << ")\n";
+}`,
+  why: String.raw`Keeping the error alongside the fallback value means the caller can use the default and still report what went wrong.` },
+
+{ n: 52, d: "applications", t: "Normalise and validate user input",
+  p: String.raw`User-entered names are cleaned before storage. Leading and trailing spaces are removed, then the text is converted to lowercase. A name shorter than 3 characters is rejected with too short, and one longer than 8 characters is rejected with too long. Process these three inputs in order: two spaces around Hello, the single letter a, and two spaces around Mixed Case Words. For an accepted name print ok followed by the name. For a rejected one print err followed by the reason, one per line.`,
+  ex: String.raw`ok hello
+err too short
+err too long`,
+  code: String.raw`#include <algorithm>
+#include <cctype>
+#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<std::string, std::string> normalise(const std::string& raw) {
+    auto first = raw.find_first_not_of(' ');
+    if (first == std::string::npos) return std::unexpected(std::string("empty"));
+    auto last = raw.find_last_not_of(' ');
+    std::string s = raw.substr(first, last - first + 1);
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (s.size() < 3) return std::unexpected(std::string("too short"));
+    if (s.size() > 8) return std::unexpected(std::string("too long"));
+    return s;
+}
+
+int main() {
+    for (std::string input : {"  Hello  ", "a", "  Mixed Case Words  "}) {
+        auto r = normalise(input);
+        if (r) std::cout << "ok " << *r << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Cleaning happens before validation, and each rule returns its own reason, so a rejected name tells the user exactly what to fix.` },
+
+{ n: 53, d: "applications", t: "Fail over across replicas",
+  p: String.raw`A value is requested from a list of replicas in order. Each replica either returns a value or is unavailable. Use the first replica that returns a value. Two requests are made. The first goes to replicas that are unavailable, then to a replica returning 42, then to one returning 7. The second goes to two replicas that are both unavailable. For a served request print served by replica followed by the 1-based position of the replica and the value. If none responds, print unavailable. Print one line per request.`,
+  ex: String.raw`served by replica 2 value 42
+unavailable`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <optional>
+#include <vector>
+
+std::optional<int> first_available(const std::vector<std::optional<int>>& replicas, std::size_t& which) {
+    for (std::size_t i = 0; i < replicas.size(); ++i) {
+        if (replicas[i]) {
+            which = i + 1;
+            return replicas[i];
+        }
+    }
+    return std::nullopt;
+}
+
+int main() {
+    std::size_t which = 0;
+    if (auto v = first_available({std::nullopt, 42, 7}, which))
+        std::cout << "served by replica " << which << " value " << *v << "\n";
+    else std::cout << "unavailable\n";
+    if (auto v = first_available({std::nullopt, std::nullopt}, which))
+        std::cout << "served by replica " << which << " value " << *v << "\n";
+    else std::cout << "unavailable\n";
+}`,
+  why: String.raw`Returning the first present value and its position lets the caller report which replica answered, and an empty result is the single signal for total failure.` },
+
+// ---------- Applications ----------
+{ n: 54, d: "applications", t: "Tokenize an arithmetic expression with error positions",
+  p: String.raw`Split an arithmetic expression into tokens. A run of digits is a number token written as NUM followed by the digits. The operators plus, minus, star and slash become OP followed by the operator. Spaces are skipped. Any other character is an error reported as error at POSITION: unexpected CHARACTER, where POSITION is its 0-based index in the text. Tokenize these two expressions in order: 12 + 3 and 12 + 3x. Print each token on its own line, or the error message if tokenizing fails.`,
+  ex: String.raw`NUM 12
+OP +
+NUM 3
+error at 6: unexpected x`,
+  code: String.raw`#include <cctype>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <vector>
+
+std::expected<std::vector<std::string>, std::string> tokenize(const std::string& s) {
+    std::vector<std::string> out;
+    std::size_t i = 0;
+    while (i < s.size()) {
+        const unsigned char c = static_cast<unsigned char>(s[i]);
+        if (std::isspace(c)) {
+            ++i;
+        } else if (std::isdigit(c)) {
+            std::size_t j = i;
+            while (j < s.size() && std::isdigit(static_cast<unsigned char>(s[j]))) ++j;
+            out.push_back("NUM " + s.substr(i, j - i));
+            i = j;
+        } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+            out.push_back(std::string("OP ") + static_cast<char>(c));
+            ++i;
+        } else {
+            return std::unexpected("error at " + std::to_string(i) + ": unexpected " + static_cast<char>(c));
+        }
+    }
+    return out;
+}
+
+int main() {
+    for (std::string input : {"12 + 3", "12 + 3x"}) {
+        auto r = tokenize(input);
+        if (r) {
+            for (const auto& t : *r) std::cout << t << "\n";
+        } else {
+            std::cout << r.error() << "\n";
+        }
+    }
+}`,
+  why: String.raw`A scanner that returns the first offending position lets a user fix the exact character, instead of getting a generic failure for the whole expression.` },
+
+{ n: 55, d: "applications", t: "Validate a file header",
+  p: String.raw`A file starts with a text header line made of a magic word and a version number, separated by a space. The magic word must be RIDX. If the magic word is wrong, the error is bad magic. If the version is absent, the error is missing version. Validate these three header lines in order: RIDX 2, then RIDX, then ZIDX 2. For a valid header print ok version followed by the version number. For an invalid one print err followed by the message. Print one line per header.`,
+  ex: String.raw`ok version 2
+err missing version
+err bad magic`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+std::expected<int, std::string> parse_header(const std::string& line) {
+    std::istringstream in(line);
+    std::string magic;
+    if (!(in >> magic)) return std::unexpected(std::string("empty header"));
+    if (magic != "RIDX") return std::unexpected(std::string("bad magic"));
+    int version = 0;
+    if (!(in >> version)) return std::unexpected(std::string("missing version"));
+    return version;
+}
+
+int main() {
+    for (std::string line : {"RIDX 2", "RIDX", "ZIDX 2"}) {
+        auto r = parse_header(line);
+        if (r) std::cout << "ok version " << *r << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Checking the magic word first means a file of the wrong type is rejected before any version is read from it.` },
+
+{ n: 56, d: "applications", t: "Exponential retry delays with a cap",
+  p: String.raw`A retry policy waits base times 2 to the attempt number, in milliseconds, but never longer than a cap. The base is 100 ms, the cap is 1000 ms, and at most 5 attempts are allowed, numbered 0 to 4. Print the delay for attempts 0 to 5, separated by spaces. An attempt number at or beyond the limit has no delay, and prints stop.`,
+  ex: String.raw`100 200 400 800 1000 stop`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+std::optional<long long> backoff(int attempt, long long base, long long cap, int max_attempts) {
+    if (attempt >= max_attempts) return std::nullopt;
+    long long delay = base;
+    for (int i = 0; i < attempt; ++i) {
+        delay *= 2;
+        if (delay >= cap) return cap;
+    }
+    return delay;
+}
+
+int main() {
+    for (int attempt = 0; attempt <= 5; ++attempt) {
+        auto d = backoff(attempt, 100, 1000, 5);
+        if (d) std::cout << *d << ' ';
+        else std::cout << "stop";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Returning an empty optional beyond the attempt limit makes "no more retries" a value the caller must check, rather than a special number.` },
+
+{ n: 57, d: "applications", t: "Parse and compare semantic versions",
+  p: String.raw`A version has three numeric parts separated by dots, such as 1.4.2. A string that does not have exactly three numeric parts is invalid. Parse these three inputs in order: 1.4.2, 1.10.0 and 1.x.2. For a valid version print ok followed by its parts. For an invalid input print err followed by the input. Then compare the first two valid versions and print A < B: yes if the first is lower, otherwise no, where A and B are the two versions as written.`,
+  ex: String.raw`ok 1.4.2
+ok 1.10.0
+err 1.x.2
+1.4.2 < 1.10.0: yes`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
+
+struct Version { int major, minor, patch; };
+
+std::expected<Version, std::string> parse_version(const std::string& s) {
+    std::vector<int> parts;
+    std::istringstream in(s);
+    for (std::string piece; std::getline(in, piece, '.');) {
+        int v = 0;
+        auto [p, ec] = std::from_chars(piece.data(), piece.data() + piece.size(), v);
+        if (ec != std::errc{} || p != piece.data() + piece.size()) return std::unexpected(s);
+        parts.push_back(v);
+    }
+    if (parts.size() != 3) return std::unexpected(s);
+    return Version{parts[0], parts[1], parts[2]};
+}
+
+bool less(const Version& a, const Version& b) {
+    return std::tie(a.major, a.minor, a.patch) < std::tie(b.major, b.minor, b.patch);
+}
+
+int main() {
+    std::vector<Version> ok;
+    for (std::string s : {"1.4.2", "1.10.0", "1.x.2"}) {
+        auto r = parse_version(s);
+        if (r) {
+            std::cout << "ok " << r->major << '.' << r->minor << '.' << r->patch << "\n";
+            ok.push_back(*r);
+        } else {
+            std::cout << "err " << r.error() << "\n";
+        }
+    }
+    std::cout << "1.4.2 < 1.10.0: " << (less(ok[0], ok[1]) ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Comparing the parsed numeric parts as a tuple gives correct ordering, where comparing the raw strings would put 1.10.0 before 1.4.2.` },
+
+{ n: 58, d: "applications", t: "Sum a nested document of values",
+  p: String.raw`A document is a tree whose nodes are either an integer, a string, or a list of further nodes. Build this tree: a list containing the integer 1, the string x, and a list containing the integer 2 and another list holding the integers 3 and 4. Sum every integer in the tree, ignoring strings, and print the result as sum=N, then a newline.`,
+  ex: String.raw`sum=10`,
+  code: String.raw`#include <cstddef>
+#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+struct Node {
+    std::variant<long long, std::string, std::vector<Node>> v;
+};
+
+long long sum(const Node& n) {
+    return std::visit([](const auto& x) -> long long {
+        using T = std::decay_t<decltype(x)>;
+        if constexpr (std::is_same_v<T, long long>) {
+            return x;
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return 0;
+        } else {
+            long long total = 0;
+            for (const Node& child : x) total += sum(child);
+            return total;
+        }
+    }, n.v);
+}
+
+int main() {
+    Node tree{std::vector<Node>{
+        Node{1LL},
+        Node{std::string("x")},
+        Node{std::vector<Node>{
+            Node{2LL},
+            Node{std::vector<Node>{Node{3LL}, Node{4LL}}}}},
+    }};
+    std::cout << "sum=" << sum(tree) << "\n";
+}`,
+  why: String.raw`Each node's alternative decides how it is handled, and recursing on the list alternative visits the whole tree without any special case for depth.` },
+
+{ n: 59, d: "applications", t: "Parse a named enumeration from text",
+  p: String.raw`A colour setting accepts exactly the words red, green and blue, each mapping to the numbers 0, 1 and 2. Any other text is an error reported as unknown colour: followed by the text. Parse the two settings green and purple in order. For a valid setting print colour followed by its number. For an invalid one print the error message. Print one line per setting.`,
+  ex: String.raw`colour 1
+unknown colour: purple`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+enum class Colour { Red = 0, Green = 1, Blue = 2 };
+
+std::expected<Colour, std::string> parse_colour(const std::string& s) {
+    if (s == "red") return Colour::Red;
+    if (s == "green") return Colour::Green;
+    if (s == "blue") return Colour::Blue;
+    return std::unexpected("unknown colour: " + s);
+}
+
+int main() {
+    for (std::string s : {"green", "purple"}) {
+        auto r = parse_colour(s);
+        if (r) std::cout << "colour " << static_cast<int>(*r) << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Mapping each accepted word to a value and returning the error for everything else keeps the set of valid settings in one place.` },
+
+{ n: 60, d: "applications", t: "Add and multiply without overflow",
+  p: String.raw`Add or multiply two non-negative 64-bit integers, and report overflow instead of wrapping around when the true result does not fit. Compute these three operations in order: the largest 64-bit signed integer plus 1; 1048576 times 1048576; and 40 plus 2. For a result that fits print it. For an overflow print overflow. Print one line per operation.`,
+  ex: String.raw`overflow
+1099511627776
+42`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <limits>
+#include <string>
+
+std::expected<long long, std::string> checked_add(long long a, long long b) {
+    if (a > std::numeric_limits<long long>::max() - b) return std::unexpected(std::string("overflow"));
+    return a + b;
+}
+
+std::expected<long long, std::string> checked_mul(long long a, long long b) {
+    if (a != 0 && b > std::numeric_limits<long long>::max() / a)
+        return std::unexpected(std::string("overflow"));
+    return a * b;
+}
+
+void show(const std::expected<long long, std::string>& r) {
+    if (r) std::cout << *r << "\n";
+    else std::cout << r.error() << "\n";
+}
+
+int main() {
+    show(checked_add(std::numeric_limits<long long>::max(), 1));
+    show(checked_mul(1048576, 1048576));
+    show(checked_add(40, 2));
+}`,
+  why: String.raw`Checking against the largest representable value before the operation means the overflow is detected rather than producing a wrong result.` },
+
+{ n: 61, d: "applications", t: "Validate calendar dates",
+  p: String.raw`Dates are written as YYYY-MM-DD. The month must be between 1 and 12, otherwise the error is bad month. The day must exist in that month, so February has 29 days only in leap years, otherwise the error is bad day. A year is a leap year if it is divisible by 4, except years divisible by 100 unless they are also divisible by 400. Validate these four dates in order: 2026-11-01, 2024-02-29, 2023-02-29 and 2026-13-01. For a valid date print ok followed by the date. For an invalid one print err followed by the message. Print one line per date.`,
+  ex: String.raw`ok 2026-11-01
+ok 2024-02-29
+err bad day
+err bad month`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+struct Date { int year, month, day; };
+
+std::expected<Date, std::string> parse_date(const std::string& s) {
+    int y = 0, m = 0, d = 0;
+    char d1 = 0, d2 = 0;
+    std::istringstream in(s);
+    if (!(in >> y >> d1 >> m >> d2 >> d) || d1 != '-' || d2 != '-')
+        return std::unexpected(std::string("bad format"));
+    if (m < 1 || m > 12) return std::unexpected(std::string("bad month"));
+    static const int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    const bool leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    int dim = days[m - 1];
+    if (m == 2 && leap) dim = 29;
+    if (d < 1 || d > dim) return std::unexpected(std::string("bad day"));
+    return Date{y, m, d};
+}
+
+int main() {
+    for (std::string s : {"2026-11-01", "2024-02-29", "2023-02-29", "2026-13-01"}) {
+        auto r = parse_date(s);
+        if (r) std::cout << "ok " << s << "\n";
+        else std::cout << "err " << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Separating the month check from the day check gives each failure its own message, and the leap-year rule is a single expression that is easy to audit.` },
+
+{ n: 62, d: "applications", t: "Decode a pagination cursor",
+  p: String.raw`A pagination cursor is written as key:value pairs separated by semicolons, such as page:3;size:20. Both page and size are required. A cursor without size gives the error missing size, and one without page gives missing page. Decode these two cursors in order: page:3;size:20 and page:3. For a valid cursor print page=N size=M separated by a space. For an invalid one print the error message. Print one line per cursor.`,
+  ex: String.raw`page=3 size=20
+missing size`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <utility>
+
+std::expected<std::pair<int, int>, std::string> decode(const std::string& cursor) {
+    std::optional<int> page, size;
+    std::istringstream in(cursor);
+    for (std::string part; std::getline(in, part, ';');) {
+        auto colon = part.find(':');
+        if (colon == std::string::npos) continue;
+        std::string key = part.substr(0, colon);
+        int value = std::stoi(part.substr(colon + 1));
+        if (key == "page") page = value;
+        else if (key == "size") size = value;
+    }
+    if (!page) return std::unexpected(std::string("missing page"));
+    if (!size) return std::unexpected(std::string("missing size"));
+    return std::pair{*page, *size};
+}
+
+int main() {
+    for (std::string c : {"page:3;size:20", "page:3"}) {
+        auto r = decode(c);
+        if (r) std::cout << "page=" << r->first << " size=" << r->second << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Collecting each optional part as it is read, and checking all required parts at the end, reports every missing field consistently.` },
+
+{ n: 63, d: "applications", t: "Split parsed results into successes and failures",
+  p: String.raw`Four text values, 10, x, 30 and y, are parsed as integers. Each parse either succeeds or fails. Add up the successful values and count the failures. Print the result as sum=N failures=M, then a newline.`,
+  ex: String.raw`sum=40 failures=2`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <vector>
+
+std::expected<int, std::string> parse_int(const std::string& s) {
+    int v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected("not a number: " + s);
+    return v;
+}
+
+int main() {
+    int sum = 0, failures = 0;
+    for (const std::string& s : std::vector<std::string>{"10", "x", "30", "y"}) {
+        auto r = parse_int(s);
+        if (r) sum += *r;
+        else ++failures;
+    }
+    std::cout << "sum=" << sum << " failures=" << failures << "\n";
+}`,
+  why: String.raw`Looping over results and branching on each one keeps every failure counted, without stopping at the first bad value.` },
+
+{ n: 64, d: "applications", t: "Evaluate a feature flag with a per-user override",
+  p: String.raw`A feature is enabled for users whose id, taken modulo 100, is less than the rollout percentage of 30. A user may have an explicit override, which always wins when present. Evaluate three users in order: id 5 with no override, id 75 with no override, and id 80 with an override of on. Print user, the id, a colon, then on or off, one per line.`,
+  ex: String.raw`user 5: on
+user 75: off
+user 80: on`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct User { int id; std::optional<bool> override_on; };
+
+bool enabled(const User& u, int rollout_percent) {
+    if (u.override_on) return *u.override_on;
+    return u.id % 100 < rollout_percent;
+}
+
+int main() {
+    const User users[] = {
+        {5, std::nullopt},
+        {75, std::nullopt},
+        {80, true},
+    };
+    for (const User& u : users)
+        std::cout << "user " << u.id << ": " << (enabled(u, 30) ? "on" : "off") << "\n";
+}`,
+  why: String.raw`An explicit override is an optional that is checked first, so a per-user decision never needs the rollout rule at all.` },
+
+{ n: 65, d: "applications", t: "Parse a service endpoint URL",
+  p: String.raw`An endpoint is written as scheme://host[:port]/path. Only the schemes http and https are supported, and any other scheme is an error reported as unsupported scheme followed by the scheme. The default port is 80 for http and 443 for https, used when no port is written. A missing path is treated as /. Parse these three URLs in order: https://api.example.com:8443/v1, http://example.com/status, and ftp://x. For a valid endpoint print host:port then a space then the path. For an invalid one print the error message. Print one line per URL.`,
+  ex: String.raw`api.example.com:8443 /v1
+example.com:80 /status
+unsupported scheme ftp`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+struct Endpoint { std::string host; int port; std::string path; };
+
+std::expected<Endpoint, std::string> parse_url(const std::string& u) {
+    auto sep = u.find("://");
+    if (sep == std::string::npos) return std::unexpected(std::string("missing scheme"));
+    const std::string scheme = u.substr(0, sep);
+    int port = 0;
+    if (scheme == "http") port = 80;
+    else if (scheme == "https") port = 443;
+    else return std::unexpected("unsupported scheme " + scheme);
+
+    const std::string rest = u.substr(sep + 3);
+    auto slash = rest.find('/');
+    const std::string hostport = rest.substr(0, slash);
+    const std::string path = slash == std::string::npos ? "/" : rest.substr(slash);
+
+    Endpoint e{hostport, port, path};
+    auto colon = hostport.find(':');
+    if (colon != std::string::npos) {
+        e.host = hostport.substr(0, colon);
+        e.port = std::stoi(hostport.substr(colon + 1));
+    }
+    return e;
+}
+
+int main() {
+    for (std::string u : {"https://api.example.com:8443/v1", "http://example.com/status", "ftp://x"}) {
+        auto r = parse_url(u);
+        if (r) std::cout << r->host << ':' << r->port << ' ' << r->path << "\n";
+        else std::cout << r.error() << "\n";
+    }
+}`,
+  why: String.raw`Deriving the default port from the scheme and falling back to it when the port is absent keeps each URL fully specified before it is used.` },
 ];
 
 const TOTAL = problems.length;
@@ -1222,7 +1932,7 @@ for (const sec of [
   { from: 11, to: 22, label: "Medium", range: "Problems 11–22", badge: "medium" },
   { from: 23, to: 31, label: "Hard", range: "Problems 23–31", badge: "hard" },
   { from: 32, to: 37, label: "Extension", range: "Problems 32–37", badge: null },
-  { from: 38, to: 45, label: "Applications", range: "Problems 38–45", badge: null }
+  { from: 38, to: 65, label: "Applications", range: "Problems 38–65", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");
