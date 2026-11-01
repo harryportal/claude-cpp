@@ -1,4 +1,5 @@
 <title>C++ Memory Model and Layout</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 32 problems</p>
+    <p class="kicker">Problems by topic · 40 problems</p>
     <h1>C++ Memory Model and Layout Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">32</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">40</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -112,7 +113,7 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <script>
 const problems = [
 // ---------- Easy ----------
-{ n: 1, d: "easy", t: "Sizes of the basic types", idiom: "Sizes and alignment",
+{ n: 1, d: "easy", t: "Sizes of the basic types",
   p: String.raw`Print sizeof of char, int, double and void pointer, separated by spaces, then a newline. Assume the usual 64-bit Linux ABI.`,
   ex: String.raw`1 4 8 8`,
   code: String.raw`#include <iostream>
@@ -122,7 +123,7 @@ int main() {
 }`,
   why: String.raw`sizeof reports the storage each type occupies. Pointer size depends on the platform's address width, not on what it points to.` },
 
-{ n: 2, d: "easy", t: "Standard-layout check on two structs", idiom: "Standard type layout",
+{ n: 2, d: "easy", t: "Standard-layout check on two structs",
   p: String.raw`Define Plain with two int members and Virt with an int member and a virtual function. Print is_standard_layout for Plain and for Virt, separated by a space, then a newline.`,
   ex: String.raw`1 0`,
   code: String.raw`#include <iostream>
@@ -139,7 +140,7 @@ int main() {
 }`,
   why: String.raw`A virtual function adds a hidden pointer to each object, so the type's layout is no longer the plain sequence of its members. Standard layout is the property that makes a struct safe to treat as a sequence of bytes in C-compatible ways.` },
 
-{ n: 3, d: "easy", t: "Byte order of a 32-bit value", idiom: "Bit-level layout",
+{ n: 3, d: "easy", t: "Byte order of a 32-bit value",
   p: String.raw`Store the value 0x01020304 in a 32-bit unsigned integer. Print the four bytes in their memory order from lowest address to highest, separated by spaces, then a newline. Print each byte as a plain decimal number.`,
   ex: String.raw`4 3 2 1`,
   code: String.raw`#include <cstdint>
@@ -153,7 +154,7 @@ int main() {
 }`,
   why: String.raw`Byte order is a property of the machine. This program shows the little-endian order used on common x86-64 systems, where the least significant byte is stored first.` },
 
-{ n: 4, d: "easy", t: "Copy a float's bit pattern into an integer", idiom: "Copying and type punning",
+{ n: 4, d: "easy", t: "Copy a float's bit pattern into an integer",
   p: String.raw`Take the float value 1.0f and obtain its 32-bit pattern as an unsigned integer, without converting the numeric value. Print that pattern in hexadecimal, then a newline.`,
   ex: String.raw`3f800000`,
   code: String.raw`#include <cstdint>
@@ -168,7 +169,7 @@ int main() {
 }`,
   why: String.raw`Copying the object representation with a byte copy is the portable way to read the bits of a float. Converting the value with a cast would give 1, not the bit pattern.` },
 
-{ n: 5, d: "easy", t: "Construct and destroy into a buffer", idiom: "Object lifetime",
+{ n: 5, d: "easy", t: "Construct and destroy into a buffer",
   p: String.raw`Struct Noisy prints construct in its constructor and destroy in its destructor. Reserve aligned raw storage large enough for one Noisy. Construct a Noisy in that storage, then end its lifetime explicitly. Do not print anything else.`,
   ex: String.raw`construct
 destroy`,
@@ -187,7 +188,7 @@ int main() {
 }`,
   why: String.raw`An object's lifetime is separate from the storage it occupies. Construction creates the object in that storage, and the destructor ends its life without releasing the memory.` },
 
-{ n: 6, d: "easy", t: "Global variables start at zero", idiom: "Storage duration",
+{ n: 6, d: "easy", t: "Global variables start at zero",
   p: String.raw`Declare a global int with no initializer. In main, print its value followed by a newline.`,
   ex: String.raw`0`,
   code: String.raw`#include <iostream>
@@ -199,7 +200,7 @@ int main() {
 }`,
   why: String.raw`Objects with static storage duration are zero-initialised before any other initialisation runs, so an unset global int reads as zero.` },
 
-{ n: 7, d: "easy", t: "Assert a struct's size at compile time", idiom: "Measuring layout",
+{ n: 7, d: "easy", t: "Assert a struct's size at compile time",
   p: String.raw`Define Packet with two 32-bit unsigned integer members, id and len. Check at compile time that sizeof Packet is 8. If the check passes, main prints ok followed by a newline.`,
   ex: String.raw`ok`,
   code: String.raw`#include <cstdint>
@@ -217,7 +218,7 @@ int main() {
 }`,
   why: String.raw`A static_assert checks layout assumptions when the program is compiled, so a size change breaks the build rather than failing silently at run time.` },
 
-{ n: 8, d: "easy", t: "Data written before a join is visible after it", idiom: "Data races without atomics",
+{ n: 8, d: "easy", t: "Data written before a join is visible after it",
   p: String.raw`Declare an int x set to zero. Start a thread that sets x to 42. Join it, then print x followed by a newline.`,
   ex: String.raw`42`,
   code: String.raw`#include <iostream>
@@ -232,7 +233,7 @@ int main() {
   why: String.raw`Joining a thread means its work happens before join returns. Reading x after the join is therefore race-free, even though x is an ordinary int.` },
 
 // ---------- Medium ----------
-{ n: 9, d: "medium", t: "Padding in a mixed struct", idiom: "Sizes and alignment",
+{ n: 9, d: "medium", t: "Padding in a mixed struct",
   p: String.raw`Define S with a char a, an int b and a char c, in that order. Print sizeof S followed by a newline. Assume the usual 64-bit Linux ABI.`,
   ex: String.raw`12`,
   code: String.raw`#include <iostream>
@@ -248,7 +249,7 @@ int main() {
 }`,
   why: String.raw`An int must start at a multiple of four, so three bytes of padding follow a. The struct is then padded at the end so that its size is a multiple of its alignment.` },
 
-{ n: 10, d: "medium", t: "Member order changes the size", idiom: "Sizes and alignment",
+{ n: 10, d: "medium", t: "Member order changes the size",
   p: String.raw`Define S with members in the order char a, int b, char c. Define T with the same three members in the order char a, char c, int b. Print sizeof S and sizeof T, separated by a space, then a newline.`,
   ex: String.raw`12 8`,
   code: String.raw`#include <iostream>
@@ -270,7 +271,7 @@ int main() {
 }`,
   why: String.raw`Placing the two chars together lets them share one aligned slot before the int, which removes most padding. Ordering members by alignment is a simple way to keep structs small.` },
 
-{ n: 11, d: "medium", t: "Standard layout of a derived class with no data", idiom: "Standard type layout",
+{ n: 11, d: "medium", t: "Standard layout of a derived class with no data",
   p: String.raw`Define Base with one int member x. Define OnlyBase as a struct deriving from Base with no members. Define BothData as a struct deriving from Base that adds an int member y. Print is_standard_layout for OnlyBase and for BothData, separated by a space, then a newline.`,
   ex: String.raw`1 0`,
   code: String.raw`#include <iostream>
@@ -285,7 +286,7 @@ int main() {
 }`,
   why: String.raw`Standard layout requires that all non-static data members be declared in a single class in the hierarchy. OnlyBase keeps all its data in Base, but BothData splits its data across two classes.` },
 
-{ n: 12, d: "medium", t: "Pointer to a struct equals pointer to its first member", idiom: "Standard type layout",
+{ n: 12, d: "medium", t: "Pointer to a struct equals pointer to its first member",
   p: String.raw`Define Pair with int members a and b. Create a Pair with a set to 7 and b set to 9. Obtain an int pointer that refers to the start of the Pair object. Print the int it points to, a space, then 1 if that pointer equals the address of a, or 0 otherwise, then a newline.`,
   ex: String.raw`7 1`,
   code: String.raw`#include <iostream>
@@ -302,7 +303,7 @@ int main() {
 }`,
   why: String.raw`For a standard-layout struct, a pointer to the struct can be converted to a pointer to its first member, and the two addresses are the same.` },
 
-{ n: 13, d: "medium", t: "Count the bits of a bit-field struct", idiom: "Bit-level layout",
+{ n: 13, d: "medium", t: "Count the bits of a bit-field struct",
   p: String.raw`Define Flags with an unsigned bit-field a of width 3 and an unsigned bit-field b of width 5. Create a Flags object with all members zeroed, set a to 5 and b to 17, then print sizeof Flags, a and b, separated by spaces, then a newline.`,
   ex: String.raw`4 5 17`,
   code: String.raw`#include <iostream>
@@ -320,7 +321,7 @@ int main() {
 }`,
   why: String.raw`Bit-fields pack several small members into the same storage unit. Eight bits in total fit in one unsigned int, so the struct is four bytes.` },
 
-{ n: 14, d: "medium", t: "Bit-field values that do not fit", idiom: "Bit-level layout",
+{ n: 14, d: "medium", t: "Bit-field values that do not fit",
   p: String.raw`Define S with an unsigned bit-field a of width 3 and a signed int bit-field s of width 3. Create an S with both zeroed. Store the value 9 in a and the value 5 in s, using variables for the values. Print a and s, separated by a space, then a newline. Values are kept modulo the field width.`,
   ex: String.raw`1 -3`,
   code: String.raw`#include <iostream>
@@ -340,7 +341,7 @@ int main() {
 }`,
   why: String.raw`Storing a value into a bit-field keeps only the bits the field has room for. For a signed field of width three, the bit pattern 101 is read back as negative three.` },
 
-{ n: 15, d: "medium", t: "Copy a struct's bytes into another struct", idiom: "Copying and type punning",
+{ n: 15, d: "medium", t: "Copy a struct's bytes into another struct",
   p: String.raw`Define P with int members x and y. Create a P with x 3 and y 4. Create a second P with both zeroed, then copy the bytes of the first into the second, byte for byte. Print the sum of the second object's x and y, then a newline.`,
   ex: String.raw`7`,
   code: String.raw`#include <cstring>
@@ -359,7 +360,7 @@ int main() {
 }`,
   why: String.raw`A trivially copyable type can be duplicated by copying its object representation. The result is an equal object whenever the source has no padding whose value matters.` },
 
-{ n: 16, d: "medium", t: "Read a double's bit pattern", idiom: "Copying and type punning",
+{ n: 16, d: "medium", t: "Read a double's bit pattern",
   p: String.raw`Obtain the 64-bit unsigned integer pattern of the double value 1.0, without converting its numeric value. Print the pattern in hexadecimal, then a newline.`,
   ex: String.raw`3ff0000000000000`,
   code: String.raw`#include <bit>
@@ -372,7 +373,7 @@ int main() {
 }`,
   why: String.raw`std::bit_cast copies the bytes of a value into a type of the same size, so the result is the raw bit pattern. The sign, exponent and fraction fields are visible in the hex digits.` },
 
-{ n: 17, d: "medium", t: "Reuse one buffer for two types", idiom: "Object lifetime",
+{ n: 17, d: "medium", t: "Reuse one buffer for two types",
   p: String.raw`Let live be a global counter. Class A increments live in its constructor and decrements it in its destructor. Class B has an int member v set to 7 and does the same counting. Reserve one aligned buffer big enough for either type. Construct an A in the buffer and print live followed by its value. End the A's lifetime, construct a B in the same buffer, and print live followed by a space, v, and a newline. End the B's lifetime and print live.`,
   ex: String.raw`live 1
 live 1 v 7
@@ -405,7 +406,7 @@ int main() {
 }`,
   why: String.raw`Storage can be reused once the object that occupied it has been destroyed. Each object's own lifetime is what the counter tracks, so it returns to zero at the end.` },
 
-{ n: 18, d: "medium", t: "Replace a value inside an optional", idiom: "Object lifetime",
+{ n: 18, d: "medium", t: "Replace a value inside an optional",
   p: String.raw`Define Tracker with an int id. Its constructor prints ctor followed by the id, and its destructor prints dtor followed by the id. Create an empty std::optional of Tracker. Emplace Tracker 1, then emplace Tracker 2 into the same optional, then reset it. Finally print end.`,
   ex: String.raw`ctor 1
 dtor 1
@@ -430,7 +431,7 @@ int main() {
 }`,
   why: String.raw`Emplacing into an optional that already holds a value first destroys the old object. Each object's destructor runs exactly once, before the next one is constructed.` },
 
-{ n: 19, d: "medium", t: "Destroy locals in reverse order", idiom: "Storage duration",
+{ n: 19, d: "medium", t: "Destroy locals in reverse order",
   p: String.raw`Define Tag with a char member c and a destructor that prints c followed by a space. In a nested block of main, create Tag objects 'A', 'B' and 'C' in that order. After the block ends, print a newline.`,
   ex: String.raw`C B A `,
   code: String.raw`#include <iostream>
@@ -450,7 +451,7 @@ int main() {
 }`,
   why: String.raw`Automatic objects are destroyed in the reverse of their construction order when their scope ends. The last object constructed is the first one destroyed.` },
 
-{ n: 20, d: "medium", t: "Thread-local globals start fresh in each thread", idiom: "Storage duration",
+{ n: 20, d: "medium", t: "Thread-local globals start fresh in each thread",
   p: String.raw`Declare a thread_local int named counter with initial value 5. Start two threads. Each thread increments counter three times, then stores its value in its own slot of a vector. Join both threads. Print main's counter, then the two slots, separated by spaces, then a newline.`,
   ex: String.raw`5 8 8`,
   code: String.raw`#include <iostream>
@@ -472,7 +473,7 @@ int main() {
 }`,
   why: String.raw`Each thread gets its own copy of a thread_local variable, initialised separately. Changes in one thread never show up in another, so main still sees 5.` },
 
-{ n: 21, d: "medium", t: "Protect a shared list with threads writing separate items", idiom: "Data races without atomics",
+{ n: 21, d: "medium", t: "Protect a shared list with threads writing separate items",
   p: String.raw`Create an empty vector of ints and a mutex. Start six threads, numbered 0 to 5. Each thread appends its own number to the vector while holding the mutex. Join all threads, sort the vector, then print its elements, each followed by a space, then a newline.`,
   ex: String.raw`0 1 2 3 4 5 `,
   code: String.raw`#include <algorithm>
@@ -497,7 +498,7 @@ int main() {
 }`,
   why: String.raw`A mutex makes each append a single step that other threads cannot interleave with. Sorting after the join removes the dependence on which thread appended first.` },
 
-{ n: 22, d: "medium", t: "Build on fields written before a thread starts", idiom: "Data races without atomics",
+{ n: 22, d: "medium", t: "Build on fields written before a thread starts",
   p: String.raw`Define Config with int members a and b. In main, create a Config and set a to 3 and b to 4. Then start a thread that reads both fields, stores their sum in a result variable, and finish by joining. Print the result followed by a newline.`,
   ex: String.raw`7`,
   code: String.raw`#include <iostream>
@@ -519,7 +520,7 @@ int main() {
 }`,
   why: String.raw`Work done before a thread is started is visible to that thread. Using the fields only after the join is also safe, because the join orders the two threads.` },
 
-{ n: 23, d: "medium", t: "Measure offsets with the offset macro", idiom: "Measuring layout",
+{ n: 23, d: "medium", t: "Measure offsets with the offset macro",
   p: String.raw`Define S with a char a, a short b, an int c and a long long d, in that order. Print the offsets of a, b, c and d within S, separated by spaces, then a newline.`,
   ex: String.raw`0 2 4 8`,
   code: String.raw`#include <cstddef>
@@ -537,7 +538,7 @@ int main() {
 }`,
   why: String.raw`Each member starts at the next offset that satisfies its alignment. The gaps between members are padding, and the offset of each member shows exactly where it lies.` },
 
-{ n: 24, d: "medium", t: "Compare member addresses in bytes", idiom: "Measuring layout",
+{ n: 24, d: "medium", t: "Compare member addresses in bytes",
   p: String.raw`Define S with a char a, a short b, an int c and a long long d, in that order. Create an S. Print the number of bytes from the address of a to the address of c, then a space, then the number of bytes from the address of a to the address of d, then a newline.`,
   ex: String.raw`4 8`,
   code: String.raw`#include <iostream>
@@ -559,7 +560,7 @@ int main() {
   why: String.raw`Subtracting two byte pointers inside the same object gives the distance between the members. Comparing it with the offsets from the offset macro checks the layout the compiler chose.` },
 
 // ---------- Hard ----------
-{ n: 25, d: "hard", t: "Array stride and total size", idiom: "Sizes and alignment",
+{ n: 25, d: "hard", t: "Array stride and total size",
   p: String.raw`Define Vec with alignas 16 holding three floats, x, y and z. Print sizeof Vec, alignof Vec, and sizeof of an array of two Vec objects, separated by spaces, then a newline.`,
   ex: String.raw`16 16 32`,
   code: String.raw`#include <iostream>
@@ -573,7 +574,7 @@ int main() {
 }`,
   why: String.raw`Three floats need twelve bytes, but alignas(16) raises both the alignment and the size to sixteen. Each element of an array then starts at the next sixteen-byte boundary.` },
 
-{ n: 26, d: "hard", t: "Derived type with a base that has data", idiom: "Standard type layout",
+{ n: 26, d: "hard", t: "Derived type with a base that has data",
   p: String.raw`Define Base with an int x and a char c. Define Derived that inherits Base publicly and adds a char d. Print sizeof Base and sizeof Derived, separated by a space, then a newline.`,
   ex: String.raw`8 12`,
   code: String.raw`#include <iostream>
@@ -592,7 +593,7 @@ int main() {
 }`,
   why: String.raw`Base has three bytes of padding after c. Base is a plain-old-data type, and the Itanium C++ ABI lets a derived class reuse a base's tail padding only when the base is not POD. So the extra char starts a new slot after the base, and the size becomes 12.` },
 
-{ n: 27, d: "hard", t: "Pack and read back three bit-fields", idiom: "Bit-level layout",
+{ n: 27, d: "hard", t: "Pack and read back three bit-fields",
   p: String.raw`Define Packed with three unsigned bit-fields: a of width 12, b of width 12, and c of width 8. Print sizeof Packed. Then store 0xABC in a, 0x123 in b and 0xFF in c, and print the three values read back as decimal numbers, separated by spaces, then a newline. Print the size first, followed by a space.`,
   ex: String.raw`4 2748 291 255`,
   code: String.raw`#include <cstdint>
@@ -613,7 +614,7 @@ int main() {
 }`,
   why: String.raw`The three fields total 32 bits, so they share one four-byte unit. Each field keeps exactly the bits it was given, and reading them back returns the same values.` },
 
-{ n: 28, d: "hard", t: "Round-trip a NaN through its bit pattern", idiom: "Copying and type punning",
+{ n: 28, d: "hard", t: "Round-trip a NaN through its bit pattern",
   p: String.raw`Start with the 32-bit unsigned value 0x7fc00001. Reinterpret its bits as a float, then reinterpret that float's bits as an unsigned 32-bit value again. Print the resulting value in hexadecimal, then a space, then 1 if the float is NaN or 0 otherwise, then a space, then 1 if the float equals itself or 0 otherwise, then a newline.`,
   ex: String.raw`7fc00001 1 0`,
   code: String.raw`#include <bit>
@@ -629,7 +630,7 @@ int main() {
 }`,
   why: String.raw`A NaN is a float whose exponent bits are all ones and whose fraction is not zero. Copying the bits keeps the payload, so the value is still NaN, and NaN never compares equal to itself.` },
 
-{ n: 29, d: "hard", t: "Lifetime extended by a reference", idiom: "Object lifetime",
+{ n: 29, d: "hard", t: "Lifetime extended by a reference",
   p: String.raw`Define Tracker with a default constructor that prints ctor, a destructor that prints dtor, and a const member function value that returns 3. In a nested block, bind a const reference to a newly created Tracker and print use followed by value(), then a newline. Leave the block and print after.`,
   ex: String.raw`ctor
 use 3
@@ -652,7 +653,7 @@ int main() {
 }`,
   why: String.raw`Binding a temporary to a const reference extends its lifetime to the lifetime of the reference. The object is destroyed at the end of the block, not at the end of the declaration.` },
 
-{ n: 30, d: "hard", t: "Give each thread its own cache line", idiom: "Data races without atomics",
+{ n: 30, d: "hard", t: "Give each thread its own cache line",
   p: String.raw`Define Slot as a struct aligned to 64 bytes holding a long long n that starts at zero. Create an array of two Slot objects. Start two threads, where thread i increments slot i's n a thousand times. Join both threads, then print alignof Slot, sizeof Slot and the sum of the two n values, separated by spaces, then a newline.`,
   ex: String.raw`64 64 2000`,
   code: String.raw`#include <iostream>
@@ -672,7 +673,7 @@ int main() {
 }`,
   why: String.raw`Two threads writing to the same cache line slow each other down even when they touch different variables. Padding each slot to a full cache line gives each thread its own line, and since each slot is written by only one thread, there is no data race.` },
 
-{ n: 31, d: "hard", t: "Dynamic array and single object destruction", idiom: "Storage duration",
+{ n: 31, d: "hard", t: "Dynamic array and single object destruction",
   p: String.raw`Define T with a destructor that increments a global counter dtors, which starts at zero. Allocate an array of three T on the heap and free it with the matching form of deletion. Print dtors followed by its value and a newline. Then allocate one T on the heap and free it with the single-object form. Print dtors again and a newline.`,
   ex: String.raw`dtors 3
 dtors 4`,
@@ -694,7 +695,7 @@ int main() {
 }`,
   why: String.raw`An array allocated with new[] must be freed with delete[], which destroys every element. Using plain delete on it would destroy only the first element, so the counter shows the difference.` },
 
-{ n: 32, d: "hard", t: "Over-aligned object on the stack", idiom: "Measuring layout",
+{ n: 32, d: "hard", t: "Over-aligned object on the stack",
   p: String.raw`Define Block as a struct aligned to 32 bytes with two int members. Create a Block on the stack with a set to 1 and b set to 2. Print sizeof Block, alignof Block, and 1 if the object's address is a multiple of 32 or 0 otherwise, separated by spaces, then a newline.`,
   ex: String.raw`32 32 1`,
   code: String.raw`#include <cstdint>
@@ -711,6 +712,143 @@ int main() {
     std::cout << sizeof(Block) << " " << alignof(Block) << " " << (addr % 32 == 0) << "\n";
 }`,
   why: String.raw`An alignas request is honoured for automatic objects as well as for heap objects. The compiler places the object at an address that meets the requirement, even though an int pair needs only eight bytes.` },
+
+{ n: 33, d: "applications", t: "Size of a packet header",
+  p: String.raw`A packet header has a one-byte version, a one-byte flags field, a two-byte length and a four-byte sequence number, in that order. Print the size of the header structure, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct Header {
+    std::uint8_t version;
+    std::uint8_t flags;
+    std::uint16_t length;
+    std::uint32_t seq;
+};
+
+int main() {
+    std::cout << sizeof(Header) << "\n";
+}`,
+  why: String.raw`The fields are ordered from largest to smallest in a way that needs no padding, so the size is exactly the sum of the field sizes.` },
+
+{ n: 34, d: "applications", t: "Offset of a payload in a message",
+  p: String.raw`A message has a four-byte id, a two-byte length and a ten-byte payload array, in that order. Print the offset of the payload from the start of the message, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <cstddef>
+#include <cstdint>
+#include <iostream>
+
+struct Msg {
+    std::uint32_t id;
+    std::uint16_t len;
+    char payload[10];
+};
+
+int main() {
+    std::cout << offsetof(Msg, payload) << "\n";
+}`,
+  why: String.raw`The offset of a member is where it begins relative to the start of the object, and the two-byte length ends exactly at offset six.` },
+
+{ n: 35, d: "applications", t: "Storage for a pixel array",
+  p: String.raw`A pixel holds three one-byte colour channels and no other data. Print the total size in bytes of an array of 100 pixels, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`300`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct Pixel {
+    std::uint8_t r, g, b;
+};
+
+int main() {
+    std::cout << sizeof(Pixel[100]) << "\n";
+}`,
+  why: String.raw`An array stores its elements back to back, so the total size is the element size multiplied by the number of elements.` },
+
+{ n: 36, d: "applications", t: "Empty member that takes no space",
+  p: String.raw`Define an empty type Tag and a structure Pair that holds an int and a Tag member marked so that the empty member may share its address with other data. Print the size of Tag, a space, then the size of Pair, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`1 4`,
+  code: String.raw`#include <iostream>
+
+struct Tag {};
+
+struct Pair {
+    int x;
+    [[no_unique_address]] Tag t;
+};
+
+int main() {
+    std::cout << sizeof(Tag) << ' ' << sizeof(Pair) << "\n";
+}`,
+  why: String.raw`An empty type still occupies one byte on its own, but with no_unique_address it need not add anything to a structure that already has data.` },
+
+{ n: 37, d: "applications", t: "Stride between neighbouring elements",
+  p: String.raw`A structure has a one-byte character followed by a two-byte short. Create an array of two of them and print the distance in bytes between the address of the second element and the address of the first. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct S {
+    char c;
+    short s;
+};
+
+int main() {
+    S arr[2];
+    std::cout << reinterpret_cast<std::uintptr_t>(&arr[1]) - reinterpret_cast<std::uintptr_t>(&arr[0]) << "\n";
+}`,
+  why: String.raw`Adjacent array elements are placed one size apart, so the distance between their addresses is exactly the element's size including its padding.` },
+
+{ n: 38, d: "applications", t: "Size of a tagged value with a union",
+  p: String.raw`A structure holds a one-byte tag followed by a union that contains an int and a double. Print the size of the structure, a space, then the size of the union, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`16 8`,
+  code: String.raw`#include <iostream>
+
+union U {
+    int i;
+    double d;
+};
+
+struct Tagged {
+    char tag;
+    U u;
+};
+
+int main() {
+    std::cout << sizeof(Tagged) << ' ' << sizeof(U) << "\n";
+}`,
+  why: String.raw`The union needs eight-byte alignment because of the double, which pushes it past the tag and leaves seven bytes of padding in front.` },
+
+{ n: 39, d: "applications", t: "Record with a trailing name buffer",
+  p: String.raw`A record holds a four-byte id followed by a five-character name array. Print the size of the record, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`12`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+
+struct Record {
+    std::int32_t id;
+    char name[5];
+};
+
+int main() {
+    std::cout << sizeof(Record) << "\n";
+}`,
+  why: String.raw`The nine bytes of data are rounded up to a multiple of the four-byte alignment, which adds three bytes of trailing padding.` },
+
+{ n: 40, d: "applications", t: "Three boolean flags in one struct",
+  p: String.raw`A structure holds three bool flags and nothing else. Print its size in bytes, then a newline. Assume the usual 64-bit Linux ABI.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+
+struct Flags {
+    bool a;
+    bool b;
+    bool c;
+};
+
+int main() {
+    std::cout << sizeof(Flags) << "\n";
+}`,
+  why: String.raw`Each bool occupies one byte and bools need no extra alignment, so the structure is exactly three bytes.` },
 ];
 
 const TOTAL = problems.length;
@@ -813,7 +951,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 8, label: "Easy", range: "Problems 1–8", badge: "easy" },
   { from: 9, to: 24, label: "Medium", range: "Problems 9–24", badge: "medium" },
-  { from: 25, to: 32, label: "Hard", range: "Problems 25–32", badge: "hard" }
+  { from: 25, to: 32, label: "Hard", range: "Problems 25–32", badge: "hard" },
+  { from: 33, to: 40, label: "Applications", range: "Problems 33–40", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

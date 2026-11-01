@@ -100,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 52 problems</p>
+    <p class="kicker">Problems by topic · 54 problems</p>
     <h1>C++ Ranges Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">52</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="52" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">54</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="54" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -112,7 +112,7 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 
 <script>
 const problems = [
-{ n: 1, d: "easy", t: "Sum the even numbers from a lazy range", idiom: "Filter view",
+{ n: 1, d: "easy", t: "Sum the even numbers from a lazy range",
   p: String.raw`Using a lazy range of the integers 1 through 10, keep only the even values and sum them. Print the sum, then a newline.`,
   ex: String.raw`30`,
   code: String.raw`#include <iostream>
@@ -126,7 +126,7 @@ int main() {
 }`,
   why: String.raw`A filter view does not build a new container. It yields the elements that satisfy the predicate as the loop asks for them.` },
 
-{ n: 2, d: "easy", t: "Squares produced by a transform view", idiom: "Transform view",
+{ n: 2, d: "easy", t: "Squares produced by a transform view",
   p: String.raw`Using a lazy range of the integers 1 through 5, produce their squares and print each square followed by a space, then a newline.`,
   ex: String.raw`1 4 9 16 25`,
   code: String.raw`#include <iostream>
@@ -139,7 +139,7 @@ int main() {
 }`,
   why: String.raw`A transform view applies a function to each element as it is read, so the squares are never stored anywhere.` },
 
-{ n: 3, d: "easy", t: "Skip and keep with drop and take", idiom: "Drop and take",
+{ n: 3, d: "easy", t: "Skip and keep with drop and take",
   p: String.raw`Starting from the integers 1 through 10, skip the first two values and then keep the next three. Print each remaining value followed by a space, then a newline.`,
   ex: String.raw`3 4 5`,
   code: String.raw`#include <iostream>
@@ -152,7 +152,7 @@ int main() {
 }`,
   why: String.raw`drop and take compose into a window over a sequence, which replaces index arithmetic with a readable pipeline.` },
 
-{ n: 4, d: "easy", t: "Sort strings by length with a projection", idiom: "Projections",
+{ n: 4, d: "easy", t: "Sort strings by length with a projection",
   p: String.raw`Sort the vector of strings ccc, a and bb by their length, using a projection rather than writing a comparison function. Print the sorted strings separated by spaces, then a newline.`,
   ex: String.raw`a bb ccc`,
   code: String.raw`#include <algorithm>
@@ -168,7 +168,7 @@ int main() {
 }`,
   why: String.raw`A projection tells a range algorithm which member of each element to compare. The algorithm then uses the comparison on that member, which keeps the call short and avoids writing a lambda.` },
 
-{ n: 5, d: "easy", t: "Find the first element matching a predicate", idiom: "Range algorithms",
+{ n: 5, d: "easy", t: "Find the first element matching a predicate",
   p: String.raw`In the vector 1, 3, 5, 7, find the first element greater than 4 using the range form of find_if. Print its index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -182,7 +182,7 @@ int main() {
 }`,
   why: String.raw`The range versions of algorithms take a whole range instead of a begin and end pair, so one argument identifies the sequence and the mistake of mismatched iterators becomes impossible.` },
 
-{ n: 6, d: "easy", t: "Reverse a range without copying", idiom: "Reverse view",
+{ n: 6, d: "easy", t: "Reverse a range without copying",
   p: String.raw`Print the elements of the vector 1, 2, 3 in reverse order, separated by spaces, then a newline. Do not modify the vector.`,
   ex: String.raw`3 2 1`,
   code: String.raw`#include <iostream>
@@ -196,7 +196,7 @@ int main() {
 }`,
   why: String.raw`A reverse view walks the same elements backwards. Nothing is copied, and the original vector is unchanged.` },
 
-{ n: 7, d: "easy", t: "Count multiples of seven", idiom: "Range algorithms",
+{ n: 7, d: "easy", t: "Count multiples of seven",
   p: String.raw`Count how many of the integers 1 through 100 are divisible by 7, using a range algorithm on a lazy range. Print the count, then a newline.`,
   ex: String.raw`14`,
   code: String.raw`#include <algorithm>
@@ -209,7 +209,7 @@ int main() {
 }`,
   why: String.raw`Range algorithms accept views as well as containers, so a counting algorithm can run directly on a generated sequence.` },
 
-{ n: 8, d: "easy", t: "Find the record with the highest score", idiom: "Projections",
+{ n: 8, d: "easy", t: "Find the record with the highest score",
   p: String.raw`Given the people ann with score 70, bob with score 90 and cy with score 85, find the person with the highest score using a projection on the score field. Print the name, then a newline.`,
   ex: String.raw`bob`,
   code: String.raw`#include <algorithm>
@@ -229,7 +229,7 @@ int main() {
 }`,
   why: String.raw`Taking a projection to a member lets a maximum be found by one field without writing a comparator. The same pattern works for any algorithm that compares elements.` },
 
-{ n: 9, d: "easy", t: "Count elements until a condition first fails", idiom: "Take while",
+{ n: 9, d: "easy", t: "Count elements until a condition first fails",
   p: String.raw`Using a lazy range of squares of the integers starting at 1, count how many squares are less than 50 before the first square that is not. Print the count, then a newline.`,
   ex: String.raw`7`,
   code: String.raw`#include <iostream>
@@ -243,7 +243,7 @@ int main() {
 }`,
   why: String.raw`take_while stops the pipeline at the first failing element, even though the underlying range is infinite. Laziness is what makes this safe.` },
 
-{ n: 10, d: "easy", t: "Flatten a vector of vectors", idiom: "Join view",
+{ n: 10, d: "easy", t: "Flatten a vector of vectors",
   p: String.raw`Given the nested vector {1, 2}, {3}, {4, 5}, print its elements flattened into one sequence, separated by spaces, then a newline.`,
   ex: String.raw`1 2 3 4 5`,
   code: String.raw`#include <iostream>
@@ -257,7 +257,7 @@ int main() {
 }`,
   why: String.raw`A join view presents a range of ranges as a single flat range, without copying the inner elements into a new container.` },
 
-{ n: 11, d: "easy", t: "Split a string into fields", idiom: "Split view",
+{ n: 11, d: "easy", t: "Split a string into fields",
   p: String.raw`Split the string a,b,c at each comma and count the fields. Print the count, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <iostream>
@@ -271,7 +271,7 @@ int main() {
 }`,
   why: String.raw`split produces a view of subranges, one per field, which avoids allocating a string for each field until you need one.` },
 
-{ n: 12, d: "easy", t: "Generate values from an infinite range", idiom: "Infinite ranges",
+{ n: 12, d: "easy", t: "Generate values from an infinite range",
   p: String.raw`Using a lazy range of the integers starting at 1, transform each to five times its value, and take the first three results. Print them separated by spaces, then a newline.`,
   ex: String.raw`5 10 15`,
   code: String.raw`#include <iostream>
@@ -284,7 +284,7 @@ int main() {
 }`,
   why: String.raw`An unbounded iota is only a rule for producing values. Taking a prefix turns it into a finite sequence, and the pipeline never generates anything past the prefix.` },
 
-{ n: 13, d: "easy", t: "Copy matching elements into an output container", idiom: "Range copy_if",
+{ n: 13, d: "easy", t: "Copy matching elements into an output container",
   p: String.raw`Copy the even values from the vector 1 through 6 into a new vector, using a range algorithm, and print the copied values separated by spaces, then a newline.`,
   ex: String.raw`2 4 6`,
   code: String.raw`#include <algorithm>
@@ -301,7 +301,7 @@ int main() {
 }`,
   why: String.raw`The range form of copy_if reads the source range once and appends matches to the output iterator. Its output is independent of the input, so the original vector is left as it was.` },
 
-{ n: 14, d: "easy", t: "Length of an integer range", idiom: "Distance",
+{ n: 14, d: "easy", t: "Length of an integer range",
   p: String.raw`Compute the number of elements in the range of integers from 5 up to but not including 10, using ranges::distance. Print the count, then a newline.`,
   ex: String.raw`5`,
   code: String.raw`#include <iostream>
@@ -313,7 +313,7 @@ int main() {
 }`,
   why: String.raw`For a sized range the distance is computed directly from the bounds. Counting is therefore cheap even when the range is generated.` },
 
-{ n: 15, d: "medium", t: "Dot product over two ranges zipped together", idiom: "Zip view",
+{ n: 15, d: "medium", t: "Dot product over two ranges zipped together",
   p: String.raw`Given the vectors 1, 2, 3 and 4, 5, 6, pair them up element by element and compute the sum of the products of each pair. Print the result, then a newline.`,
   ex: String.raw`32`,
   code: String.raw`#include <iostream>
@@ -328,7 +328,7 @@ int main() {
 }`,
   why: String.raw`zip walks several ranges in step and yields a tuple of references for each position, so parallel sequences can be processed without an index.` },
 
-{ n: 16, d: "medium", t: "Positions of a value with enumerate", idiom: "Enumerate view",
+{ n: 16, d: "medium", t: "Positions of a value with enumerate",
   p: String.raw`In the vector 3, 1, 3, 2, print the indices of every element equal to 3, separated by spaces, then a newline.`,
   ex: String.raw`0 2`,
   code: String.raw`#include <cstddef>
@@ -344,7 +344,7 @@ int main() {
 }`,
   why: String.raw`enumerate yields each element together with its position, which replaces a manually maintained counter in loops that need to know where they are.` },
 
-{ n: 17, d: "medium", t: "Split a sequence into chunks", idiom: "Chunk view",
+{ n: 17, d: "medium", t: "Split a sequence into chunks",
   p: String.raw`Split the vector 1, 2, 3, 4, 5 into consecutive chunks of at most two elements. Print the size of each chunk separated by spaces, then a newline.`,
   ex: String.raw`2 2 1`,
   code: String.raw`#include <iostream>
@@ -359,7 +359,7 @@ int main() {
 }`,
   why: String.raw`chunk divides a range into contiguous pieces of a fixed size, the last piece possibly shorter. It describes block processing directly.` },
 
-{ n: 18, d: "medium", t: "Sliding windows of two", idiom: "Slide view",
+{ n: 18, d: "medium", t: "Sliding windows of two",
   p: String.raw`Consider the sliding windows of length two over the vector 1, 2, 3, 4. Print the sum of each window separated by spaces, then a newline.`,
   ex: String.raw`3 5 7`,
   code: String.raw`#include <iostream>
@@ -378,7 +378,7 @@ int main() {
 }`,
   why: String.raw`slide gives each overlapping window as a view. Moving the window is the same as dropping one element and taking another, so the window sums are each computed from fresh elements.` },
 
-{ n: 19, d: "medium", t: "Run lengths of equal neighbours", idiom: "Chunk by view",
+{ n: 19, d: "medium", t: "Run lengths of equal neighbours",
   p: String.raw`Group the vector 1, 1, 2, 2, 2, 3 into maximal runs of equal values. Print the length of each run separated by spaces, then a newline.`,
   ex: String.raw`2 3 1`,
   code: String.raw`#include <functional>
@@ -394,7 +394,7 @@ int main() {
 }`,
   why: String.raw`chunk_by starts a new group whenever the predicate between neighbouring elements fails. It is the range form of grouping sorted data.` },
 
-{ n: 20, d: "medium", t: "Every other element of a range", idiom: "Stride view",
+{ n: 20, d: "medium", t: "Every other element of a range",
   p: String.raw`Starting from the integers 0 through 6, take every second value. Print the values separated by spaces, then a newline.`,
   ex: String.raw`0 2 4 6`,
   code: String.raw`#include <iostream>
@@ -406,7 +406,7 @@ int main() {
 }`,
   why: String.raw`stride selects positions at a fixed step through a range. It is the range form of a loop that advances by more than one.` },
 
-{ n: 21, d: "medium", t: "Differences between neighbours", idiom: "Adjacent view",
+{ n: 21, d: "medium", t: "Differences between neighbours",
   p: String.raw`For the vector 1, 4, 9, 16, compute the difference between each element and the one after it. Print the differences separated by spaces, then a newline.`,
   ex: String.raw`3 5 7`,
   code: String.raw`#include <iostream>
@@ -420,7 +420,7 @@ int main() {
 }`,
   why: String.raw`adjacent<2> yields each consecutive pair, and it gives you neighbouring elements without index arithmetic that could go out of bounds.` },
 
-{ n: 22, d: "medium", t: "Sum of squares of odd numbers", idiom: "Pipelines",
+{ n: 22, d: "medium", t: "Sum of squares of odd numbers",
   p: String.raw`Using a single pipeline over the integers 1 through 9, keep the odd values, square them, and sum the results. Print the sum, then a newline.`,
   ex: String.raw`165`,
   code: String.raw`#include <iostream>
@@ -436,7 +436,7 @@ int main() {
 }`,
   why: String.raw`Chaining filter and transform states each step once, and the loop runs the whole chain for each element in turn. The steps read like a description of the data flow.` },
 
-{ n: 23, d: "medium", t: "Sort in descending order with a standard comparator", idiom: "Comparators in ranges",
+{ n: 23, d: "medium", t: "Sort in descending order with a standard comparator",
   p: String.raw`Sort the vector 3, 1, 2 into descending order using the standard greater comparator in the range form of sort. Print the result separated by spaces, then a newline.`,
   ex: String.raw`3 2 1`,
   code: String.raw`#include <algorithm>
@@ -452,7 +452,7 @@ int main() {
 }`,
   why: String.raw`The range algorithms accept function objects in the same way as the iterator forms, so comparators are written once and reused.` },
 
-{ n: 24, d: "medium", t: "First position not less than a value", idiom: "Binary search",
+{ n: 24, d: "medium", t: "First position not less than a value",
   p: String.raw`In the sorted vector 1, 3, 4, 4, 7, find the index of the first element that is at least 4 using the range form of lower_bound. Print the index, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -466,7 +466,7 @@ int main() {
 }`,
   why: String.raw`lower_bound uses binary search, which needs the range to be sorted. It returns the first position where the value could be inserted without disturbing order.` },
 
-{ n: 25, d: "medium", t: "Remove adjacent duplicates", idiom: "Unique and erase",
+{ n: 25, d: "medium", t: "Remove adjacent duplicates",
   p: String.raw`From the vector 1, 1, 2, 3, 3, 3, remove consecutive duplicates using the range form of unique, then erase the leftover tail. Print the remaining elements separated by spaces, then a newline.`,
   ex: String.raw`1 2 3`,
   code: String.raw`#include <algorithm>
@@ -482,7 +482,7 @@ int main() {
 }`,
   why: String.raw`unique moves the distinct values to the front and returns the start of the leftover tail, which still has to be erased from the container to change its size.` },
 
-{ n: 26, d: "medium", t: "Count the elements moved to the front by partition", idiom: "Partition",
+{ n: 26, d: "medium", t: "Count the elements moved to the front by partition",
   p: String.raw`Partition the vector 1, 2, 3, 4, 5, 6 so that the even values come first. Print the number of even values, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -496,7 +496,7 @@ int main() {
 }`,
   why: String.raw`partition reorders a range so the elements satisfying a predicate come first. The returned subrange marks the boundary between the two groups.` },
 
-{ n: 27, d: "medium", t: "Sum the values of a map", idiom: "Values view",
+{ n: 27, d: "medium", t: "Sum the values of a map",
   p: String.raw`Given the map with key 1 mapped to 10 and key 2 mapped to 20, sum the mapped values using a view of the values only. Print the sum, then a newline.`,
   ex: String.raw`30`,
   code: String.raw`#include <iostream>
@@ -511,7 +511,7 @@ int main() {
 }`,
   why: String.raw`The values view selects one part of each key-value pair without copying the map, so code that needs only one part does not have to name the pair type.` },
 
-{ n: 28, d: "medium", t: "Add two ranges elementwise", idiom: "Zip transform view",
+{ n: 28, d: "medium", t: "Add two ranges elementwise",
   p: String.raw`Using a range that combines the vectors 1, 2 and 10, 20 elementwise by addition, print each result separated by spaces, then a newline.`,
   ex: String.raw`11 22`,
   code: String.raw`#include <functional>
@@ -526,7 +526,7 @@ int main() {
 }`,
   why: String.raw`zip_transform fuses a zip with a function, producing one result per position on demand. No intermediate vector is created for the sums.` },
 
-{ n: 29, d: "medium", t: "First three multiples of three above ten", idiom: "Filter and take",
+{ n: 29, d: "medium", t: "First three multiples of three above ten",
   p: String.raw`From the integers starting at 11, keep those divisible by 3 and take the first three. Print them separated by spaces, then a newline.`,
   ex: String.raw`12 15 18`,
   code: String.raw`#include <iostream>
@@ -540,7 +540,7 @@ int main() {
 }`,
   why: String.raw`Filtering an unbounded range is safe as long as the pipeline ends in a take, because elements are produced only as the consumer requests them.` },
 
-{ n: 30, d: "medium", t: "Sum the first two elements of a C array", idiom: "Counted view",
+{ n: 30, d: "medium", t: "Sum the first two elements of a C array",
   p: String.raw`From the C array 1, 2, 3, make a view of its first two elements using a pointer and a count. Print the sum of those elements, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <iostream>
@@ -554,7 +554,7 @@ int main() {
 }`,
   why: String.raw`counted turns a pointer and a length into a range, which is how range algorithms interoperate with C-style arrays and buffers.` },
 
-{ n: 31, d: "medium", t: "Sum the elements of a range with a loop", idiom: "Range-based loops",
+{ n: 31, d: "medium", t: "Sum the elements of a range with a loop",
   p: String.raw`Sum the values of the vector 4, 5, 6 using a range-based for loop, and print the sum, then a newline.`,
   ex: String.raw`15`,
   code: String.raw`#include <iostream>
@@ -568,7 +568,7 @@ int main() {
 }`,
   why: String.raw`A range-based for loop works with any range, so the same loop applies to containers, views and generated sequences.` },
 
-{ n: 32, d: "hard", t: "Write a custom input range", idiom: "Custom ranges",
+{ n: 32, d: "hard", t: "Write a custom input range",
   p: String.raw`Define a type Countdown that holds a starting value, and provide an iterator type and begin and end members so that a range-based for loop over Countdown{3} visits 3, 2 and 1 and stops before 0. Sum the values produced by a loop over Countdown{3} and print the sum, then a newline.`,
   ex: String.raw`6`,
   code: String.raw`#include <cstddef>
@@ -599,7 +599,7 @@ int main() {
 }`,
   why: String.raw`A custom range needs an iterator that supports increment and dereference, plus a sentinel that marks the end. Once those exist, the standard range algorithms and adaptors work with it unchanged.` },
 
-{ n: 33, d: "hard", t: "Sort by department ascending, then salary descending", idiom: "Multi-key projection",
+{ n: 33, d: "hard", t: "Sort by department ascending, then salary descending",
   p: String.raw`Sort the employees, given as eng with salary 100 named ann, ops with salary 90 named bob, and eng with salary 120 named cy, so that they are ordered by department ascending and then by salary descending. Use a single projection that returns a tuple. Print the names separated by spaces, then a newline.`,
   ex: String.raw`cy ann bob`,
   code: String.raw`#include <algorithm>
@@ -622,7 +622,7 @@ int main() {
 }`,
   why: String.raw`Comparing a tuple compares its fields in order, so a projection that negates one numeric field reverses that key while keeping the others ascending.` },
 
-{ n: 34, d: "hard", t: "Count how many elements a pipeline actually evaluates", idiom: "Lazy evaluation",
+{ n: 34, d: "hard", t: "Count how many elements a pipeline actually evaluates",
   p: String.raw`Create the vector 1, 2, 3, 4, 5 and a counter initialized to zero. Build a lazy transform view over it that increments the counter each time its function runs and returns the element doubled. Take the first two elements of that view and iterate over them without anything else. Print the value of the counter, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -643,7 +643,7 @@ int main() {
 }`,
   why: String.raw`Views evaluate their functions only for the elements a consumer reads. Taking two elements from a five-element transform therefore calls the function twice, not five times.` },
 
-{ n: 35, d: "hard", t: "Count a run with equal_range", idiom: "Sorted ranges",
+{ n: 35, d: "hard", t: "Count a run with equal_range",
   p: String.raw`In the sorted vector 1, 4, 4, 4, 5, find the subrange of values equal to 4 using the range form of equal_range. Print the number of elements in that subrange, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -658,7 +658,7 @@ int main() {
 }`,
   why: String.raw`equal_range finds the first and past-the-last positions of a value in a sorted range using two binary searches, so counting duplicates takes logarithmic time.` },
 
-{ n: 36, d: "hard", t: "Drop a leading prefix that satisfies a condition", idiom: "Drop while",
+{ n: 36, d: "hard", t: "Drop a leading prefix that satisfies a condition",
   p: String.raw`From the vector 1, 2, 5, 1, skip the leading elements that are less than 3 and keep the rest. Print the remaining elements separated by spaces, then a newline.`,
   ex: String.raw`5 1`,
   code: String.raw`#include <iostream>
@@ -672,7 +672,7 @@ int main() {
 }`,
   why: String.raw`drop_while only checks the leading elements. Once one fails the condition, every later element is kept, even if it would have satisfied the predicate.` },
 
-{ n: 37, d: "hard", t: "Stable sort keeps the order of equal keys", idiom: "Stable sorting",
+{ n: 37, d: "hard", t: "Stable sort keeps the order of equal keys",
   p: String.raw`Start with the pairs (2, a), (1, b), (2, c), (1, d). Sort them by the first number only, using a stable sort in the range form, so that pairs with equal first numbers keep their original order. Print the second letters of the sorted pairs with no separators, then a newline.`,
   ex: String.raw`bdac`,
   code: String.raw`#include <algorithm>
@@ -688,7 +688,7 @@ int main() {
 }`,
   why: String.raw`A stable sort preserves the relative order of elements that compare equal. This matters when a list is sorted in stages, since earlier orderings survive the later sort.` },
 
-{ n: 38, d: "hard", t: "Count common elements of two sorted ranges", idiom: "Set operations on ranges",
+{ n: 38, d: "hard", t: "Count common elements of two sorted ranges",
   p: String.raw`Compute the intersection of the sorted vectors 1, 3, 5, 7 and 3, 4, 5, 6 using the range form of set_intersection, writing the result into a new vector. Print the number of elements in the result, then a newline.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -704,7 +704,7 @@ int main() {
 }`,
   why: String.raw`Set algorithms on sorted ranges merge the two inputs in one pass, which is linear in their combined length. Sortedness is what makes that single pass correct.` },
 
-{ n: 39, d: "hard", t: "Find an element by a member field", idiom: "Projections",
+{ n: 39, d: "hard", t: "Find an element by a member field",
   p: String.raw`In the vector of people named ann, bob and cy, find the one named bob by projecting onto the name field, and print its index, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -724,7 +724,7 @@ int main() {
 }`,
   why: String.raw`find with a projection compares one member of each element with a value, so searching structured data needs no lambda.` },
 
-{ n: 40, d: "extension", t: "Index-aware loops over a range", idiom: "Enumerate with arithmetic",
+{ n: 40, d: "extension", t: "Index-aware loops over a range",
   p: String.raw`Using the vector 5, 6, 7 and enumerate, compute the sum of each element multiplied by its index. Print the result, then a newline.`,
   ex: String.raw`20`,
   code: String.raw`#include <cstddef>
@@ -740,7 +740,7 @@ int main() {
 }`,
   why: String.raw`enumerate gives the index as a signed difference type, which must be converted before it is multiplied with unsigned or int values. The conversion is explicit so the intent stays visible.` },
 
-{ n: 41, d: "extension", t: "Build a subrange from two iterators", idiom: "Subrange",
+{ n: 41, d: "extension", t: "Build a subrange from two iterators",
   p: String.raw`Create a subrange that starts at the second element and stops before the last element of the vector 1, 2, 3, 4. Print the size of the subrange, a space, and the sum of its elements, then a newline.`,
   ex: String.raw`2 5`,
   code: String.raw`#include <iostream>
@@ -756,7 +756,7 @@ int main() {
 }`,
   why: String.raw`A subrange is a non-owning pair of iterators with range operations. It is a convenient way to pass part of a container to a function that takes a range.` },
 
-{ n: 42, d: "extension", t: "Detect a result that refers to a temporary", idiom: "Dangling iterators",
+{ n: 42, d: "extension", t: "Detect a result that refers to a temporary",
   p: String.raw`Search the temporary vector 1, 2 for the value 1 using the range form of find. Check whether the returned type is std::ranges::dangling, which means the result does not refer to a valid iterator once the temporary is gone. Print 1 if it is, else 0, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <algorithm>
@@ -770,7 +770,7 @@ int main() {
 }`,
   why: String.raw`When a range algorithm is given an rvalue range, it cannot return an iterator into it, because the iterator would dangle after the full expression. It returns the placeholder dangling instead, so the compiler flags misuse at the point it happens.` },
 
-{ n: 43, d: "extension", t: "Make a view read-only", idiom: "as_const view",
+{ n: 43, d: "extension", t: "Make a view read-only",
   p: String.raw`Given the vector 1, 2, 3, produce a view of its elements that presents them as const. Check whether the reference type obtained when iterating over that view is a const reference, and print 1 if it is, else 0, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <iostream>
@@ -785,7 +785,7 @@ int main() {
 }`,
   why: String.raw`as_const is a view that changes the element type of a range to const. It gives a read-only interface to data without copying it or changing the container.` },
 
-{ n: 44, d: "extension", t: "Check which ranges are common", idiom: "Common ranges",
+{ n: 44, d: "extension", t: "Check which ranges are common",
   p: String.raw`Check whether the vector and the integer range from 1 to 5 are common ranges, meaning that they have the same type for begin and end. Print 1 for each that is, separated by a space, then a newline.`,
   ex: String.raw`1 1`,
   code: String.raw`#include <iostream>
@@ -798,7 +798,7 @@ int main() {
 }`,
   why: String.raw`Many older algorithms require begin and end of the same type. Common ranges meet that requirement, and views that do not can be turned into common ones with common_view.` },
 
-{ n: 45, d: "extension", t: "Check whether a view knows its size", idiom: "Sized ranges",
+{ n: 45, d: "extension", t: "Check whether a view knows its size",
   p: String.raw`Check whether the view obtained by applying a transform to the vector 1, 2, 3 is a sized range, meaning that its size can be found without iterating. Print 1 if it is, else 0, then a newline.`,
   ex: String.raw`1`,
   code: String.raw`#include <iostream>
@@ -812,7 +812,7 @@ int main() {
 }`,
   why: String.raw`A sized range reports its size in constant time, which lets algorithms such as distance and reserve work without walking the sequence.` },
 
-{ n: 46, d: "extension", t: "Iterate over a range of ranges by reference", idiom: "Nested views",
+{ n: 46, d: "extension", t: "Iterate over a range of ranges by reference",
   p: String.raw`Given the vector of vectors {1, 2} and {3}, sum all their elements by joining them into one view. Print the sum, then a newline.`,
   ex: String.raw`6`,
   code: String.raw`#include <iostream>
@@ -827,7 +827,7 @@ int main() {
 }`,
   why: String.raw`Joining keeps references into the inner vectors, so a loop can read each element without copying the nested structure.` },
 
-{ n: 47, d: "applications", t: "Sum the numbers in a comma-separated line", idiom: "Parsing with split",
+{ n: 47, d: "applications", t: "Sum the numbers in a comma-separated line",
   p: String.raw`The line 1,2,3 contains numbers separated by commas. Split it at each comma, convert each field to an integer, and print the total, then a newline.`,
   ex: String.raw`6`,
   code: String.raw`#include <iostream>
@@ -845,7 +845,7 @@ int main() {
 }`,
   why: String.raw`Splitting a line into fields lazily avoids building a vector of strings first. Only one field is converted at a time, which keeps the work proportional to the input.` },
 
-{ n: 48, d: "applications", t: "Count words in a sentence", idiom: "Splitting text",
+{ n: 48, d: "applications", t: "Count words in a sentence",
   p: String.raw`Count the words in the sentence the quick fox, where words are separated by single spaces. Print the count, then a newline.`,
   ex: String.raw`3`,
   code: String.raw`#include <iostream>
@@ -858,7 +858,7 @@ int main() {
 }`,
   why: String.raw`A split view yields one subrange per word, so counting words is the same as counting the fields that the split produces.` },
 
-{ n: 49, d: "applications", t: "First two error messages from a log", idiom: "Log filtering",
+{ n: 49, d: "applications", t: "First two error messages from a log",
   p: String.raw`Given the log lines INFO a, ERROR b, ERROR c, select the lines that begin with ERROR and take the first two. Print each message, which is the text after the word ERROR and a space, separated by a space, then a newline.`,
   ex: String.raw`b c`,
   code: String.raw`#include <iostream>
@@ -878,7 +878,7 @@ int main() {
 }`,
   why: String.raw`A lazy pipeline reads the log only as far as needed to find two errors, so it can process a stream of any length without holding all of it in memory.` },
 
-{ n: 50, d: "applications", t: "Sliding window sums over a sensor stream", idiom: "Sliding windows",
+{ n: 50, d: "applications", t: "Sliding window sums over a sensor stream",
   p: String.raw`Given the readings 1, 2, 3, 4, 5, compute the sum of each pair of consecutive readings, using sliding windows of length two. Print the sums separated by spaces, then a newline.`,
   ex: String.raw`3 5 7 9`,
   code: String.raw`#include <iostream>
@@ -896,7 +896,7 @@ int main() {
 }`,
   why: String.raw`Windowed statistics such as moving averages are sliding-window computations. A slide view supplies each window without copying the readings.` },
 
-{ n: 51, d: "applications", t: "Average age of adults", idiom: "Filter and reduce",
+{ n: 51, d: "applications", t: "Average age of adults",
   p: String.raw`Given the ages 12, 20 and 30, select the ages that are at least 18, and print their average with two decimal places, then a newline.`,
   ex: String.raw`25.00`,
   code: String.raw`#include <cstdio>
@@ -914,7 +914,7 @@ int main() {
 }`,
   why: String.raw`Filtering and then reducing is the usual shape of an aggregate query. The filter view feeds the reduction without an intermediate list of the adults.` },
 
-{ n: 52, d: "applications", t: "Row sums of a flattened matrix", idiom: "Chunking data into rows",
+{ n: 52, d: "applications", t: "Row sums of a flattened matrix",
   p: String.raw`A two-by-three matrix is stored row by row in the vector 1, 2, 3, 4, 5, 6. Split the storage into rows of three values and print the sum of each row separated by a space, then a newline.`,
   ex: String.raw`6 15`,
   code: String.raw`#include <iostream>
@@ -931,6 +931,35 @@ int main() {
     std::cout << "\n";
 }`,
   why: String.raw`Matrices stored in row-major order are a range of values that chunk turns back into rows. This keeps the storage flat while the computation is written row by row.` },
+
+{ n: 53, d: "applications", t: "Counting long lines in a report",
+  p: String.raw`A report has the lines ok, fine, bad and great. Count the lines that have more than three characters, then print the count, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <ranges>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::string> lines{"ok", "fine", "bad", "great"};
+    auto longer = lines | std::views::filter([](const std::string& s) { return s.size() > 3; });
+    std::cout << std::ranges::distance(longer) << "\n";
+}`,
+  why: String.raw`A filtered view describes the long lines without building a second container, and the count walks the view once.` },
+
+{ n: 54, d: "applications", t: "Sum of squares of the first five numbers",
+  p: String.raw`Print the sum of the squares of the numbers 1 to 5, then a newline.`,
+  ex: String.raw`55`,
+  code: String.raw`#include <iostream>
+#include <numeric>
+#include <ranges>
+
+int main() {
+    auto squares = std::views::iota(1, 6)
+                 | std::views::transform([](int x) { return x * x; });
+    std::cout << std::accumulate(squares.begin(), squares.end(), 0) << "\n";
+}`,
+  why: String.raw`iota produces the numbers lazily, so the squares are computed as the sum consumes them, without storing any of the intermediate values.` },
 ];
 
 const TOTAL = problems.length;
@@ -1035,7 +1064,7 @@ for (const sec of [
   { from: 15, to: 31, label: "Medium", range: "Problems 15–31", badge: "medium" },
   { from: 32, to: 39, label: "Hard", range: "Problems 32–39", badge: "hard" },
   { from: 40, to: 46, label: "Extension", range: "Problems 40–46", badge: null },
-  { from: 47, to: 52, label: "Applications", range: "Problems 47–52", badge: null }
+  { from: 47, to: 54, label: "Applications", range: "Problems 47–54", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

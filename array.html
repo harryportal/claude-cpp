@@ -1,4 +1,5 @@
 <title>STL Array Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL Array Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1039,6 +1040,123 @@ int main() {
     std::cout << out << '\n';
 }`,
   why: String.raw`The table precomputes the mapping for every letter, so encryption is one lookup per character. The modulo wraps the alphabet back to its start.` },
+
+{ n: 59, d: "applications", t: "Average of sensor readings",
+  p: String.raw`A sensor has reported five readings: 12, 15, 9, 20 and 14. Print the integer average of the readings, rounded down, then a newline.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 5> readings{12, 15, 9, 20, 14};
+    int sum = 0;
+    for (int r : readings) sum += r;
+    std::cout << sum / static_cast<int>(readings.size()) << "\n";
+}`,
+  why: String.raw`A fixed-size array knows its own length, so the average can divide by size() without a separately stored count.` },
+
+{ n: 60, d: "applications", t: "Checksum of a fixed packet",
+  p: String.raw`A network packet is exactly four bytes long, with the values 0x10, 0x20, 0x30 and 0x40. Print the sum of its byte values in decimal, then a newline.`,
+  ex: String.raw`160`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<unsigned char, 4> packet{0x10, 0x20, 0x30, 0x40};
+    int total = 0;
+    for (unsigned char b : packet) total += b;
+    std::cout << total << "\n";
+}`,
+  why: String.raw`A fixed-size array with a known element type is a natural fit for a fixed-size packet, and the checksum loop does not need to know how long it is.` },
+
+{ n: 61, d: "applications", t: "Days in each month",
+  p: String.raw`Store the number of days in each month of a non-leap year, with January first. Print the number of days in March, which is index 2, then the number of months with 31 days, separated by a space, then a newline.`,
+  ex: String.raw`31 7`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    constexpr std::array<int, 12> days{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int count31 = 0;
+    for (int d : days)
+        if (d == 31) ++count31;
+    std::cout << days[2] << ' ' << count31 << "\n";
+}`,
+  why: String.raw`A constexpr array is a compile-time lookup table, so the data costs nothing at run time and can be indexed directly.` },
+
+{ n: 62, d: "applications", t: "Swapping colour channels",
+  p: String.raw`A colour is stored as three values in the order red, green, blue, with the values 255, 128 and 0. Swap the red and blue values, then print the three values separated by spaces, then a newline.`,
+  ex: String.raw`0 128 255`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <utility>
+
+int main() {
+    std::array<int, 3> rgb{255, 128, 0};
+    std::swap(rgb[0], rgb[2]);
+    std::cout << rgb[0] << ' ' << rgb[1] << ' ' << rgb[2] << "\n";
+}`,
+  why: String.raw`Elements of an array are ordinary lvalues, so they can be swapped in place without copying the whole colour.` },
+
+{ n: 63, d: "applications", t: "Top three scores",
+  p: String.raw`The scores of six players are 44, 91, 73, 91, 60 and 85. Print the three highest scores in decreasing order, separated by spaces, then a newline. Leave the original scores unchanged.`,
+  ex: String.raw`91 91 85`,
+  code: String.raw`#include <algorithm>
+#include <array>
+#include <functional>
+#include <iostream>
+
+int main() {
+    std::array<int, 6> scores{44, 91, 73, 91, 60, 85};
+    auto ranked = scores;
+    std::sort(ranked.begin(), ranked.end(), std::greater<int>{});
+    std::cout << ranked[0] << ' ' << ranked[1] << ' ' << ranked[2] << "\n";
+}`,
+  why: String.raw`Copying a std::array gives an independent sorted copy, so the original order is kept for any later use.` },
+
+{ n: 64, d: "applications", t: "Fixed-size ring of recent values",
+  p: String.raw`Keep the three most recent values in three slots. Store the values 5, 7, 9 and 11 one after another, where each new value goes into the next slot and the fourth value replaces the oldest one. Print the three slots from first to last, separated by spaces, then a newline.`,
+  ex: String.raw`11 7 9`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 3> slots{};
+    const std::array<int, 4> values{5, 7, 9, 11};
+    for (std::size_t i = 0; i < values.size(); ++i)
+        slots[i % slots.size()] = values[i];
+    std::cout << slots[0] << ' ' << slots[1] << ' ' << slots[2] << "\n";
+}`,
+  why: String.raw`A buffer that overwrites its oldest entry needs only an index that wraps around. The array's fixed size makes the wrap a single modulo.` },
+
+{ n: 65, d: "applications", t: "Status message lookup",
+  p: String.raw`Three status messages are stored in order: ok, warn and fail. The status code is 2. Print the message for that code, then a newline.`,
+  ex: String.raw`fail`,
+  code: String.raw`#include <array>
+#include <cstddef>
+#include <iostream>
+
+int main() {
+    std::array<const char*, 3> messages{"ok", "warn", "fail"};
+    std::size_t status = 2;
+    std::cout << messages[status] << "\n";
+}`,
+  why: String.raw`Mapping small integer codes to messages is a table lookup. An array indexed by the code avoids a chain of comparisons.` },
+
+{ n: 66, d: "applications", t: "Row totals of a grid",
+  p: String.raw`A grid has two rows: 1, 2, 3 and 4, 5, 6. Print the total of each row, separated by a space, then a newline.`,
+  ex: String.raw`6 15`,
+  code: String.raw`#include <array>
+#include <iostream>
+
+int main() {
+    std::array<std::array<int, 3>, 2> grid{{{1, 2, 3}, {4, 5, 6}}};
+    int first = 0, second = 0;
+    for (int v : grid[0]) first += v;
+    for (int v : grid[1]) second += v;
+    std::cout << first << ' ' << second << "\n";
+}`,
+  why: String.raw`A std::array of std::array gives a two-dimensional grid with no extra allocation, and each row can be traversed on its own.` },
 ];
 
 const TOTAL = problems.length;
@@ -1141,7 +1259,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
   { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
-  { from: 21, to: 48, label: "Hard", range: "Problems 21–48", badge: "hard" }
+  { from: 21, to: 48, label: "Hard", range: "Problems 21–48", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

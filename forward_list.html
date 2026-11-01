@@ -1,4 +1,5 @@
 <title>STL Forward List Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL Forward List Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1104,6 +1105,122 @@ int main() {
     std::cout << '\n';
 }`,
   why: String.raw`A flag toggled at each step tracks whether the position is odd, which needs only a single forward pass.` },
+
+{ n: 59, d: "applications", t: "Reversing a linked playlist",
+  p: String.raw`A playlist is stored as a singly linked list with the tracks 1, 2 and 3 in that order. Reverse the playlist, then print the tracks from first to last, separated by spaces, then a newline.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> playlist{1, 2, 3};
+    playlist.reverse();
+    for (int t : playlist) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A singly linked list can be reversed in place by reversing the direction of each link, with no extra storage for the elements.` },
+
+{ n: 60, d: "applications", t: "Removing finished jobs",
+  p: String.raw`A queue of job numbers from 1 to 9 is processed. Jobs whose number is a multiple of 3 are finished and removed. Print the remaining jobs in order, separated by spaces, then a newline.`,
+  ex: String.raw`1 2 4 5 7 8`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> jobs{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    jobs.remove_if([](int j) { return j % 3 == 0; });
+    for (int j : jobs) std::cout << j << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`remove_if drops every element matching a condition in one pass, and a forward list does this without shifting anything except the links.` },
+
+{ n: 61, d: "applications", t: "Inserting into the middle",
+  p: String.raw`A list holds 1 and 2. Insert 0 at the very front. Then insert 9 directly after the element 1. Print the list from first to last, separated by spaces, then a newline.`,
+  ex: String.raw`0 1 9 2`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> f{1, 2};
+    f.push_front(0);
+    auto it = f.begin();
+    ++it;
+    f.insert_after(it, 9);
+    for (int v : f) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A singly linked list inserts after a known position, not before one, so the iterator used for the insertion has to point at the element before the gap.` },
+
+{ n: 62, d: "applications", t: "Merging two sorted feeds",
+  p: String.raw`Two feeds are each already sorted: the first holds 1, 4 and 6, and the second holds 2, 3 and 7. Combine them into a single sorted list, then print it, separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 4 6 7`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> a{1, 4, 6};
+    std::forward_list<int> b{2, 3, 7};
+    a.merge(b);
+    for (int v : a) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Merging two sorted lists takes a single pass over both, and the second list is emptied in the process.` },
+
+{ n: 63, d: "applications", t: "Counting views in a log",
+  p: String.raw`A session log holds the entries login, view, view and logout, in that order. Print how many entries are view, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <forward_list>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::forward_list<std::string> log{"login", "view", "view", "logout"};
+    std::cout << std::count(log.begin(), log.end(), "view") << "\n";
+}`,
+  why: String.raw`Counting entries is a read-only pass over the sequence, so it works on any iterator range, including a forward list.` },
+
+{ n: 64, d: "applications", t: "Collapsing repeated readings",
+  p: String.raw`A sensor produced the readings 1, 1, 2, 2, 2, 3 and 1, in that order. Remove any reading that is the same as the one just before it, then print what remains separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 1`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> readings{1, 1, 2, 2, 2, 3, 1};
+    readings.unique();
+    for (int r : readings) std::cout << r << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`unique removes only adjacent duplicates, which matches a stream where repeats show up back to back.` },
+
+{ n: 65, d: "applications", t: "Keeping even values",
+  p: String.raw`A list holds the values 1 to 6 in order. Remove the odd values, then print what remains separated by spaces, then a newline.`,
+  ex: String.raw`2 4 6`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> values{1, 2, 3, 4, 5, 6};
+    values.remove_if([](int v) { return v % 2 != 0; });
+    for (int v : values) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Filtering a sequence by a predicate keeps the original order of the elements that survive.` },
+
+{ n: 66, d: "applications", t: "Ordering durations",
+  p: String.raw`Four track durations in minutes are 30, 5, 12 and 7. Sort them from shortest to longest, print them separated by spaces, then a newline.`,
+  ex: String.raw`5 7 12 30`,
+  code: String.raw`#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> durations{30, 5, 12, 7};
+    durations.sort();
+    for (int d : durations) std::cout << d << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A forward list has its own sort member, because the generic sort algorithm needs random access that a singly linked list does not provide.` },
 ];
 
 const TOTAL = problems.length;
@@ -1206,7 +1323,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
   { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
-  { from: 21, to: 55, label: "Hard", range: "Problems 21–55", badge: "hard" }
+  { from: 21, to: 55, label: "Hard", range: "Problems 21–55", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

@@ -1,4 +1,5 @@
 <title>STL Deque Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL Deque Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1078,6 +1079,139 @@ int main() {
     std::cout << std::string(text.begin(), text.end()) << '\n';
 }`,
   why: String.raw`Insertion at an arbitrary position in a deque shifts the shorter side, so editing near the cursor stays cheap. Here the cursor sits between a and b, which puts x in the middle.` },
+
+{ n: 59, d: "applications", t: "Undo history with a cap",
+  p: String.raw`Record the actions 1 to 5 in order, but keep only the most recent three. Print the remaining actions from oldest to newest, separated by spaces, then a newline.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> history;
+    for (int i = 1; i <= 5; ++i) {
+        history.push_back(i);
+        if (history.size() > 3) history.pop_front();
+    }
+    for (int a : history) std::cout << a << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A deque removes from the front in constant time, so a capped history can drop its oldest entry cheaply on every push.` },
+
+{ n: 60, d: "applications", t: "Average of the latest window",
+  p: String.raw`Keep the most recent three values from the sequence 1 to 5, discarding older ones as new values arrive. Print the integer average of those three values, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> window;
+    for (int i = 1; i <= 5; ++i) {
+        window.push_back(i);
+        if (window.size() > 3) window.pop_front();
+    }
+    int sum = 0;
+    for (int v : window) sum += v;
+    std::cout << sum / static_cast<int>(window.size()) << "\n";
+}`,
+  why: String.raw`A sliding window needs to add at one end and remove at the other, which is exactly the access pattern a deque supports well.` },
+
+{ n: 61, d: "applications", t: "Urgent task at the front",
+  p: String.raw`A queue of tasks holds A and then B. An urgent task U is added so that it is served before everything else. Print the tasks from front to back, separated by spaces, then a newline.`,
+  ex: String.raw`U A B`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<std::string> tasks{"A", "B"};
+    tasks.push_front("U");
+    for (const auto& t : tasks) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Inserting at the front lets an urgent item jump the line without moving the rest of the queue.` },
+
+{ n: 62, d: "applications", t: "Going back in history",
+  p: String.raw`Visit the pages a, b and c in that order. Going back removes the most recent visit. After one step back, print the history from oldest to newest, separated by spaces, then a newline.`,
+  ex: String.raw`a b`,
+  code: String.raw`#include <deque>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::deque<std::string> history{"a", "b", "c"};
+    history.pop_back();
+    for (const auto& page : history) std::cout << page << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Back navigation takes the most recent entry off the end, so a deque holding the visit order handles it directly.` },
+
+{ n: 63, d: "applications", t: "Rotating a playlist",
+  p: String.raw`A playlist holds the tracks 1, 2, 3 and 4. Move the first track to the end twice, then print the tracks in order, separated by spaces, then a newline.`,
+  ex: String.raw`3 4 1 2`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> playlist{1, 2, 3, 4};
+    for (int i = 0; i < 2; ++i) {
+        playlist.push_back(playlist.front());
+        playlist.pop_front();
+    }
+    for (int t : playlist) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Moving the front element to the back is a rotation, and a deque does both steps without shifting the other elements.` },
+
+{ n: 64, d: "applications", t: "Trimming both ends",
+  p: String.raw`A deque holds the values 1 to 6. Remove the first and the last value, then print the sum of the values that remain, then a newline.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d{1, 2, 3, 4, 5, 6};
+    d.pop_front();
+    d.pop_back();
+    int sum = 0;
+    for (int v : d) sum += v;
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`Removing from both ends of a deque is constant time at each end, which suits trimming a sequence from both sides.` },
+
+{ n: 65, d: "applications", t: "Ordering arriving packets",
+  p: String.raw`Packets with the sequence numbers 2, 1 and 3 arrive in that order. Store them in a deque so that the smallest is at the front. Each arriving number goes at the front if it is smaller than the current front, and otherwise at the back. Print the deque from front to back, separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> d;
+    for (int x : {2, 1, 3}) {
+        if (!d.empty() && x < d.front()) d.push_front(x);
+        else d.push_back(x);
+    }
+    for (int v : d) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A deque lets arrivals join at either end, which is what a reordering buffer needs when packets come in out of order.` },
+
+{ n: 66, d: "applications", t: "Average of the last samples",
+  p: String.raw`Feed the samples 1 to 10 one at a time into a buffer that holds only the most recent four. Print the average of the values in the buffer at the end, as a decimal number, then a newline.`,
+  ex: String.raw`8.5`,
+  code: String.raw`#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> buffer;
+    for (int i = 1; i <= 10; ++i) {
+        buffer.push_back(i);
+        if (buffer.size() > 4) buffer.pop_front();
+    }
+    int sum = 0;
+    for (int v : buffer) sum += v;
+    std::cout << static_cast<double>(sum) / static_cast<double>(buffer.size()) << "\n";
+}`,
+  why: String.raw`A bounded buffer keeps the newest samples and forgets the oldest, and the average is taken over whatever it currently holds.` },
 ];
 
 const TOTAL = problems.length;
@@ -1180,7 +1314,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 58, label: "Easy", range: "Problems 1–58", badge: "easy" },
   { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
-  { from: 21, to: 50, label: "Hard", range: "Problems 21–50", badge: "hard" }
+  { from: 21, to: 50, label: "Hard", range: "Problems 21–50", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

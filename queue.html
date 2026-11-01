@@ -1,4 +1,5 @@
 <title>STL Queue Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL Queue Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1274,6 +1275,164 @@ int main() {
     std::cout << input.size() << '\n';
 }`,
   why: String.raw`Items arrive in one pass and are removed one at a time, so the backlog is the number pushed minus the number processed.` },
+
+{ n: 59, d: "applications", t: "Next print job",
+  p: String.raw`Four print jobs 1, 2, 3 and 4 are sent in that order. The first job is printed and removed from the line. Print the number of the job now at the front, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> jobs;
+    for (int j = 1; j <= 4; ++j) jobs.push(j);
+    jobs.pop();
+    std::cout << jobs.front() << "\n";
+}`,
+  why: String.raw`Jobs are served in the order they arrived, so the first one in is the first one out.` },
+
+{ n: 60, d: "applications", t: "Round-robin time slices",
+  p: String.raw`Three tasks need 2, 1 and 3 units of work, and they are listed in the order A, B, C. The processor runs one unit of the task at the front of the line, then sends that task to the back of the line if it still has work left. Print the task letter for each unit run, separated by spaces, then a newline.`,
+  ex: String.raw`A B C A C C`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
+
+int main() {
+    std::queue<std::pair<std::string, int>> line;
+    line.push({"A", 2});
+    line.push({"B", 1});
+    line.push({"C", 3});
+    while (!line.empty()) {
+        auto [name, left] = line.front();
+        line.pop();
+        std::cout << name << ' ';
+        if (left > 1) line.push({name, left - 1});
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Putting an unfinished task at the back of the line means each task gets a turn in the order they arrived, without any task being skipped.` },
+
+{ n: 61, d: "applications", t: "Visit order through a friend network",
+  p: String.raw`Person 1 is friends with 2 and 3. Person 2 is friends with 4. Person 3 is friends with 4 and 5. Starting from person 1, visit everyone in the network, going through each person's friends in the order they were first found, and never visiting anyone twice. Print the order of visits separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 4 5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+int main() {
+    std::map<int, std::vector<int>> friends{{1, {2, 3}}, {2, {4}}, {3, {4, 5}}};
+    std::queue<int> todo;
+    std::set<int> seen{1};
+    todo.push(1);
+    while (!todo.empty()) {
+        int p = todo.front();
+        todo.pop();
+        std::cout << p << ' ';
+        for (int f : friends[p]) {
+            if (seen.insert(f).second) todo.push(f);
+        }
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`People discovered earlier are visited earlier, so a queue of people waiting to be visited keeps the order of discovery.` },
+
+{ n: 62, d: "applications", t: "Who is still waiting",
+  p: String.raw`Customers ann, bob, cy and dee join a support line in that order. The first two are served and leave the line. Print the names still waiting, separated by spaces, then a newline.`,
+  ex: String.raw`cy dee`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> line;
+    for (const char* name : {"ann", "bob", "cy", "dee"}) line.push(name);
+    line.pop();
+    line.pop();
+    while (!line.empty()) {
+        std::cout << line.front() << ' ';
+        line.pop();
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Customers are served in arrival order, so the people still waiting are simply the ones at the back of the line after the first served.` },
+
+{ n: 63, d: "applications", t: "Total waiting time",
+  p: String.raw`Three jobs take 3, 1 and 4 minutes to finish, and they are processed one after another in that order. A job waits until every job before it has finished. Print the total waiting time of all three jobs, in minutes, then a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> jobs;
+    jobs.push(3);
+    jobs.push(1);
+    jobs.push(4);
+    int elapsed = 0, total = 0;
+    while (!jobs.empty()) {
+        total += elapsed;
+        elapsed += jobs.front();
+        jobs.pop();
+    }
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Each job's wait is the time already used by the jobs ahead of it, and that running total is kept as the line is drained.` },
+
+{ n: 64, d: "applications", t: "Keeping only recent log lines",
+  p: String.raw`A log keeps only its two most recent lines. Write the lines a, b and c into the log in that order. Print the lines still kept from oldest to newest, separated by spaces, then a newline.`,
+  ex: String.raw`b c`,
+  code: String.raw`#include <iostream>
+#include <queue>
+#include <string>
+
+int main() {
+    std::queue<std::string> log;
+    for (const char* line : {"a", "b", "c"}) {
+        log.push(line);
+        if (log.size() > 2) log.pop();
+    }
+    while (!log.empty()) {
+        std::cout << log.front() << ' ';
+        log.pop();
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`When the log is full, the oldest line leaves from the front while the newest joins at the back, which is the standard first-in, first-out order.` },
+
+{ n: 65, d: "applications", t: "Events due by a deadline",
+  p: String.raw`Events with the timestamps 10, 20 and 30 arrive in that order. Process the events that are due at or before time 25, taking them in arrival order and stopping at the first event that is not yet due. Print how many events are still waiting, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> events;
+    for (int t : {10, 20, 30}) events.push(t);
+    while (!events.empty() && events.front() <= 25) events.pop();
+    std::cout << events.size() << "\n";
+}`,
+  why: String.raw`Events are handled strictly in arrival order, so the first event that is not yet due holds back every event behind it.` },
+
+{ n: 66, d: "applications", t: "Handing work from one stage to the next",
+  p: String.raw`A producer pushes the numbers 1 to 5 into a buffer. A consumer then removes the first two numbers. Print the numbers left in the buffer from first to last, separated by spaces, then a newline.`,
+  ex: String.raw`3 4 5`,
+  code: String.raw`#include <iostream>
+#include <queue>
+
+int main() {
+    std::queue<int> buffer;
+    for (int i = 1; i <= 5; ++i) buffer.push(i);
+    buffer.pop();
+    buffer.pop();
+    while (!buffer.empty()) {
+        std::cout << buffer.front() << ' ';
+        buffer.pop();
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`A buffer between two stages preserves the order the items were produced in, so the consumer always takes the oldest item first.` },
 ];
 
 const TOTAL = problems.length;
@@ -1376,7 +1535,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 58, label: "Easy", range: "Problems 1–58", badge: "easy" },
   { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
-  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" }
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

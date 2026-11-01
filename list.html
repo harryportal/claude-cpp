@@ -1,4 +1,5 @@
 <title>STL List Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL List Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1068,6 +1069,130 @@ int main() {
     std::cout << '\n';
 }`,
   why: String.raw`A returning visitor's node is moved to the front with splice, so the record is reused rather than rebuilt. The list then reads most recent first.` },
+
+{ n: 59, d: "applications", t: "Recently used first",
+  p: String.raw`A list holds the items 1, 2 and 3 in that order. Item 2 is used, so move it to the front without changing the order of the others. Print the items separated by spaces, then a newline.`,
+  ex: String.raw`2 1 3`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> items{1, 2, 3};
+    auto it = std::next(items.begin());
+    items.splice(items.begin(), items, it);
+    for (int v : items) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`splice moves an element from one position to another in constant time without copying it, which suits a recently-used ordering.` },
+
+{ n: 60, d: "applications", t: "Moving a track to the end",
+  p: String.raw`A playlist holds the tracks 1, 2, 3 and 4. Move the first track to the end, then print the playlist separated by spaces, then a newline.`,
+  ex: String.raw`2 3 4 1`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> playlist{1, 2, 3, 4};
+    playlist.splice(playlist.end(), playlist, playlist.begin());
+    for (int t : playlist) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Reordering a list by splicing relinks the nodes, so the tracks keep their identity and no element is copied.` },
+
+{ n: 61, d: "applications", t: "Interleaving two sorted playlists",
+  p: String.raw`Two sorted playlists are 1, 3 and 5, and 2, 4 and 6. Combine them into one sorted playlist, print it separated by spaces, then a newline.`,
+  ex: String.raw`1 2 3 4 5 6`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> a{1, 3, 5};
+    std::list<int> b{2, 4, 6};
+    a.merge(b);
+    for (int v : a) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Merging sorted lists relinks nodes from one list into the other, so the second list ends up empty.` },
+
+{ n: 62, d: "applications", t: "Removing a value everywhere",
+  p: String.raw`A list holds the values 5, 2, 5, 8 and 5, in that order. Remove every occurrence of 5, then print what remains separated by spaces, then a newline.`,
+  ex: String.raw`2 8`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> values{5, 2, 5, 8, 5};
+    values.remove(5);
+    for (int v : values) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`Removing by value in a list deletes every match in one pass, and does not invalidate iterators to the other elements.` },
+
+{ n: 63, d: "applications", t: "Bringing one entry forward",
+  p: String.raw`A list holds the values 1, 2, 3, 4 and 5 in order. Take the third value and place it before the first value. Print the list separated by spaces, then a newline.`,
+  ex: String.raw`3 1 2 4 5`,
+  code: String.raw`#include <iostream>
+#include <iterator>
+#include <list>
+
+int main() {
+    std::list<int> values{1, 2, 3, 4, 5};
+    auto third = std::next(values.begin(), 2);
+    values.splice(values.begin(), values, third);
+    for (int v : values) std::cout << v << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`An iterator to a list element stays valid across splices, so the element can be moved using the iterator from earlier.` },
+
+{ n: 64, d: "applications", t: "Sorting scores from highest to lowest",
+  p: String.raw`Three scores are listed as 3, 1 and 2. Sort them from highest to lowest, print them separated by spaces, then a newline.`,
+  ex: String.raw`3 2 1`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> scores{3, 1, 2};
+    scores.sort(std::greater<int>{});
+    for (int s : scores) std::cout << s << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`A list supplies its own sort that accepts a comparison, and it does the work by relinking nodes.` },
+
+{ n: 65, d: "applications", t: "Erasing while walking the list",
+  p: String.raw`A list holds the values 1, 2, 3 and 4. Walk through it, erasing every even value as you go. Then print the sum of the values that remain, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <list>
+
+int main() {
+    std::list<int> values{1, 2, 3, 4};
+    for (auto it = values.begin(); it != values.end();) {
+        if (*it % 2 == 0) it = values.erase(it);
+        else ++it;
+    }
+    int sum = 0;
+    for (int v : values) sum += v;
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`erase returns the iterator to the next element, so a walk that removes items can continue without invalidating its position.` },
+
+{ n: 66, d: "applications", t: "Unique tags",
+  p: String.raw`A list of tags holds a, b, a and c, in that order. Sort the tags, remove the duplicates, then print the remaining tags separated by spaces, then a newline.`,
+  ex: String.raw`a b c`,
+  code: String.raw`#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> tags{"a", "b", "a", "c"};
+    tags.sort();
+    tags.unique();
+    for (const auto& t : tags) std::cout << t << ' ';
+    std::cout << "\n";
+}`,
+  why: String.raw`unique only removes adjacent duplicates, so the tags are sorted first to bring every copy of a tag next to each other.` },
 ];
 
 const TOTAL = problems.length;
@@ -1170,7 +1295,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
   { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
-  { from: 21, to: 29, label: "Hard", range: "Problems 21–29", badge: "hard" }
+  { from: 21, to: 29, label: "Hard", range: "Problems 21–29", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

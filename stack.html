@@ -1,4 +1,5 @@
 <title>STL Stack Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL Stack Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -1294,6 +1295,177 @@ int main() {
     std::cout << total << '\n';
 }`,
   why: String.raw`Each open parenthesis saves the running total and the sign that applies to the group. The closing parenthesis folds the inner total back into the saved value.` },
+
+{ n: 59, d: "applications", t: "Undo the last edit",
+  p: String.raw`Three edits are made in order: a, b and c. The most recent edit is undone. Print the edit that is now the most recent, then a newline.`,
+  ex: String.raw`b`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> undo;
+    undo.push("a");
+    undo.push("b");
+    undo.push("c");
+    undo.pop();
+    std::cout << undo.top() << "\n";
+}`,
+  why: String.raw`Undo always reverts the most recent change first, so the history is last-in, first-out and a stack holds it directly.` },
+
+{ n: 60, d: "applications", t: "Back button on a page history",
+  p: String.raw`A browser visits the pages p1, p2 and p3 in that order. The back button is pressed twice. Print the page now showing, then a newline.`,
+  ex: String.raw`p1`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> history;
+    history.push("p1");
+    history.push("p2");
+    history.push("p3");
+    history.pop();
+    history.pop();
+    std::cout << history.top() << "\n";
+}`,
+  why: String.raw`Going back returns to the page visited most recently before the current one, which is the last entry pushed.` },
+
+{ n: 61, d: "applications", t: "Which function is running",
+  p: String.raw`The function main calls A, A calls B and B calls C. Function C then returns to its caller. Print the name of the function that is now running, then a newline.`,
+  ex: String.raw`B`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> calls;
+    calls.push("main");
+    calls.push("A");
+    calls.push("B");
+    calls.push("C");
+    calls.pop();
+    std::cout << calls.top() << "\n";
+}`,
+  why: String.raw`Each call goes on top of the chain and each return removes it, so the running function is always the most recent unfinished call.` },
+
+{ n: 62, d: "applications", t: "Reversing a word",
+  p: String.raw`Reverse the word stack by reading its letters one at a time and writing them back out in the opposite order. Print the reversed word, then a newline.`,
+  ex: String.raw`kcats`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<char> letters;
+    for (char c : std::string("stack")) letters.push(c);
+    std::string out;
+    while (!letters.empty()) {
+        out += letters.top();
+        letters.pop();
+    }
+    std::cout << out << "\n";
+}`,
+  why: String.raw`Pushing every letter and then popping them all produces the reverse, because the last letter in is the first one out.` },
+
+{ n: 63, d: "applications", t: "Smallest value so far",
+  p: String.raw`Push the values 5, 3 and 8 one at a time. After each push, print the smallest value pushed so far, with the values separated by spaces, then a newline.`,
+  ex: String.raw`5 3 3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <stack>
+
+struct Entry {
+    int value;
+    int smallest;
+};
+
+int main() {
+    std::stack<Entry> s;
+    for (int v : {5, 3, 8}) {
+        int smallest = s.empty() ? v : std::min(v, s.top().smallest);
+        s.push({v, smallest});
+        std::cout << s.top().smallest << ' ';
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Storing the smallest value alongside each entry means the answer is always available at the top, even after pops.` },
+
+{ n: 64, d: "applications", t: "Deepest nesting of tags",
+  p: String.raw`A document has the tags written in this order: a, b, /b, c, d, /d, /c, /a. A tag starts a new level and a tag beginning with / closes the most recent level. Print the deepest level reached, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<std::string> open;
+    std::size_t deepest = 0;
+    for (std::string t : {"a", "b", "/b", "c", "d", "/d", "/c", "/a"}) {
+        if (t[0] == '/') open.pop();
+        else {
+            open.push(t);
+            deepest = std::max(deepest, open.size());
+        }
+    }
+    std::cout << deepest << "\n";
+}`,
+  why: String.raw`Each opening tag is matched by its closing tag in reverse order, so the open tags always form a last-in, first-out chain.` },
+
+{ n: 65, d: "applications", t: "Evaluating a calculation",
+  p: String.raw`Evaluate the expression written as 3 4 + 2 *, where each operator is applied to the two values just before it. Print the result, then a newline.`,
+  ex: String.raw`14`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::stack<int> s;
+    std::istringstream in("3 4 + 2 *");
+    std::string tok;
+    while (in >> tok) {
+        if (tok == "+" || tok == "*") {
+            int b = s.top(); s.pop();
+            int a = s.top(); s.pop();
+            s.push(tok == "+" ? a + b : a * b);
+        } else {
+            s.push(std::stoi(tok));
+        }
+    }
+    std::cout << s.top() << "\n";
+}`,
+  why: String.raw`Each operator needs the two most recent values, which are the ones on top, so the operands can be read off in the order they were pushed.` },
+
+{ n: 66, d: "applications", t: "Checking a nested bracket string",
+  p: String.raw`Check whether the brackets in the string {[()]} are properly balanced, meaning every closing bracket matches the most recent unmatched opening bracket and nothing is left open. Print balanced or unbalanced, then a newline.`,
+  ex: String.raw`balanced`,
+  code: String.raw`#include <iostream>
+#include <stack>
+#include <string>
+
+int main() {
+    std::string text = "{[()]}";
+    std::stack<char> open;
+    bool ok = true;
+    for (char c : text) {
+        if (c == '(' || c == '[' || c == '{') {
+            open.push(c);
+            continue;
+        }
+        if (open.empty()) { ok = false; break; }
+        char o = open.top();
+        open.pop();
+        if ((c == ')' && o != '(') || (c == ']' && o != '[') || (c == '}' && o != '{')) {
+            ok = false;
+            break;
+        }
+    }
+    std::cout << ((ok && open.empty()) ? "balanced" : "unbalanced") << "\n";
+}`,
+  why: String.raw`A closing bracket must match the opening bracket that was seen most recently and not yet closed, which is the top of a stack.` },
 ];
 
 const TOTAL = problems.length;
@@ -1396,7 +1568,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 55, label: "Easy", range: "Problems 1–55", badge: "easy" },
   { from: 11, to: 57, label: "Medium", range: "Problems 11–57", badge: "medium" },
-  { from: 17, to: 58, label: "Hard", range: "Problems 17–58", badge: "hard" }
+  { from: 17, to: 58, label: "Hard", range: "Problems 17–58", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

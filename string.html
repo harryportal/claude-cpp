@@ -1,4 +1,5 @@
 <title>STL String Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
@@ -99,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Problems by topic · 58 problems</p>
+    <p class="kicker">Problems by topic · 66 problems</p>
     <h1>STL String Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -993,6 +994,133 @@ int main() {
     std::cout << out << '\n';
 }`,
   why: String.raw`Converting the number to text makes each digit a character, and subtracting '0' turns it into an index into the name table.` },
+
+{ n: 59, d: "applications", t: "Cleaning a username",
+  p: String.raw`A user typed the name "   alice   " with spaces before and after it. Remove the spaces at both ends and print the result, then a newline.`,
+  ex: String.raw`alice`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string name = "   alice   ";
+    auto first = name.find_first_not_of(' ');
+    auto last = name.find_last_not_of(' ');
+    std::cout << name.substr(first, last - first + 1) << "\n";
+}`,
+  why: String.raw`Form fields often carry stray spaces, and a string's positions of the first and last non-space characters give the trimmed part directly.` },
+
+{ n: 60, d: "applications", t: "Reading a file extension",
+  p: String.raw`Print the extension of the file name report.final.pdf, meaning the part after its last dot, then a newline.`,
+  ex: String.raw`pdf`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string file = "report.final.pdf";
+    auto dot = file.rfind('.');
+    std::cout << file.substr(dot + 1) << "\n";
+}`,
+  why: String.raw`A file name can contain several dots, so the search has to start from the end of the name to find the one that separates the extension.` },
+
+{ n: 61, d: "applications", t: "Building a CSV row",
+  p: String.raw`Build a single comma-separated line containing the three fields a, b and c, with no spaces. Print the line, then a newline.`,
+  ex: String.raw`a,b,c`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<std::string> fields{"a", "b", "c"};
+    std::string line;
+    for (std::size_t i = 0; i < fields.size(); ++i) {
+        if (i > 0) line += ',';
+        line += fields[i];
+    }
+    std::cout << line << "\n";
+}`,
+  why: String.raw`Joining fields needs the separator only between items, so the loop adds it before every field except the first.` },
+
+{ n: 62, d: "applications", t: "Counting vowels in a word",
+  p: String.raw`Count the vowels a, e, i, o and u in the word programming, treating each occurrence as one vowel. Print the count, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string word = "programming";
+    int count = 0;
+    for (char c : word)
+        if (std::string("aeiou").find(c) != std::string::npos) ++count;
+    std::cout << count << "\n";
+}`,
+  why: String.raw`Looking up each character in a string of vowels is a simple membership test, and find returns npos when the character is absent.` },
+
+{ n: 63, d: "applications", t: "Masking a card number",
+  p: String.raw`A card number is 4111111111111111. Replace every digit except the last four with the character *, then print the result, then a newline.`,
+  ex: String.raw`************1111`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string card = "4111111111111111";
+    std::string masked = std::string(card.size() - 4, '*') + card.substr(card.size() - 4);
+    std::cout << masked << "\n";
+}`,
+  why: String.raw`Only the last four characters are shown to the user, so the rest of the string is built from a run of stars followed by the visible tail.` },
+
+{ n: 64, d: "applications", t: "Splitting a path into parts",
+  p: String.raw`Split the path usr/local/bin at each slash and print the parts separated by spaces, then a newline.`,
+  ex: String.raw`usr local bin`,
+  code: String.raw`#include <iostream>
+#include <string>
+
+int main() {
+    std::string path = "usr/local/bin";
+    std::string out;
+    std::size_t start = 0;
+    while (true) {
+        auto slash = path.find('/', start);
+        out += path.substr(start, slash - start);
+        if (slash == std::string::npos) break;
+        out += ' ';
+        start = slash + 1;
+    }
+    std::cout << out << "\n";
+}`,
+  why: String.raw`Each part lies between two slashes, so the scan keeps track of where the next part begins and stops when no slash is left.` },
+
+{ n: 65, d: "applications", t: "Checking a reversible code",
+  p: String.raw`Print yes if the string level reads the same forwards and backwards, otherwise print no. Then print the same answer for the string lever, then a newline. Separate the two answers with a space.`,
+  ex: String.raw`yes no`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+bool same_both_ways(const std::string& s) {
+    std::string r = s;
+    std::reverse(r.begin(), r.end());
+    return r == s;
+}
+
+int main() {
+    std::cout << (same_both_ways("level") ? "yes" : "no") << ' '
+              << (same_both_ways("lever") ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Comparing a string with a reversed copy of itself tests whether it reads the same in both directions.` },
+
+{ n: 66, d: "applications", t: "Making a URL-friendly slug",
+  p: String.raw`Turn the title hello big world into a slug, where each space becomes an underscore, then print the slug, then a newline.`,
+  ex: String.raw`hello_big_world`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string title = "hello big world";
+    std::replace(title.begin(), title.end(), ' ', '_');
+    std::cout << title << "\n";
+}`,
+  why: String.raw`Replacing one character with another across the whole string is a single pass that leaves all other characters untouched.` },
 ];
 
 const TOTAL = problems.length;
@@ -1095,7 +1223,8 @@ function buildCard(p) {
 for (const sec of [
   { from: 1, to: 56, label: "Easy", range: "Problems 1–56", badge: "easy" },
   { from: 11, to: 58, label: "Medium", range: "Problems 11–58", badge: "medium" },
-  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" }
+  { from: 21, to: 30, label: "Hard", range: "Problems 21–30", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");

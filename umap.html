@@ -1,7 +1,9 @@
 <title>unordered_map Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
   --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
   --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
   color-scheme: light;
@@ -41,7 +43,7 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
 .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
 .section { margin-top: 30px; }
-.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; margin: 0 0 10px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
 .range { color: var(--muted); font-weight: 400; font-size: 13px; }
 .card {
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
@@ -98,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">std::unordered_map · 58 problems</p>
+    <p class="kicker">std::unordered_map · 66 problems</p>
     <h1>unordered_map Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">58</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="58" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">66</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="66" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -110,8 +112,8 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 
 <script>
 const problems = [
-// ---------- Basics ----------
-{ n: 1, g: "Basics", d: "easy", t: "Insert and look up",
+// ---------- Problems ----------
+{ n: 1, d: "easy", t: "Insert and look up",
   p: String.raw`Create an unordered_map<string, int> holding apple to 3 and pear to 5. Print the value for pear. Then look up kiwi and print its value, or -1 if it is absent.`,
   ex: String.raw`5 -1`,
   code: String.raw`#include <iostream>
@@ -126,7 +128,7 @@ int main() {
 }`,
   why: String.raw`find returns an iterator to the element, or end() when the key is missing. It never inserts anything.` },
 
-{ n: 2, g: "Basics", d: "easy", t: "Default insertion with operator[]",
+{ n: 2, d: "easy", t: "Default insertion with operator[]",
   p: String.raw`On an empty unordered_map<string, int>, read the value for the key x using operator[]. Print that value and the size of the map afterwards.`,
   ex: String.raw`0 1`,
   code: String.raw`#include <iostream>
@@ -140,7 +142,7 @@ int main() {
 }`,
   why: String.raw`operator[] inserts a value-initialised element for a missing key, so reading through it changes the map.` },
 
-{ n: 3, g: "Basics", d: "easy", t: "Erase by key",
+{ n: 3, d: "easy", t: "Erase by key",
   p: String.raw`Start with a, b and c mapped to 1, 2 and 3. Erase the key b, then erase the key z. Print the two return values and the final size.`,
   ex: String.raw`1 0 2`,
   code: String.raw`#include <iostream>
@@ -153,7 +155,7 @@ int main() {
 }`,
   why: String.raw`erase(key) returns how many elements were removed, which is 0 or 1 for a unique-key map.` },
 
-{ n: 4, g: "Basics", d: "easy", t: "Membership checks",
+{ n: 4, d: "easy", t: "Membership checks",
   p: String.raw`In an unordered_map<string, int> containing only a, print whether a is present using count, then whether z is present using contains. Print booleans.`,
   ex: String.raw`true false`,
   code: String.raw`#include <iostream>
@@ -166,7 +168,7 @@ int main() {
 }`,
   why: String.raw`count returns a size_t that is 0 or 1 here, while contains returns a bool directly. Both leave the map unchanged.` },
 
-{ n: 5, g: "Basics", d: "easy", t: "emplace does not overwrite",
+{ n: 5, d: "easy", t: "emplace does not overwrite",
   p: String.raw`Call emplace on an unordered_map<int, string> with key 1 and value one, then again with key 1 and value uno. Print whether each call inserted, then the value stored under key 1.`,
   ex: String.raw`true false one`,
   code: String.raw`#include <iostream>
@@ -181,7 +183,7 @@ int main() {
 }`,
   why: String.raw`emplace constructs only when the key is absent. Its result says whether the insertion happened, and an existing value is left alone.` },
 
-{ n: 6, g: "Basics", d: "easy", t: "try_emplace versus insert_or_assign",
+{ n: 6, d: "easy", t: "try_emplace versus insert_or_assign",
   p: String.raw`Start with k mapped to first in an unordered_map<string, string>. Call try_emplace with k and second, print the value of k, then call insert_or_assign with k and third and print the value again.`,
   ex: String.raw`first third`,
   code: String.raw`#include <iostream>
@@ -197,7 +199,7 @@ int main() {
 }`,
   why: String.raw`try_emplace leaves an existing value alone, while insert_or_assign always replaces it.` },
 
-{ n: 7, g: "Basics", d: "easy", t: "Sum the values",
+{ n: 7, d: "easy", t: "Sum the values",
   p: String.raw`Given an unordered_map<string, int> with a to 4, b to 6 and c to 10, print the sum of all its values.`,
   ex: String.raw`20`,
   code: String.raw`#include <iostream>
@@ -212,7 +214,7 @@ int main() {
 }`,
   why: String.raw`Range-based for visits every element once, in an order that is unspecified. Summing is independent of that order.` },
 
-{ n: 8, g: "Basics", d: "easy", t: "Reserve buckets",
+{ n: 8, d: "easy", t: "Reserve buckets",
   p: String.raw`Reserve room for 100 elements in an empty unordered_map<int, int>, then print whether its bucket count is at least 100.`,
   ex: String.raw`true`,
   code: String.raw`#include <iostream>
@@ -225,7 +227,7 @@ int main() {
 }`,
   why: String.raw`reserve sizes the table so that the requested number of elements fits under the maximum load factor without a rehash.` },
 
-{ n: 9, g: "Basics", d: "medium", t: "Merge without overwriting",
+{ n: 9, d: "medium", t: "Merge without overwriting",
   p: String.raw`m1 holds 1 to a and 2 to b. m2 holds 2 to x and 3 to c. Merge m2 into m1 by moving nodes. Print m1's value for key 2, the size of m1, and the size of m2.`,
   ex: String.raw`b 3 1`,
   code: String.raw`#include <iostream>
@@ -239,7 +241,7 @@ int main() {
 }`,
   why: String.raw`merge transfers nodes whose keys are not already in the destination. A key that collides stays in the source map, so m2 keeps key 2.` },
 
-{ n: 10, g: "Basics", d: "medium", t: "Extract and rekey a node",
+{ n: 10, d: "medium", t: "Extract and rekey a node",
   p: String.raw`Start with 1 to a and 2 to b. Extract the node for key 1, change its key to 5, and insert it back. Print whether key 1 exists, then the value of key 5.`,
   ex: String.raw`false a`,
   code: String.raw`#include <iostream>
@@ -256,7 +258,7 @@ int main() {
 }`,
   why: String.raw`A node handle owns the key and value. Changing the key through the handle avoids copying the mapped value.` },
 
-{ n: 11, g: "Basics", d: "medium", t: "Character frequencies",
+{ n: 11, d: "medium", t: "Character frequencies",
   p: String.raw`Count how many times each character appears in banana. Print each character with its count, in alphabetical order of the characters.`,
   ex: String.raw`a:3 b:1 n:2 `,
   code: String.raw`#include <iostream>
@@ -272,7 +274,7 @@ int main() {
 }`,
   why: String.raw`An unordered map is not ordered, so the counts are copied into a std::map only to produce sorted output.` },
 
-{ n: 12, g: "Basics", d: "medium", t: "Map equality",
+{ n: 12, d: "medium", t: "Map equality",
   p: String.raw`Compare two unordered_map<int, string> values. The first holds 1 to a and 2 to b, and the second holds the same pairs inserted in the other order. Print whether they are equal. Then compare the first with a map holding only 1 to a and print that result.`,
   ex: String.raw`true false`,
   code: String.raw`#include <iostream>
@@ -287,8 +289,7 @@ int main() {
 }`,
   why: String.raw`Equality compares sizes and then each key's mapped value, so insertion order does not matter.` },
 
-// ---------- Counting and grouping ----------
-{ n: 13, g: "Counting and grouping", d: "medium", t: "Anagram groups",
+{ n: 13, d: "medium", t: "Anagram groups",
   p: String.raw`Group the words eat, tea, tan, ate, nat and bat by anagram class. Print each group's words separated by spaces, followed by a bar. Print the groups sorted lexicographically by their words.`,
   ex: String.raw`bat | eat tea ate | tan nat | `,
   code: String.raw`#include <algorithm>
@@ -315,7 +316,7 @@ int main() {
 }`,
   why: String.raw`Sorting each word's letters produces a canonical key. Words with the same key land in one bucket.` },
 
-{ n: 14, g: "Counting and grouping", d: "medium", t: "Most frequent value",
+{ n: 14, d: "medium", t: "Most frequent value",
   p: String.raw`Return the most frequent value in a vector<int>. If several values share the top count, return the smallest of them. Print the result for 1, 3, 3, 2, 2.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -340,7 +341,7 @@ int main() {
 }`,
   why: String.raw`The tie-break is applied during the scan, so the result does not depend on the map's iteration order.` },
 
-{ n: 15, g: "Counting and grouping", d: "medium", t: "First non-repeating character",
+{ n: 15, d: "medium", t: "First non-repeating character",
   p: String.raw`Return the index of the first character in a string that appears exactly once. Return -1 if there is none. Print the results for leetcode and aabb.`,
   ex: String.raw`0 -1`,
   code: String.raw`#include <cstddef>
@@ -361,7 +362,7 @@ int main() {
 }`,
   why: String.raw`Counting in a first pass means the second pass can answer each character's count in constant average time.` },
 
-{ n: 16, g: "Counting and grouping", d: "medium", t: "Subarrays with a target sum",
+{ n: 16, d: "medium", t: "Subarrays with a target sum",
   p: String.raw`Count the contiguous subarrays of a vector<int> whose sum equals k. Print the count for 1, 1, 1 with k = 2.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -385,7 +386,7 @@ int main() {
 }`,
   why: String.raw`A subarray from index i+1 to j sums to k exactly when prefix(j) minus k was seen as a prefix sum at some i. The map counts those earlier prefixes.` },
 
-{ n: 17, g: "Counting and grouping", d: "medium", t: "Longest balanced run",
+{ n: 17, d: "medium", t: "Longest balanced run",
   p: String.raw`Given a vector of 0s and 1s, return the length of the longest contiguous subarray containing equal numbers of 0s and 1s. Print the result for 0, 1, 0.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -412,7 +413,7 @@ int main() {
 }`,
   why: String.raw`Treat 1 as +1 and 0 as -1. A subarray is balanced exactly when two prefix balances are equal, so the first index of each balance gives the longest span.` },
 
-{ n: 18, g: "Counting and grouping", d: "medium", t: "Top k frequent values",
+{ n: 18, d: "medium", t: "Top k frequent values",
   p: String.raw`Return the k most frequent values of a vector<int>, ordered by descending count and then by ascending value. Print the top 2 for 1, 1, 1, 2, 2, 3.`,
   ex: String.raw`1 2`,
   code: String.raw`#include <algorithm>
@@ -438,7 +439,7 @@ int main() {
 }`,
   why: String.raw`The map gives counts in average constant time. Sorting the distinct values costs O(d log d), where d is the number of distinct values.` },
 
-{ n: 19, g: "Counting and grouping", d: "medium", t: "Positions of each value",
+{ n: 19, d: "medium", t: "Positions of each value",
   p: String.raw`For the vector 5, 3, 5, 2, collect the indices at which each value occurs. Print each value with its indices, in ascending order of value, followed by a semicolon.`,
   ex: String.raw`2: 3; 3: 1; 5: 0 2; `,
   code: String.raw`#include <cstddef>
@@ -460,7 +461,7 @@ int main() {
 }`,
   why: String.raw`Grouping positions by value is a single pass. Sorting the keys afterwards is only for stable output.` },
 
-{ n: 20, g: "Counting and grouping", d: "medium", t: "Isomorphic strings",
+{ n: 20, d: "medium", t: "Isomorphic strings",
   p: String.raw`Two strings are isomorphic when each character of the first maps to exactly one character of the second, and no two characters map to the same one. Print whether egg and add are isomorphic, then whether foo and bar are.`,
   ex: String.raw`true false`,
   code: String.raw`#include <cstddef>
@@ -484,7 +485,7 @@ int main() {
 }`,
   why: String.raw`Two maps, one in each direction, catch both a character mapping to two targets and two characters sharing a target.` },
 
-{ n: 21, g: "Counting and grouping", d: "medium", t: "Pairs with a fixed difference",
+{ n: 21, d: "medium", t: "Pairs with a fixed difference",
   p: String.raw`Count the distinct values x in a vector<int> for which x + k is also present, with k greater than 0. Print the count for 1, 5, 3, 4, 2 with k = 2.`,
   ex: String.raw`3`,
   code: String.raw`#include <iostream>
@@ -505,7 +506,7 @@ int main() {
 }`,
   why: String.raw`Iterating over the distinct values and checking one neighbour per value counts each pair once, because k is positive.` },
 
-{ n: 22, g: "Counting and grouping", d: "medium", t: "First repeated value",
+{ n: 22, d: "medium", t: "First repeated value",
   p: String.raw`Return the first value in a vector<int> that has already appeared earlier in the sequence. Return nothing if all values are distinct. Print the result for 2, 1, 3, 1, 2.`,
   ex: String.raw`1`,
   code: String.raw`#include <iostream>
@@ -527,8 +528,7 @@ int main() {
 }`,
   why: String.raw`The first value whose key is already present is the first repeat encountered in order. The check happens before insertion.` },
 
-// ---------- Lookup patterns ----------
-{ n: 23, g: "Lookup patterns", d: "medium", t: "Count pairs with a target sum",
+{ n: 23, d: "medium", t: "Count pairs with a target sum",
   p: String.raw`Count pairs of positions i < j in a vector<int> whose values add up to k. Print the count for 1, 2, 3, 4, 3 with k = 6.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -550,7 +550,7 @@ int main() {
 }`,
   why: String.raw`Each element looks back for its complement among earlier elements, so every pair is counted exactly once.` },
 
-{ n: 24, g: "Lookup patterns", d: "medium", t: "Duplicate within distance",
+{ n: 24, d: "medium", t: "Duplicate within distance",
   p: String.raw`Return true if a vector<int> contains two equal values whose indices differ by at most k. Print the result for 1, 2, 3, 1 with k = 3.`,
   ex: String.raw`true`,
   code: String.raw`#include <iostream>
@@ -571,7 +571,7 @@ int main() {
 }`,
   why: String.raw`Only the most recent index of each value matters, because any closer earlier occurrence would already have triggered the check.` },
 
-{ n: 25, g: "Lookup patterns", d: "medium", t: "First index of each value",
+{ n: 25, d: "medium", t: "First index of each value",
   p: String.raw`Record the first index at which each value appears in the vector 5, 3, 5, 2. Print each value and its first index in ascending order of value, using the format value@index followed by a space.`,
   ex: String.raw`2@3 3@1 5@0 `,
   code: String.raw`#include <cstddef>
@@ -589,7 +589,7 @@ int main() {
 }`,
   why: String.raw`try_emplace keeps the entry created by the first occurrence, so later occurrences leave it alone.` },
 
-{ n: 26, g: "Lookup patterns", d: "medium", t: "Word pattern matching",
+{ n: 26, d: "medium", t: "Word pattern matching",
   p: String.raw`Given a pattern string and a sentence, return true if each pattern character maps to exactly one word and each word maps back to exactly one pattern character. Print the result for abba and dog cat cat dog.`,
   ex: String.raw`true`,
   code: String.raw`#include <cstddef>
@@ -619,7 +619,7 @@ int main() {
 }`,
   why: String.raw`The same two-directional mapping as the isomorphic check, applied to words instead of characters.` },
 
-{ n: 27, g: "Lookup patterns", d: "medium", t: "Ransom note",
+{ n: 27, d: "medium", t: "Ransom note",
   p: String.raw`Return true if the ransom note string can be formed from the characters of the magazine string, using each magazine character at most once. Print the results for aa from aab and for aaa from aab.`,
   ex: String.raw`true false`,
   code: String.raw`#include <iostream>
@@ -639,7 +639,7 @@ int main() {
 }`,
   why: String.raw`Counting the available characters turns the question into a check that no count goes negative.` },
 
-{ n: 28, g: "Lookup patterns", d: "medium", t: "Longest substring without repeats",
+{ n: 28, d: "medium", t: "Longest substring without repeats",
   p: String.raw`Return the length of the longest substring of a string that contains no repeated character. Print the result for abcabcbb.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -665,7 +665,7 @@ int main() {
 }`,
   why: String.raw`The window's left edge only moves forward. A repeated character jumps the left edge past its previous occurrence, so each index is visited once.` },
 
-{ n: 29, g: "Lookup patterns", d: "hard", t: "At most two distinct characters",
+{ n: 29, d: "hard", t: "At most two distinct characters",
   p: String.raw`Return the length of the longest substring of a string that contains at most two distinct characters. Print the result for eceba.`,
   ex: String.raw`3`,
   code: String.raw`#include <algorithm>
@@ -693,7 +693,7 @@ int main() {
 }`,
   why: String.raw`The window grows on the right, and the map's size tells when it has too many distinct characters. Shrinking from the left removes counts that reach zero.` },
 
-{ n: 30, g: "Lookup patterns", d: "hard", t: "Distinct count per window",
+{ n: 30, d: "hard", t: "Distinct count per window",
   p: String.raw`For each window of length k in a vector<int>, print the number of distinct values in that window. Print the results for 1, 2, 1, 3, 4, 2, 3 with k = 4.`,
   ex: String.raw`3 4 4 3`,
   code: String.raw`#include <iostream>
@@ -716,8 +716,7 @@ int main() {
 }`,
   why: String.raw`Counts let a sliding window add one value and remove another in constant average time. The number of keys is the number of distinct values in the window.` },
 
-// ---------- Keys and hashing ----------
-{ n: 31, g: "Keys and hashing", d: "hard", t: "Struct key with custom hash",
+{ n: 31, d: "hard", t: "Struct key with custom hash",
   p: String.raw`Define a Coord struct with int fields r and c, and a hash for it. Store the value 1 at (0, 0) and 7 at (2, 3) in an unordered_map<Coord, int>. Print the value at (2, 3), and whether (1, 1) is present.`,
   ex: String.raw`7 false`,
   code: String.raw`#include <cstddef>
@@ -743,7 +742,7 @@ int main() {
 }`,
   why: String.raw`An unordered container needs a hash for the key and an equality test. Here equality is defaulted and the hash packs both coordinates into one value.` },
 
-{ n: 32, g: "Keys and hashing", d: "hard", t: "Pair key with a functor",
+{ n: 32, d: "hard", t: "Pair key with a functor",
   p: String.raw`Use std::pair<int, int> as the key of an unordered_map<pair, string>, supplying your own hash functor. Assign a to (1,2), b to (2,1) and c to (1,2) again. Print the number of entries and the value at (1,2).`,
   ex: String.raw`2 c`,
   code: String.raw`#include <cstddef>
@@ -770,7 +769,7 @@ int main() {
 }`,
   why: String.raw`The default std::hash for pair does not exist, so a functor is supplied. Order matters in the hash, so (1,2) and (2,1) need different hashes.` },
 
-{ n: 33, g: "Keys and hashing", d: "hard", t: "Case-insensitive keys",
+{ n: 33, d: "hard", t: "Case-insensitive keys",
   p: String.raw`Build an unordered_map<string, int> whose keys compare without regard to letter case, using your own hash and equality functors. Set Ann to 1, then add 1 to ann, then add 1 to ANN. Print the number of entries and the value under aNn.`,
   ex: String.raw`1 3`,
   code: String.raw`#include <algorithm>
@@ -807,7 +806,7 @@ int main() {
 }`,
   why: String.raw`Equal keys must hash identically, so the hash lowercases each character before combining. Equality then compares the same way.` },
 
-{ n: 34, g: "Keys and hashing", d: "hard", t: "Heterogeneous lookup with string_view",
+{ n: 34, d: "hard", t: "Heterogeneous lookup with string_view",
   p: String.raw`Using an unordered_map<string, int> with transparent hashing and equality, look up the key alpha through a string_view, without creating a std::string for the lookup. Print the value found, then whether beta is absent when looked up the same way. The map holds alpha to 1 and gamma to 3.`,
   ex: String.raw`1 true`,
   code: String.raw`#include <functional>
@@ -831,7 +830,7 @@ int main() {
 }`,
   why: String.raw`is_transparent on both the hash and the equality functor lets find accept any type they can compare with the key. The lookup then avoids building a std::string.` },
 
-{ n: 35, g: "Keys and hashing", d: "hard", t: "Pointer stability across inserts",
+{ n: 35, d: "hard", t: "Pointer stability across inserts",
   p: String.raw`Insert key 1 mapped to keep in an unordered_map<int, string>, and keep a pointer to its value. Then insert 9998 more entries. Print whether the pointer still refers to keep, and whether looking up key 1 gives the same address.`,
   ex: String.raw`true true`,
   code: String.raw`#include <iostream>
@@ -846,7 +845,7 @@ int main() {
 }`,
   why: String.raw`unordered_map stores each element in its own node. Rehashing relinks nodes but never moves them, so pointers and references to values remain valid.` },
 
-{ n: 36, g: "Keys and hashing", d: "hard", t: "Erase leaves other iterators valid",
+{ n: 36, d: "hard", t: "Erase leaves other iterators valid",
   p: String.raw`Hold an iterator to key 2 in an unordered_map<int, string> that holds 1, 2 and 3. Erase keys 1 and 3, then print the value the iterator refers to and the size of the map.`,
   ex: String.raw`b 1`,
   code: String.raw`#include <iostream>
@@ -862,7 +861,7 @@ int main() {
 }`,
   why: String.raw`Erasing an element invalidates only iterators to that element. Iterators to other elements remain valid.` },
 
-{ n: 37, g: "Keys and hashing", d: "hard", t: "Load factor control",
+{ n: 37, d: "hard", t: "Load factor control",
   p: String.raw`Set the maximum load factor of an empty unordered_map<int, int> to 0.5, insert the keys 0 to 99, and print whether the current load factor is at most the maximum load factor.`,
   ex: String.raw`true`,
   code: String.raw`#include <iostream>
@@ -876,7 +875,7 @@ int main() {
 }`,
   why: String.raw`The table rehashes as needed to keep the load factor under the limit. A lower limit gives faster lookups at the cost of more buckets.` },
 
-{ n: 38, g: "Keys and hashing", d: "hard", t: "Memoised Fibonacci",
+{ n: 38, d: "hard", t: "Memoised Fibonacci",
   p: String.raw`Compute the 50th Fibonacci number, with fib(0) = 0 and fib(1) = 1, using a memo stored in an unordered_map<int, long long>. Print the result.`,
   ex: String.raw`12586269025`,
   code: String.raw`#include <iostream>
@@ -896,8 +895,7 @@ int main() {
 }`,
   why: String.raw`Each value is computed once and cached, which reduces the exponential recursion to linear work.` },
 
-// ---------- Applications ----------
-{ n: 39, g: "Applications", d: "hard", t: "Time-based key-value store",
+{ n: 39, d: "hard", t: "Time-based key-value store",
   p: String.raw`Implement a store where set(key, value, timestamp) records a value and get(key, timestamp) returns the value with the largest timestamp not exceeding the query, or an empty string. Timestamps for each key arrive in increasing order. Run: set foo bar at 1; get foo at 1; get foo at 3; set foo bar2 at 4; get foo at 4; get foo at 5.`,
   ex: String.raw`bar bar bar2 bar2`,
   code: String.raw`#include <algorithm>
@@ -936,7 +934,7 @@ int main() {
 }`,
   why: String.raw`The hash map finds the key's history in constant average time. Within that history, binary search locates the latest entry at or before the query time.` },
 
-{ n: 40, g: "Applications", d: "hard", t: "Cycle in a directed graph",
+{ n: 40, d: "hard", t: "Cycle in a directed graph",
   p: String.raw`Given a directed graph as adjacency lists in an unordered_map<int, vector<int>>, return true if it contains a cycle. The graph has edges 1 to 2, 2 to 3 and 3 to 1. Print the result.`,
   ex: String.raw`true`,
   code: String.raw`#include <functional>
@@ -969,7 +967,7 @@ int main() {
 }`,
   why: String.raw`A back edge to a node on the current path is what makes a cycle. Tracking three states per node separates that from edges into already finished parts of the graph.` },
 
-{ n: 41, g: "Applications", d: "hard", t: "Topological order with in-degrees",
+{ n: 41, d: "hard", t: "Topological order with in-degrees",
   p: String.raw`Given the directed edges 1 to 2, 1 to 3, 2 to 4 and 3 to 4, produce a topological order using in-degree counts stored in unordered_maps. When several nodes are ready, take them in the order they were first seen. Print the order.`,
   ex: String.raw`1 2 3 4`,
   code: String.raw`#include <iostream>
@@ -1007,7 +1005,7 @@ int main() {
 }`,
   why: String.raw`Nodes with no incoming edges can go first. Removing a node decrements its neighbours' in-degrees, and any that reach zero become ready.` },
 
-{ n: 42, g: "Applications", d: "hard", t: "Connected components with union-find",
+{ n: 42, d: "hard", t: "Connected components with union-find",
   p: String.raw`Using a union-find structure whose parent links live in an unordered_map, union 1 with 2 and 3 with 4. Print the number of components among the nodes 1 to 4. Then union 2 with 3 and print the count again.`,
   ex: String.raw`2 1`,
   code: String.raw`#include <iostream>
@@ -1044,7 +1042,7 @@ int main() {
 }`,
   why: String.raw`find with path compression keeps trees shallow, so each operation is nearly constant time. Each set has one root, and the number of roots among the nodes is the number of components.` },
 
-{ n: 43, g: "Applications", d: "medium", t: "Last two actions per user",
+{ n: 43, d: "medium", t: "Last two actions per user",
   p: String.raw`Process the log entries (ann, login), (bob, view), (ann, view) and (ann, logout). For each user keep only their two most recent actions. Print ann's kept actions, then bob's, in the format name: action action; .`,
   ex: String.raw`ann: view logout; bob: view; `,
   code: String.raw`#include <deque>
@@ -1071,7 +1069,7 @@ int main() {
 }`,
   why: String.raw`Each user gets a short deque that is trimmed as new entries arrive. The map gives direct access to each user's history.` },
 
-{ n: 44, g: "Applications", d: "medium", t: "Deduplicate keeping the first value",
+{ n: 44, d: "medium", t: "Deduplicate keeping the first value",
   p: String.raw`Given the pairs (a, 1), (b, 2) and (a, 9), build a map that keeps only the first value seen for each key. Print the entries in alphabetical order of key, in the format key=value followed by a space.`,
   ex: String.raw`a=1 b=2 `,
   code: String.raw`#include <iostream>
@@ -1090,7 +1088,7 @@ int main() {
 }`,
   why: String.raw`try_emplace inserts only when the key is absent, so the first value wins without any explicit check.` },
 
-{ n: 45, g: "Applications", d: "medium", t: "Sparse vector dot product",
+{ n: 45, d: "medium", t: "Sparse vector dot product",
   p: String.raw`Represent two sparse vectors as unordered_map<int, long long> from index to nonzero value. Vector a has 2 at index 0 and 5 at index 3. Vector b has 4 at index 3 and 1 at index 7. Compute their dot product.`,
   ex: String.raw`20`,
   code: String.raw`#include <iostream>
@@ -1111,7 +1109,7 @@ int main() {
 }`,
   why: String.raw`Only indices where both vectors are nonzero contribute. Iterating over the smaller map and looking up each index in the larger one makes the work proportional to the sparser vector.` },
 
-{ n: 46, g: "Applications", d: "medium", t: "Inverted index",
+{ n: 46, d: "medium", t: "Inverted index",
   p: String.raw`Documents 0, 1 and 2 contain the text cat dog, dog bird and cat bird. Build an inverted index from each word to the set of document ids containing it. For the words bird, cat and dog, in that order, print the word, a colon, and its document ids in ascending order, followed by a semicolon.`,
   ex: String.raw`bird: 1 2; cat: 0 2; dog: 0 1; `,
   code: String.raw`#include <iostream>
@@ -1136,7 +1134,7 @@ int main() {
 }`,
   why: String.raw`Each word maps to a set, so document ids stay unique and ordered. The index answers which documents contain a word without scanning them.` },
 
-{ n: 47, g: "Applications", d: "hard", t: "Randomised set in constant time",
+{ n: 47, d: "hard", t: "Randomised set in constant time",
   p: String.raw`Implement a set of integers supporting insert and remove, each returning whether it changed the set, and a size query. Both insert and remove must run in constant average time. Run: insert 1, insert 1 again, remove 1, then print the size. Print each boolean result, and the size last.`,
   ex: String.raw`true false true 0`,
   code: String.raw`#include <cstddef>
@@ -1174,7 +1172,7 @@ int main() {
 }`,
   why: String.raw`Swapping the removed value with the last element of a vector makes removal a constant-time pop. The map records each value's position so that it can be found in constant average time.` },
 
-{ n: 48, g: "Applications", d: "hard", t: "Minimum window substring",
+{ n: 48, d: "hard", t: "Minimum window substring",
   p: String.raw`Return the shortest substring of s that contains every character of t, counting multiplicities. If none exists, return an empty string. Print the result for s = ADOBECODEBANC and t = ABC.`,
   ex: String.raw`BANC`,
   code: String.raw`#include <climits>
@@ -1209,7 +1207,8 @@ int main() {
     std::cout << min_window("ADOBECODEBANC", "ABC") << '\n';   // BANC
 }`,
   why: String.raw`The window expands to the right until every required count is met, then shrinks from the left while it stays valid. Tracking how many character requirements are currently met avoids recomputing comparisons.` },
-{ n: 49, g: "Applications", d: "medium", t: "Most frequent word",
+
+{ n: 49, d: "medium", t: "Most frequent word",
   p: String.raw`The text "b a b c a b" is split on spaces. Count each word in an unordered_map<string,int>. Print the word with the highest count and that count, separated by a space.`,
   ex: String.raw`b 3`,
   code: String.raw`#include <iostream>
@@ -1229,7 +1228,7 @@ int main() {
 }`,
   why: String.raw`Word counting is the basic shape of search indexing and log analysis. Hashing each word makes every update constant time on average.` },
 
-{ n: 50, g: "Applications", d: "medium", t: "Session store with expiry",
+{ n: 50, d: "medium", t: "Session store with expiry",
   p: String.raw`Store the key k with value v that expires at time 5. Look it up at time 3, then at time 6. Print the value found at time 3, or none if it has expired, followed by the result at time 6, separated by a space.`,
   ex: String.raw`v none`,
   code: String.raw`#include <iostream>
@@ -1253,7 +1252,7 @@ int main() {
 }`,
   why: String.raw`Session and token stores keep an expiry time beside each entry. The check happens at lookup, so no sweeper is needed for correctness.` },
 
-{ n: 51, g: "Applications", d: "medium", t: "Hits per page and user",
+{ n: 51, d: "medium", t: "Hits per page and user",
   p: String.raw`Record page visits as (page, user) pairs: (home,1), (home,2), (home,2) and (about,2). Count the visits for the pair (home,2) and print the count.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -1276,7 +1275,7 @@ int main() {
 }`,
   why: String.raw`Composite keys let one flat map answer questions that would otherwise need a map of maps. A custom hash is needed because pairs have no default one.` },
 
-{ n: 52, g: "Applications", d: "hard", t: "Duplicate file contents",
+{ n: 52, d: "hard", t: "Duplicate file contents",
   p: String.raw`Three files are named a with contents x, b with contents y, and c with contents x. Count how many distinct contents appear in more than one file, and print that number.`,
   ex: String.raw`1`,
   code: String.raw`#include <iostream>
@@ -1296,7 +1295,7 @@ int main() {
 }`,
   why: String.raw`Deduplication tools group files by a digest of their contents. Any digest that appears more than once marks a set of duplicates.` },
 
-{ n: 53, g: "Applications", d: "medium", t: "Transfer between accounts",
+{ n: 53, d: "medium", t: "Transfer between accounts",
   p: String.raw`Alice has 50 and Bob has 0. Transfer 30 from Alice to Bob, but only if Alice has at least 30. Print Alice's balance, then Bob's, separated by a space.`,
   ex: String.raw`20 30`,
   code: String.raw`#include <iostream>
@@ -1314,7 +1313,7 @@ int main() {
 }`,
   why: String.raw`Ledgers check the balance before they move money. Keeping balances in a map keyed by account name makes each transfer two lookups.` },
 
-{ n: 54, g: "Applications", d: "hard", t: "Longest path in a DAG",
+{ n: 54, d: "hard", t: "Longest path in a DAG",
   p: String.raw`A directed graph has edges 1 to 2, 1 to 3, 2 to 4 and 3 to 4, and no cycles. Find the largest number of edges on any path that starts at 1. Remember results you have already computed for each node so that no node is solved twice. Print that number.`,
   ex: String.raw`2`,
   code: String.raw`#include <algorithm>
@@ -1341,7 +1340,7 @@ int main() {
 }`,
   why: String.raw`Memoised recursion over a directed acyclic graph computes each node's answer once, however many paths reach it. The memo table is keyed by node.` },
 
-{ n: 55, g: "Applications", d: "medium", t: "Degree in an undirected graph",
+{ n: 55, d: "medium", t: "Degree in an undirected graph",
   p: String.raw`An undirected graph has edges 1-2, 1-3 and 2-3. Build an adjacency map from node to its neighbours, then print the number of neighbours of node 1.`,
   ex: String.raw`2`,
   code: String.raw`#include <iostream>
@@ -1359,7 +1358,7 @@ int main() {
 }`,
   why: String.raw`Adjacency maps suit sparse graphs, where most node pairs have no edge. Each edge is recorded in both directions for an undirected graph.` },
 
-{ n: 56, g: "Applications", d: "medium", t: "Indices of a pair summing to a target",
+{ n: 56, d: "medium", t: "Indices of a pair summing to a target",
   p: String.raw`In the list 2 7 11 15, find two positions whose values add up to 9. Print the earlier index, then the later index, separated by a space.`,
   ex: String.raw`0 1`,
   code: String.raw`#include <iostream>
@@ -1381,7 +1380,7 @@ int main() {
 }`,
   why: String.raw`Remembering each value's position lets you check, for every new element, whether its partner has already appeared. One pass is enough.` },
 
-{ n: 57, g: "Applications", d: "hard", t: "Keys grouped by value",
+{ n: 57, d: "hard", t: "Keys grouped by value",
   p: String.raw`The map from letter to number is a to 1, b to 2 and c to 1. Invert it so that each number maps to the list of letters that have it. Print the letters that map to 1 in sorted order, separated by a space.`,
   ex: String.raw`a c`,
   code: String.raw`#include <algorithm>
@@ -1401,7 +1400,7 @@ int main() {
 }`,
   why: String.raw`Inverting a mapping is a common step when you need to go from a value back to everything that produced it. A map of lists records the many-to-one case.` },
 
-{ n: 58, g: "Applications", d: "hard", t: "Bracket matching with a lookup table",
+{ n: 58, d: "hard", t: "Bracket matching with a lookup table",
   p: String.raw`Check whether the text ({[]}) has correctly nested brackets, using a table that maps each closing bracket to its opening partner. Print true or false.`,
   ex: String.raw`true`,
   code: String.raw`#include <iostream>
@@ -1425,6 +1424,126 @@ int main() {
     std::cout << std::boolalpha << (ok && st.empty()) << '\n';
 }`,
   why: String.raw`Each closing bracket must match the most recent unmatched opening one, which is exactly what a stack gives. The lookup table keeps the pairing rule in one place.` },
+
+{ n: 59, d: "applications", t: "Phone book lookup by name",
+  p: String.raw`A phone book maps the names ana, ben and cy to the numbers 555-0101, 555-0102 and 555-0103. Print the number stored for ben, then a newline.`,
+  ex: String.raw`555-0102`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, std::string> book{
+        {"ana", "555-0101"}, {"ben", "555-0102"}, {"cy", "555-0103"}};
+    std::cout << book["ben"] << "\n";
+}`,
+  why: String.raw`A name is the key and the number is the value, so finding a number takes one lookup rather than a scan of the whole book.` },
+
+{ n: 60, d: "applications", t: "Count of responses per status code",
+  p: String.raw`A server logs the status codes 200, 404, 200, 500 and 200 in that order. Print the number of 200 responses and the number of 404 responses, separated by a space, then a newline.`,
+  ex: String.raw`3 1`,
+  code: String.raw`#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::unordered_map<int, int> counts;
+    for (int code : std::vector<int>{200, 404, 200, 500, 200}) ++counts[code];
+    std::cout << counts[200] << ' ' << counts[404] << "\n";
+}`,
+  why: String.raw`Each status code is a key whose value is a running count, so the tally is built as the log is read.` },
+
+{ n: 61, d: "applications", t: "Feature flags with a default",
+  p: String.raw`A settings map holds only dark_mode set to on. Print the value for dark_mode, then the value for beta, using off when the setting is missing, separated by a space, then a newline.`,
+  ex: String.raw`on off`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, std::string> settings{{"dark_mode", "on"}};
+    auto it = settings.find("beta");
+    std::cout << settings["dark_mode"] << ' '
+              << (it == settings.end() ? std::string("off") : it->second) << "\n";
+}`,
+  why: String.raw`A lookup that finds nothing should not add an entry, so the search uses find and falls back to the default when the key is absent.` },
+
+{ n: 62, d: "applications", t: "Stock left after sales",
+  p: String.raw`The stock map records sku A with 10 units and sku B with 4 units. Two units of sku A are sold. Print the stock left for sku A, then a newline.`,
+  ex: String.raw`8`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> stock{{"A", 10}, {"B", 4}};
+    stock["A"] -= 2;
+    std::cout << stock["A"] << "\n";
+}`,
+  why: String.raw`Updating a count by key changes only the entry for that item, and other items in the map are left as they are.` },
+
+{ n: 63, d: "applications", t: "Grouping words by first letter",
+  p: String.raw`Group the words apple, avocado and banana by their first letter. Print the number of words in the group for a, then the number of words in the group for b, separated by a space, then a newline.`,
+  ex: String.raw`2 1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::unordered_map<char, std::vector<std::string>> groups;
+    for (const char* w : {"apple", "avocado", "banana"})
+        groups[w[0]].push_back(w);
+    std::cout << groups['a'].size() << ' ' << groups['b'].size() << "\n";
+}`,
+  why: String.raw`Using the first letter as the key collects each word into its group in a single pass, and a new group is created on first use.` },
+
+{ n: 64, d: "applications", t: "Expire old sessions",
+  p: String.raw`Four sessions have these expiry times: alice 50, bob 150, cy 90 and dee 200. The current time is 100, and any session that expired before the current time is removed. Print how many sessions remain, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> expiry{
+        {"alice", 50}, {"bob", 150}, {"cy", 90}, {"dee", 200}};
+    const int now = 100;
+    for (auto it = expiry.begin(); it != expiry.end();) {
+        if (it->second < now) it = expiry.erase(it);
+        else ++it;
+    }
+    std::cout << expiry.size() << "\n";
+}`,
+  why: String.raw`Erasing while walking the map returns the next valid iterator, so expired entries can be dropped without losing the rest of the walk.` },
+
+{ n: 65, d: "applications", t: "Votes per candidate",
+  p: String.raw`Votes were cast for x, y, x, z and x, in that order. Print the number of votes for x, then the number of different candidates who received a vote, separated by a space, then a newline.`,
+  ex: String.raw`3 3`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+int main() {
+    std::unordered_map<std::string, int> tally;
+    for (const std::string& v : std::vector<std::string>{"x", "y", "x", "z", "x"}) ++tally[v];
+    std::cout << tally["x"] << ' ' << tally.size() << "\n";
+}`,
+  why: String.raw`The map's size is the number of distinct keys, so the candidate count comes from the same structure that holds the tallies.` },
+
+{ n: 66, d: "applications", t: "Cost of a route segment",
+  p: String.raw`Route costs are stored for the segments A-B costing 7, B-C costing 4 and A-C costing 9. Print the cost of the segment B-C, then a newline.`,
+  ex: String.raw`4`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <unordered_map>
+
+int main() {
+    std::unordered_map<std::string, int> cost{{"A-B", 7}, {"B-C", 4}, {"A-C", 9}};
+    std::cout << cost.at("B-C") << "\n";
+}`,
+  why: String.raw`A composite string key identifies each segment, and at() returns the stored cost directly for a key known to exist.` },
 ];
 
 const TOTAL = problems.length;
@@ -1488,6 +1607,7 @@ function buildCard(p) {
   body.id = id;
   body.hidden = true;
   body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
   if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
 
   const reveal = el("button", "reveal", "Show solution");
@@ -1523,16 +1643,21 @@ function buildCard(p) {
   return card;
 }
 
-const groups = [...new Set(problems.map(p => p.g))];
-for (const g of groups) {
-  const items = problems.filter(p => p.g === g);
+for (const sec of [
+  { from: 1, to: 8, label: "Easy", range: "Problems 1–8", badge: "easy" },
+  { from: 9, to: 56, label: "Medium", range: "Problems 9–56", badge: "medium" },
+  { from: 29, to: 58, label: "Hard", range: "Problems 29–58", badge: "hard" },
+  { from: 59, to: 66, label: "Applications", range: "Problems 59–66", badge: null }
+]) {
   const section = el("section", "section");
   const h = el("h2");
-  h.append(el("span", null, g), el("span", "range", items.length + " problems"));
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
   section.append(h);
-  for (const p of items) section.append(buildCard(p));
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
   list.append(section);
 }
 
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
 updateProgress();
 </script>
