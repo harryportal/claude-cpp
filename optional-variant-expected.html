@@ -1,0 +1,1028 @@
+<title>C++ Optional, Variant and Expected Problems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.back{display:inline-block;margin:0 0 12px;color:var(--accent);text-decoration:none;font-weight:600}
+.back:hover{text-decoration:underline}
+</style>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">&larr; All topics</a>
+    <p class="kicker">C++ Optional, Variant, Expected · 45 problems</p>
+    <h1>C++ Optional, Variant and Expected Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">45</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="45" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "easy", t: "Empty or filled",
+  p: String.raw`Create an optional holding an int that holds no value, and print 1 if it is empty and 0 otherwise. Print the result, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o;
+    std::cout << (o.has_value() ? 0 : 1) << "\n";
+}`,
+  why: String.raw`A default-constructed optional is empty. has_value reports whether it holds a value, which is distinct from holding a zero.` },
+
+{ n: 2, d: "easy", t: "Reading a stored number",
+  p: String.raw`Store 42 in an optional int, then print the stored value, then a newline.`,
+  ex: String.raw`42`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o = 42;
+    std::cout << *o << "\n";
+}`,
+  why: String.raw`Dereferencing an engaged optional gives the stored value. Dereferencing an empty one is undefined behaviour, so the program must check first.` },
+
+{ n: 3, d: "easy", t: "Fallback value",
+  p: String.raw`An optional int holds no value. Print the value it gives when asked for a fallback of 7, then a newline.`,
+  ex: String.raw`7`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o;
+    std::cout << o.value_or(7) << "\n";
+}`,
+  why: String.raw`value_or returns the stored value if there is one and the given fallback otherwise, without ever dereferencing an empty optional.` },
+
+{ n: 4, d: "easy", t: "Clearing a value",
+  p: String.raw`Store 5 in an optional int, then clear it. Print 1 if it still holds a value and 0 otherwise, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o = 5;
+    o.reset();
+    std::cout << (o.has_value() ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Clearing an optional destroys the held object and leaves it empty, without any separate notion of a null value.` },
+
+{ n: 5, d: "easy", t: "Length of stored text",
+  p: String.raw`Store the text hello in an optional string using in-place construction, then print its length, then a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+int main() {
+    std::optional<std::string> o;
+    o.emplace("hello");
+    std::cout << o->size() << "\n";
+}`,
+  why: String.raw`emplace constructs the held object directly inside the optional, and the arrow operator gives access to its members.` },
+
+{ n: 6, d: "easy", t: "Safe division",
+  p: String.raw`Write a function that divides two integers and returns an optional result that is empty when the divisor is zero. Print the result of 10 divided by 2, then the result of 1 divided by 0, separated by a space, using -1 for an empty result. Print them, then a newline.`,
+  ex: String.raw`5 -1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+std::optional<int> divide(int a, int b) {
+    if (b == 0) return std::nullopt;
+    return a / b;
+}
+
+int main() {
+    std::cout << divide(10, 2).value_or(-1) << ' ' << divide(1, 0).value_or(-1) << "\n";
+}`,
+  why: String.raw`Returning an empty optional signals failure in the return type itself, so callers cannot ignore it the way they might ignore a sentinel value.` },
+
+{ n: 7, d: "easy", t: "Presence in a condition",
+  p: String.raw`Store 0 in an optional int. Print yes if it holds a value and no otherwise, then a newline.`,
+  ex: String.raw`yes`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o = 0;
+    std::cout << (o ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Testing an optional in a condition asks whether it holds a value, not whether the value is true. Zero is a value like any other.` },
+
+{ n: 8, d: "easy", t: "Empty compares as smallest",
+  p: String.raw`Print 1 if an empty optional int compares less than an optional int holding 0, and 0 otherwise, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::cout << (std::optional<int>{} < std::optional<int>{0}) << "\n";
+}`,
+  why: String.raw`Comparing optionals orders an empty one before any engaged one, and compares engaged ones by their values.` },
+
+{ n: 9, d: "easy", t: "Which type is active",
+  p: String.raw`Create a variant that can hold either an int or a string, and set it to the int 3. Print the position of the active alternative, counting from 0, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 3;
+    std::cout << v.index() << "\n";
+}`,
+  why: String.raw`A variant always holds exactly one alternative. index reports its position in the list of allowed types.` },
+
+{ n: 10, d: "easy", t: "Reading a text alternative",
+  p: String.raw`Set a variant that can hold either an int or a string to the text hi, and print the stored text, then a newline.`,
+  ex: String.raw`hi`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = std::string("hi");
+    std::cout << std::get<std::string>(v) << "\n";
+}`,
+  why: String.raw`get with a type selects the alternative of that type, and throws if a different alternative is active.` },
+
+{ n: 11, d: "medium", t: "Position of the active text",
+  p: String.raw`Set a variant that can hold either an int or a string to the text hi, then print the position of the active alternative, counting from 0, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = std::string("hi");
+    std::cout << v.index() << "\n";
+}`,
+  why: String.raw`The position follows the order of the types in the template argument list, not the order of assignments.` },
+
+{ n: 12, d: "medium", t: "Is it a text value",
+  p: String.raw`A variant that can hold an int or a string currently holds the int 9. Print 1 if it holds a string and 0 otherwise, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 9;
+    std::cout << (std::holds_alternative<std::string>(v) ? 1 : 0) << "\n";
+}`,
+  why: String.raw`holds_alternative answers a yes-or-no question about the active type without risking an exception.` },
+
+{ n: 13, d: "medium", t: "Peeking without throwing",
+  p: String.raw`A variant that can hold an int or a string holds the int 9. Ask for its string value in a way that does not throw. Print 1 if no string is returned and 0 otherwise, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 9;
+    std::cout << (std::get_if<std::string>(&v) == nullptr ? 1 : 0) << "\n";
+}`,
+  why: String.raw`get_if returns a pointer to the alternative, or nullptr when a different alternative is active, which makes the failure case explicit.` },
+
+{ n: 14, d: "medium", t: "Handling each alternative",
+  p: String.raw`Describe the variant holding the int 4, then the variant holding the text ab, printing int:4 and string:ab on separate lines in that order. Print both lines, then a newline.`,
+  ex: String.raw`int:4
+string:ab`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+template <class... Ts>
+struct Overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
+int main() {
+    auto describe = Overloaded{
+        [](int x) { std::cout << "int:" << x << "\n"; },
+        [](const std::string& s) { std::cout << "string:" << s << "\n"; }};
+    std::variant<int, std::string> a = 4;
+    std::variant<int, std::string> b = std::string("ab");
+    std::visit(describe, a);
+    std::visit(describe, b);
+}`,
+  why: String.raw`visit calls the function object matching the active alternative. Overloading a set of lambdas gives exhaustive, compile-time-checked handling of every type.` },
+
+{ n: 15, d: "medium", t: "Replacing the stored value",
+  p: String.raw`Set a variant that can hold an int or a string to 1, then replace it with the text hello, and print the length of the stored text, then a newline.`,
+  ex: String.raw`5`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 1;
+    v = std::string("hello");
+    std::cout << std::get<std::string>(v).size() << "\n";
+}`,
+  why: String.raw`Assigning a value of another alternative destroys the old one and makes the new alternative active.` },
+
+{ n: 16, d: "medium", t: "Wrong type access",
+  p: String.raw`Set a variant that can hold an int or a string to 5, then try to read it as a string. Print caught if the attempt fails, and ok otherwise, then a newline.`,
+  ex: String.raw`caught`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 5;
+    try {
+        std::get<std::string>(v);
+        std::cout << "ok\n";
+    } catch (const std::bad_variant_access&) {
+        std::cout << "caught\n";
+    }
+}`,
+  why: String.raw`get with the wrong type throws bad_variant_access. get_if is the non-throwing alternative when a mismatch is expected.` },
+
+{ n: 17, d: "medium", t: "Default state",
+  p: String.raw`Create a variant that can hold either a placeholder with no data or an int, and leave it in its default state. Print the position of its active alternative, counting from 0, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<std::monostate, int> v;
+    std::cout << v.index() << "\n";
+}`,
+  why: String.raw`A variant's default state holds its first alternative, so monostate is the usual choice when the first type should be an empty placeholder.` },
+
+{ n: 18, d: "medium", t: "Totalling mixed numbers",
+  p: String.raw`A vector holds the variants 1, 2.5 and 4, where each is either an int or a double. Print their total as a number, then a newline.`,
+  ex: String.raw`7.5`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+int main() {
+    std::vector<std::variant<int, double>> xs{1, 2.5, 4};
+    double total = 0;
+    for (const auto& x : xs)
+        total += std::visit([](auto v) { return static_cast<double>(v); }, x);
+    std::cout << total << "\n";
+}`,
+  why: String.raw`A generic lambda passed to visit compiles one branch per alternative, so each element is converted using the type it actually holds.` },
+
+{ n: 19, d: "medium", t: "Transforming an optional",
+  p: String.raw`Store 5 in an optional int, transform it by doubling the value while keeping the result optional, and print the result with 0 as the fallback, then a newline.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> o = 5;
+    std::cout << o.transform([](int x) { return x * 2; }).value_or(0) << "\n";
+}`,
+  why: String.raw`transform applies a function only when a value is present, and returns an empty optional otherwise, so a chain of steps needs no explicit checks.` },
+
+{ n: 20, d: "medium", t: "Chaining steps that can fail",
+  p: String.raw`Starting from 40, subtract 10, then divide by 5, where the result is empty if the value is negative. Print the final value, or -1 if any step failed, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    auto subtract_ten = [](int x) -> std::optional<int> { return x - 10; };
+    auto divide_five = [](int x) -> std::optional<int> {
+        if (x < 0) return std::nullopt;
+        return x / 5;
+    };
+    auto r = std::optional<int>{40}.and_then(subtract_ten).and_then(divide_five);
+    std::cout << r.value_or(-1) << "\n";
+}`,
+  why: String.raw`and_then runs the next step only when the previous one produced a value, so the first failure carries through to the end of the chain.` },
+
+{ n: 21, d: "medium", t: "Counting engaged entries",
+  p: String.raw`A vector holds the optional ints 1, empty, 3 and empty. Print how many of them hold a value, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <optional>
+#include <vector>
+
+int main() {
+    std::vector<std::optional<int>> v{1, std::nullopt, 3, std::nullopt};
+    std::cout << std::count_if(v.begin(), v.end(),
+                               [](const std::optional<int>& o) { return o.has_value(); })
+              << "\n";
+}`,
+  why: String.raw`Each optional is a self-describing element, so an ordinary algorithm can count the engaged ones with a predicate.` },
+
+{ n: 22, d: "medium", t: "Expected with a message",
+  p: String.raw`Write a function that returns the number when it is positive, and otherwise returns the message not positive. Call it with -4 and print the result, which is the message, then a newline.`,
+  ex: String.raw`not positive`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> positive(int x) {
+    if (x > 0) return x;
+    return std::unexpected("not positive");
+}
+
+int main() {
+    auto r = positive(-4);
+    std::cout << (r ? std::to_string(*r) : r.error()) << "\n";
+}`,
+  why: String.raw`expected holds either the success value or the error, so the caller must look at it before using either one.` },
+
+{ n: 23, d: "hard", t: "Chain of checks that succeeds",
+  p: String.raw`Write a function that halves an even number and fails on an odd number with the message odd. Apply it three times in a row starting at 8, then print the final value, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> half(int x) {
+    if (x % 2 != 0) return std::unexpected("odd");
+    return x / 2;
+}
+
+int main() {
+    auto r = half(8).and_then(half).and_then(half);
+    std::cout << r.value() << "\n";
+}`,
+  why: String.raw`and_then continues along the success path and stops at the first error, so a sequence of fallible steps reads as a single expression.` },
+
+{ n: 24, d: "hard", t: "Chain of checks that fails",
+  p: String.raw`Apply the same halving rule to 12 three times in a row. Print the value if every step succeeds, and otherwise print the message from the failing step, then a newline.`,
+  ex: String.raw`odd`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> half(int x) {
+    if (x % 2 != 0) return std::unexpected("odd");
+    return x / 2;
+}
+
+int main() {
+    auto r = half(12).and_then(half).and_then(half);
+    if (r) std::cout << *r << "\n";
+    else std::cout << r.error() << "\n";
+}`,
+  why: String.raw`12 becomes 6, then 3. The third step fails on the odd value 3, and that error is what the whole chain returns.` },
+
+{ n: 25, d: "hard", t: "Transforming a success",
+  p: String.raw`Start with a successful result holding 4, and square the value using a transformation that keeps the result as a success. Print the value, then a newline.`,
+  ex: String.raw`16`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::expected<int, std::string> e = 4;
+    auto r = e.transform([](int x) { return x * x; });
+    std::cout << r.value() << "\n";
+}`,
+  why: String.raw`transform applies a function to the success value and leaves an error untouched, so the error type does not change.` },
+
+{ n: 26, d: "hard", t: "Recovering from an error",
+  p: String.raw`Start with an error holding the text bad, and recover from it by producing the value 0. Print the recovered value, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::expected<int, std::string> e = std::unexpected("bad");
+    auto r = e.or_else([](const std::string&) {
+        return std::expected<int, std::string>(0);
+    });
+    std::cout << r.value() << "\n";
+}`,
+  why: String.raw`or_else runs only on the error path and can turn an error back into a success, which is the opposite of and_then.` },
+
+{ n: 27, d: "hard", t: "Changing the error type",
+  p: String.raw`Start with an error holding the text abc, and convert the error into the length of that text. Print the converted error, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::expected<int, std::string> e = std::unexpected("abc");
+    std::expected<int, std::size_t> m = e ? std::expected<int, std::size_t>(*e)
+                                          : std::unexpected(e.error().size());
+    std::cout << m.error() << "\n";
+}`,
+  why: String.raw`Converting to a result with a different error type keeps successes unchanged and rewrites only the error, which is the job the standard map_error function does where the library provides it.` },
+
+{ n: 28, d: "hard", t: "Parsing numbers from text",
+  p: String.raw`Write a function that reads an integer from text and returns either the number or the message invalid. Show the result for the text 42 and for the text x, printing the number or message for each, separated by a space, then a newline.`,
+  ex: String.raw`42 invalid`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <string_view>
+
+std::expected<int, std::string> parse(std::string_view s) {
+    int v{};
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected("invalid");
+    return v;
+}
+
+int main() {
+    auto show = [](const std::expected<int, std::string>& r) {
+        return r ? std::to_string(*r) : r.error();
+    };
+    std::cout << show(parse("42")) << ' ' << show(parse("x")) << "\n";
+}`,
+  why: String.raw`from_chars reports failure through its error code and end pointer rather than an exception, so the function can translate it into an expected error.` },
+
+{ n: 29, d: "hard", t: "First failure in a list",
+  p: String.raw`Parse the texts 1, 2, x and 4 in order, using the same rule that accepts only whole integers and otherwise gives the message invalid. Print the message of the first failure, or ok if every text parses, then a newline.`,
+  ex: String.raw`invalid`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
+
+std::expected<int, std::string> parse(std::string_view s) {
+    int v{};
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected("invalid");
+    return v;
+}
+
+int main() {
+    std::vector<std::string> texts{"1", "2", "x", "4"};
+    std::string result = "ok";
+    for (const auto& t : texts) {
+        auto r = parse(t);
+        if (!r) {
+            result = r.error();
+            break;
+        }
+    }
+    std::cout << result << "\n";
+}`,
+  why: String.raw`Stopping at the first error mirrors and_then, and it avoids doing work on later items once the outcome is already known.` },
+
+{ n: 30, d: "hard", t: "Moving out of an optional",
+  p: String.raw`An optional holds a pointer to the number 7, stored in a unique pointer. Move the pointer out of the optional into a separate variable. Then print 1 if the optional still holds a value, and 1 if the moved-out pointer is set, separated by a space, then a newline.`,
+  ex: String.raw`1 1`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <optional>
+
+int main() {
+    std::optional<std::unique_ptr<int>> o = std::make_unique<int>(7);
+    auto moved = std::move(*o);
+    std::cout << (o.has_value() ? 1 : 0) << ' ' << (moved != nullptr ? 1 : 0) << "\n";
+}`,
+  why: String.raw`Moving from the contained object leaves the optional engaged, now holding a null pointer. Moving the optional itself is different: it leaves the optional engaged but with a moved-from value.` },
+
+{ n: 31, d: "hard", t: "Success without a value",
+  p: String.raw`Write a function that either succeeds with no value to return, or fails with the message fail. Call it so that it fails, and print 1 if the result is a success and 0 otherwise, then a newline.`,
+  ex: String.raw`0`,
+  code: String.raw`#include <expected>
+#include <iostream>
+#include <string>
+
+std::expected<void, std::string> run(bool ok) {
+    if (!ok) return std::unexpected("fail");
+    return {};
+}
+
+int main() {
+    auto r = run(false);
+    std::cout << (r.has_value() ? 1 : 0) << "\n";
+}`,
+  why: String.raw`expected<void, E> represents an operation that can succeed or fail without producing a result, such as a write that either completes or reports an error.` },
+
+{ n: 32, d: "extension", t: "Summing a recursive tree",
+  p: String.raw`Model a tree whose leaves are integers and whose inner nodes hold a list of children. Build a tree with the leaf 1, followed by a node holding the leaves 2 and 3, and print the sum of all leaves, then a newline.`,
+  ex: String.raw`6`,
+  code: String.raw`#include <iostream>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+struct Node {
+    std::variant<int, std::vector<Node>> v;
+};
+
+int sum(const Node& n) {
+    return std::visit([](const auto& x) -> int {
+        using T = std::decay_t<decltype(x)>;
+        if constexpr (std::is_same_v<T, int>) {
+            return x;
+        } else {
+            int s = 0;
+            for (const auto& child : x) s += sum(child);
+            return s;
+        }
+    }, n.v);
+}
+
+int main() {
+    Node root{std::vector<Node>{Node{1}, Node{std::vector<Node>{Node{2}, Node{3}}}}};
+    std::cout << sum(root) << "\n";
+}`,
+  why: String.raw`A variant can hold either a leaf value or a collection of child nodes, and visit with if constexpr handles each case. This is the same shape as many expression and syntax trees.` },
+
+{ n: 33, d: "extension", t: "Counting events by type",
+  p: String.raw`Process the events Start, Tick, Tick and Stop in that order, where each event is one of three different types. Count how many of them are ticks, then print the count, then a newline.`,
+  ex: String.raw`2`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Start {};
+struct Tick {};
+struct Stop {};
+
+int main() {
+    std::vector<std::variant<Start, Tick, Stop>> events{Start{}, Tick{}, Tick{}, Stop{}};
+    int ticks = 0;
+    for (const auto& e : events)
+        if (std::holds_alternative<Tick>(e)) ++ticks;
+    std::cout << ticks << "\n";
+}`,
+  why: String.raw`A variant of distinct event types lets a list hold different kinds of events and still test each one by its type.` },
+
+{ n: 34, d: "extension", t: "Multiplying the engaged values",
+  p: String.raw`A vector holds the optional ints 2, empty, and 5. Multiply together the values that are present, ignoring the empty entries, and print the product, then a newline.`,
+  ex: String.raw`10`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+int main() {
+    std::vector<std::optional<int>> v{2, std::nullopt, 5};
+    int product = 1;
+    for (const auto& o : v)
+        if (o) product *= *o;
+    std::cout << product << "\n";
+}`,
+  why: String.raw`Checking each optional before using it means empty entries are skipped without special sentinel values.` },
+
+{ n: 35, d: "extension", t: "Map lookup that may fail",
+  p: String.raw`Look up the key b in a map from text to int that holds a to 1, b to 2 and c to 3, and print the value if present or -1 if absent. Then do the same for the key z, separated by a space, then a newline.`,
+  ex: String.raw`2 -1`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+std::optional<int> lookup(const std::map<std::string, int>& m, const std::string& k) {
+    auto it = m.find(k);
+    if (it == m.end()) return std::nullopt;
+    return it->second;
+}
+
+int main() {
+    std::map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
+    std::cout << lookup(m, "b").value_or(-1) << ' ' << lookup(m, "z").value_or(-1) << "\n";
+}`,
+  why: String.raw`Returning an optional from a lookup makes the possibility of a missing key part of the function's signature, instead of a special value that callers might forget to check.` },
+
+{ n: 36, d: "extension", t: "Converting each alternative",
+  p: String.raw`A variant holds either an int or a double. Convert whatever it holds into a double, double the result, and print it for the int 3 and then for the double 1.5, separated by a space, then a newline.`,
+  ex: String.raw`6 3`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<int, double> a = 3;
+    std::variant<int, double> b = 1.5;
+    auto twice = [](const std::variant<int, double>& v) {
+        return std::visit([](auto x) { return static_cast<double>(x) * 2; }, v);
+    };
+    std::cout << twice(a) << ' ' << twice(b) << "\n";
+}`,
+  why: String.raw`visit with a generic lambda lets one piece of code handle every alternative, converting each one through a common type.` },
+
+{ n: 37, d: "extension", t: "Finding the first negative",
+  p: String.raw`Write a function that returns the index of the first negative number in a vector, or nothing if there is none. Call it with the vector 3, -2, 5, -7, and print the index, or -1 if there is none, then a newline.`,
+  ex: String.raw`1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+std::optional<int> first_negative(const std::vector<int>& v) {
+    for (std::size_t i = 0; i < v.size(); ++i)
+        if (v[i] < 0) return static_cast<int>(i);
+    return std::nullopt;
+}
+
+int main() {
+    std::cout << first_negative({3, -2, 5, -7}).value_or(-1) << "\n";
+}`,
+  why: String.raw`Returning as soon as the answer is found avoids scanning the rest of the vector, and the optional return type expresses that the answer may not exist.` },
+
+{ n: 38, d: "applications", t: "Optional configuration fields",
+  p: String.raw`A configuration has an optional port, which is set to 8080, and an optional name, which is not set. Print the port if it is set and 80 otherwise, then the name if it is set and none otherwise, separated by a space, then a newline.`,
+  ex: String.raw`8080 none`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+struct Config {
+    std::optional<int> port;
+    std::optional<std::string> name;
+};
+
+int main() {
+    Config c{8080, std::nullopt};
+    std::cout << c.port.value_or(80) << ' ' << c.name.value_or("none") << "\n";
+}`,
+  why: String.raw`Optional fields express settings that may be absent, and value_or provides the default at the point of use.` },
+
+{ n: 39, d: "applications", t: "Applying a sequence of commands",
+  p: String.raw`Start a running total at 0. Apply the commands add 5, negate, and add 2 in that order, where negate changes the sign of the total. Print the final total, then a newline.`,
+  ex: String.raw`-3`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Add { int n; };
+struct Negate {};
+struct Reset {};
+
+template <class... Ts>
+struct Overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
+int main() {
+    int total = 0;
+    std::vector<std::variant<Add, Negate, Reset>> cmds{Add{5}, Negate{}, Add{2}};
+    for (const auto& c : cmds) {
+        std::visit(Overloaded{
+            [&](const Add& a) { total += a.n; },
+            [&](const Negate&) { total = -total; },
+            [&](const Reset&) { total = 0; }}, c);
+    }
+    std::cout << total << "\n";
+}`,
+  why: String.raw`Commands as variants give a closed set of operations, and visit makes the compiler check that each one is handled.` },
+
+{ n: 40, d: "applications", t: "Pipeline that stops at the first failure",
+  p: String.raw`Write three steps: read a whole number from text, double it, and then require the doubled value to be below 100. Run the pipeline on the text 30 and on the text 60, and print the final value or the error message for each, separated by a space, then a newline.`,
+  ex: String.raw`60 too large`,
+  code: String.raw`#include <charconv>
+#include <expected>
+#include <iostream>
+#include <string>
+#include <string_view>
+
+std::expected<int, std::string> read_num(std::string_view s) {
+    int v{};
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::unexpected("invalid");
+    return v;
+}
+std::expected<int, std::string> doubled(int x) { return x * 2; }
+std::expected<int, std::string> below_100(int x) {
+    if (x >= 100) return std::unexpected("too large");
+    return x;
+}
+
+int main() {
+    auto run = [](std::string_view s) {
+        auto r = read_num(s).and_then(doubled).and_then(below_100);
+        return r ? std::to_string(*r) : r.error();
+    };
+    std::cout << run("30") << ' ' << run("60") << "\n";
+}`,
+  why: String.raw`Each step returns either a value or an error, and and_then links them. The error from the first failing step becomes the result, so no step needs its own error handling.` },
+
+{ n: 41, d: "applications", t: "Fallback chain for display names",
+  p: String.raw`Two lookup tables exist: nicknames, which maps alice to Al, and first names, which maps bob to Bob. For each of alice, bob and carol, find the nickname if there is one, otherwise the first name, otherwise the text anonymous. Print the three results separated by spaces, then a newline.`,
+  ex: String.raw`Al Bob anonymous`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+std::optional<std::string> find(const std::map<std::string, std::string>& m, const std::string& k) {
+    auto it = m.find(k);
+    if (it == m.end()) return std::nullopt;
+    return it->second;
+}
+
+int main() {
+    std::map<std::string, std::string> nicknames{{"alice", "Al"}};
+    std::map<std::string, std::string> first_names{{"bob", "Bob"}};
+    for (const std::string user : {"alice", "bob", "carol"}) {
+        auto name = find(nicknames, user)
+                        .or_else([&] { return find(first_names, user); })
+                        .value_or("anonymous");
+        std::cout << name << (user == "carol" ? "\n" : " ");
+    }
+}`,
+  why: String.raw`or_else tries the next source only when the previous one came up empty, which expresses a fallback order without nested ifs.` },
+
+{ n: 42, d: "applications", t: "Doubling mixed numeric values",
+  p: String.raw`Two numbers are stored, each as either an int or a double: the int 42 and the double 2.5. Print each one doubled, separated by a space, then a newline.`,
+  ex: String.raw`84 5`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<int, double> a = 42;
+    std::variant<int, double> b = 2.5;
+    auto twice = [](const std::variant<int, double>& v) {
+        return std::visit([](auto x) { return static_cast<double>(x) * 2; }, v);
+    };
+    std::cout << twice(a) << ' ' << twice(b) << "\n";
+}`,
+  why: String.raw`Generic lambdas let visit apply the same doubling to whichever type is stored, keeping the int exact and the double as a double.` },
+
+{ n: 43, d: "applications", t: "Collecting the numbers that parse",
+  p: String.raw`From the texts 4, x, 9 and y, keep only those that read as whole numbers, using a result that may be empty for each text. Print the sum of the numbers kept, then a newline.`,
+  ex: String.raw`13`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
+
+std::optional<int> to_int(std::string_view s) {
+    int v{};
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::nullopt;
+    return v;
+}
+
+int main() {
+    std::vector<std::string> texts{"4", "x", "9", "y"};
+    int sum = 0;
+    for (const auto& t : texts)
+        if (auto v = to_int(t)) sum += *v;
+    std::cout << sum << "\n";
+}`,
+  why: String.raw`Making the parse result optional lets the caller skip bad input in the same condition that tests for success, instead of checking a separate error code.` },
+
+{ n: 44, d: "applications", t: "Validation report",
+  p: String.raw`Check the ages 17, 25 and -3 with a function that returns the age when it is not negative, and otherwise returns the message negative age. Print each result on its own line, numbers as numbers and messages as text, then a newline.`,
+  ex: String.raw`17
+25
+negative age`,
+  code: String.raw`#include <expected>
+#include <initializer_list>
+#include <iostream>
+#include <string>
+
+std::expected<int, std::string> check_age(int a) {
+    if (a < 0) return std::unexpected("negative age");
+    return a;
+}
+
+int main() {
+    for (int a : {17, 25, -3}) {
+        auto r = check_age(a);
+        std::cout << (r ? std::to_string(*r) : r.error()) << "\n";
+    }
+}`,
+  why: String.raw`Each validation result carries its own message, so a report can be built from results without a separate error channel.` },
+
+{ n: 45, d: "applications", t: "Counting lights that are on",
+  p: String.raw`A light is either off, on with a brightness of 80, or blinking with a period of 5. Count how many of the lights On, Off, Blinking and On are on, treating blinking as on, then print the count, then a newline.`,
+  ex: String.raw`3`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Off {};
+struct On { int brightness; };
+struct Blinking { int period; };
+using Light = std::variant<Off, On, Blinking>;
+
+int main() {
+    std::vector<Light> lights{On{80}, Off{}, Blinking{5}, On{20}};
+    auto n = std::count_if(lights.begin(), lights.end(),
+                           [](const Light& l) { return l.index() != 0; });
+    std::cout << n << "\n";
+}`,
+  why: String.raw`Using the variant's alternative index keeps the state model in the type. Adding a new kind of light forces the code that reads it to be revisited.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-optional-variant-expected-v1";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 10, label: "Easy", range: "Problems 1–10", badge: "easy" },
+  { from: 11, to: 22, label: "Medium", range: "Problems 11–22", badge: "medium" },
+  { from: 23, to: 31, label: "Hard", range: "Problems 23–31", badge: "hard" },
+  { from: 32, to: 37, label: "Extension", range: "Problems 32–37", badge: null },
+  { from: 38, to: 45, label: "Applications", range: "Problems 38–45", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
