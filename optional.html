@@ -1,0 +1,961 @@
+<title>std::optional</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.back{display:inline-block;margin:0 0 12px;color:var(--accent);text-decoration:none;font-weight:600}
+.back:hover{text-decoration:underline}
+</style>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">&larr; All topics</a>
+    <p class="kicker">Practical applications using std::optional · 32 problems</p>
+    <h1>std::optional Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">32</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "applications", t: "Last known price with an empty slot",
+  p: String.raw`Keep the last trade price for three symbol slots in an array of optionals. Slot 0 traded at 10000, slot 1 has never traded, and slot 2 traded at 10150. Print each slot as N: price, or N: no price for an empty slot.`,
+  ex: String.raw`0: 10000
+1: no price
+2: 10150`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <optional>
+
+int main() {
+    std::array<std::optional<long long>, 3> last;
+    last[0] = 10000;
+    last[2].emplace(10150);
+    for (size_t i = 0; i < last.size(); ++i) {
+        std::cout << i << ": ";
+        if (last[i]) std::cout << *last[i] << "\n";
+        else std::cout << "no price\n";
+    }
+}`,
+  why: String.raw`An empty optional marks a symbol that has never traded, so a zero price can never be mistaken for a real last trade.` },
+
+{ n: 2, d: "applications", t: "Reference data loaded once, on first use",
+  p: String.raw`A lot-size table is expensive to load, so it is loaded lazily into an optional on first use. Call get_lot three times and after each call print lot=N loads=N, where the load count is the number of times the table was loaded. The lot size is 100.`,
+  ex: String.raw`lot=100 loads=1
+lot=100 loads=1
+lot=100 loads=1`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Reference { long long lot; };
+
+int loads = 0;
+std::optional<Reference> cache;
+
+const Reference& reference() {
+    if (!cache) {
+        ++loads;
+        cache.emplace(Reference{100});
+    }
+    return *cache;
+}
+
+long long get_lot() { return reference().lot; }
+
+int main() {
+    for (int i = 0; i < 3; ++i) {
+        long long lot = get_lot();
+        std::cout << "lot=" << lot << " loads=" << loads << "\n";
+    }
+}`,
+  why: String.raw`Checking the optional before loading means the expensive load runs once for the life of the process, however often the lot size is read.` },
+
+{ n: 3, d: "applications", t: "Triggering a stop from an optional stop price",
+  p: String.raw`An order may carry an optional stop price. A sell stop triggers when the market price is at or below the stop. With the market at 9900, check three orders in order: stop 10000, stop 9800, and no stop. Print triggered when the stop has fired, waiting when it has not, and no stop when the order has no stop price.`,
+  ex: String.raw`triggered
+waiting
+no stop`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Order { std::optional<long long> stop; };
+
+const char* check(const Order& o, long long market) {
+    if (!o.stop) return "no stop";
+    return market <= *o.stop ? "triggered" : "waiting";
+}
+
+int main() {
+    const Order orders[] = {Order{10000}, Order{9800}, Order{std::nullopt}};
+    for (const auto& o : orders) std::cout << check(o, 9900) << "\n";
+}`,
+  why: String.raw`A missing stop is distinct from a stop at zero, so an order without a stop is never triggered by a price comparison against a placeholder.` },
+
+{ n: 4, d: "applications", t: "Mid price only when both sides exist",
+  p: String.raw`The mid price is the average of bid and ask, in cents with integer division, and exists only when both sides are present. Compute the mid for a bid of 10000 with an ask of 10010, a bid of 10000 with no ask, and no bid with no ask. Print mid=N when it exists and no mid otherwise.`,
+  ex: String.raw`mid=10005
+no mid
+no mid`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <utility>
+
+using Px = std::optional<long long>;
+
+std::optional<long long> mid(Px bid, Px ask) {
+    if (!bid || !ask) return std::nullopt;
+    return (*bid + *ask) / 2;
+}
+
+int main() {
+    const std::pair<Px, Px> cases[] = {
+        {10000, 10010}, {10000, std::nullopt}, {std::nullopt, std::nullopt}};
+    for (const auto& [b, a] : cases) {
+        auto m = mid(b, a);
+        if (m) std::cout << "mid=" << *m << "\n";
+        else std::cout << "no mid\n";
+    }
+}`,
+  why: String.raw`Returning nullopt when either side is missing means a one-sided quote cannot quietly produce a mid price that looks real.` },
+
+{ n: 5, d: "applications", t: "Quantity parsing that yields lots",
+  p: String.raw`Parse a quantity string into an optional integer, returning nullopt when the text is not entirely a number. Convert each parsed quantity to lots of 100 with transform, and print lots=N for a valid quantity or invalid otherwise. Process the strings 300, abc and 250 in order. Lots are the quantity divided by 100 with integer division.`,
+  ex: String.raw`lots=3
+invalid
+lots=2`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <optional>
+#include <string_view>
+#include <system_error>
+
+std::optional<long long> parse_qty(std::string_view s) {
+    long long v = 0;
+    auto [p, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
+    if (ec != std::errc{} || p != s.data() + s.size()) return std::nullopt;
+    return v;
+}
+
+int main() {
+    for (std::string_view s : {"300", "abc", "250"}) {
+        auto lots = parse_qty(s).transform([](long long q) { return q / 100; });
+        if (lots) std::cout << "lots=" << *lots << "\n";
+        else std::cout << "invalid\n";
+    }
+}`,
+  why: String.raw`transform runs only on a parsed value, so the lot conversion never sees the bad input and needs no separate check.` },
+
+{ n: 6, d: "applications", t: "Venue override with a default",
+  p: String.raw`A symbol's venue override is optional and is set only when the symbol is routed away from the default venue NYSE. Resolve the venue for an override of BATS and then for no override. Print venue=NAME for each.`,
+  ex: String.raw`venue=BATS
+venue=NYSE`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+std::string resolve(const std::optional<std::string>& override_venue) {
+    return override_venue.value_or("NYSE");
+}
+
+int main() {
+    std::cout << "venue=" << resolve(std::string("BATS")) << "\n";
+    std::cout << "venue=" << resolve(std::nullopt) << "\n";
+}`,
+  why: String.raw`value_or states the default in one place, so every caller gets the same venue when no override is set.` },
+
+{ n: 7, d: "applications", t: "Settlement date known only after confirmation",
+  p: String.raw`A trade's settlement date is an optional integer in the form YYYYMMDD, set only once the back office confirms it. Print settles on DATE for a confirmed trade and pending for an unconfirmed one. The first trade settles on 20261104 and the second has not been confirmed.`,
+  ex: String.raw`settles on 20261104
+pending`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Trade { int id; std::optional<int> settle; };
+
+int main() {
+    const Trade trades[] = {{1, 20261104}, {2, std::nullopt}};
+    for (const auto& t : trades) {
+        if (t.settle) std::cout << "settles on " << *t.settle << "\n";
+        else std::cout << "pending\n";
+    }
+}`,
+  why: String.raw`The settlement date is absent until it is known, so no code can read a placeholder date and report it as confirmed.` },
+
+{ n: 8, d: "applications", t: "Best bid across a book with empty levels",
+  p: String.raw`A price book is a vector of optional prices, one per level, with empty levels as nullopt. Return the highest present price as the best bid, or nullopt when no level has a price. Print best=N for the first book, whose levels are 10000, empty, 10050 and 9990, and no bid for the second book, whose levels are all empty.`,
+  ex: String.raw`best=10050
+no bid`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+using Level = std::optional<long long>;
+
+std::optional<long long> best_bid(const std::vector<Level>& levels) {
+    std::optional<long long> best;
+    for (const Level& l : levels)
+        if (l && (!best || *l > *best)) best = l;
+    return best;
+}
+
+int main() {
+    auto a = best_bid({10000, std::nullopt, 10050, 9990});
+    auto b = best_bid({std::nullopt, std::nullopt});
+    if (a) std::cout << "best=" << *a << "\n";
+    else std::cout << "no bid\n";
+    if (b) std::cout << "best=" << *b << "\n";
+    else std::cout << "no bid\n";
+}`,
+  why: String.raw`Starting from an empty optional lets the first real price set the running best, so an all-empty book needs no special case.` },
+
+{ n: 9, d: "applications", t: "Memoized volatility cleared at the day boundary",
+  p: String.raw`A volatility figure is expensive, so it is memoized in an optional. Call volatility twice, printing computations=N after each call, then reset the memo as at the start of a new day, call volatility again, and print computations=N. The count is the number of real computations so far.`,
+  ex: String.raw`computations=1
+computations=1
+computations=2`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int computations = 0;
+std::optional<double> memo;
+
+double volatility() {
+    if (!memo) {
+        ++computations;
+        memo = 0.25;
+    }
+    return *memo;
+}
+
+int main() {
+    volatility();
+    std::cout << "computations=" << computations << "\n";
+    volatility();
+    std::cout << "computations=" << computations << "\n";
+    memo.reset();
+    volatility();
+    std::cout << "computations=" << computations << "\n";
+}`,
+  why: String.raw`reset() is the invalidation step: clearing the optional forces the next read to recompute rather than serve yesterday's figure.` },
+
+{ n: 10, d: "applications", t: "Moving a value out of an optional",
+  p: String.raw`Move the order id held in an optional string into a plain string. Then print moved=ID and whether the optional still reports having a value, as engaged=yes or engaged=no. The order id is ORDER-7.`,
+  ex: String.raw`moved=ORDER-7 engaged=yes`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+#include <utility>
+
+int main() {
+    std::optional<std::string> id = std::string("ORDER-7");
+    std::string moved = std::move(*id);
+    std::cout << "moved=" << moved << " engaged=" << (id.has_value() ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Moving out of an optional leaves it engaged with a moved-from value, so code that needs an empty state must call reset rather than rely on the move.` },
+
+{ n: 11, d: "applications", t: "Sorting prices with missing entries first",
+  p: String.raw`Sort a list of optional prices ascending. nullopt compares less than any value, so missing prices come first. The list is 10100, missing, 10000 and 10050. Print the sorted list separated by spaces, with - for a missing price.`,
+  ex: String.raw`- 10000 10050 10100`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <optional>
+#include <vector>
+
+int main() {
+    std::vector<std::optional<long long>> px{10100, std::nullopt, 10000, 10050};
+    std::sort(px.begin(), px.end());
+    for (size_t i = 0; i < px.size(); ++i) {
+        if (i > 0) std::cout << " ";
+        if (px[i]) std::cout << *px[i];
+        else std::cout << "-";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`The standard ordering puts nullopt first, so a sorted book shows its gaps at the front rather than mixing them into real prices.` },
+
+{ n: 12, d: "applications", t: "Strategy size with an override chain",
+  p: String.raw`A strategy takes its order size from a per-symbol override if present, otherwise from a global default if present, otherwise from a hard floor of 100. Chain the optionals with or_else, then supply the floor with value_or. Print size=N for three cases: override 300 with global 500, no override with global 500, and neither.`,
+  ex: String.raw`size=300
+size=500
+size=100`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+long long size_for(std::optional<long long> per_symbol, std::optional<long long> global) {
+    return per_symbol.or_else([&] { return global; }).value_or(100);
+}
+
+int main() {
+    std::cout << "size=" << size_for(300, 500) << "\n";
+    std::cout << "size=" << size_for(std::nullopt, 500) << "\n";
+    std::cout << "size=" << size_for(std::nullopt, std::nullopt) << "\n";
+}`,
+  why: String.raw`or_else expresses a fallback order without nested ifs, and the floor is written once at the end where the chain can no longer change it.` },
+
+{ n: 13, d: "applications", t: "Lot size through a chain of lookups",
+  p: String.raw`To find a symbol's lot size, look up its instrument group, then the group's lot size. Each step can be missing, and the chain stops at the first missing link with and_then. The symbols are AAPL, which belongs to group equity with a lot of 100, XYZ, which has no instrument, and ABC, whose group has no lot size. Print lot=N or unknown for each, in that order.`,
+  ex: String.raw`lot=100
+unknown
+unknown`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+const std::map<std::string, std::string> instrument_group{{"AAPL", "equity"}, {"ABC", "bond-x"}};
+const std::map<std::string, long long> group_lot{{"equity", 100}};
+
+std::optional<std::string> group_of(const std::string& sym) {
+    auto it = instrument_group.find(sym);
+    if (it == instrument_group.end()) return std::nullopt;
+    return it->second;
+}
+
+std::optional<long long> lot_of(const std::string& sym) {
+    return group_of(sym).and_then([](const std::string& g) -> std::optional<long long> {
+        auto it = group_lot.find(g);
+        if (it == group_lot.end()) return std::nullopt;
+        return it->second;
+    });
+}
+
+int main() {
+    for (std::string s : {"AAPL", "XYZ", "ABC"}) {
+        auto lot = lot_of(s);
+        if (lot) std::cout << "lot=" << *lot << "\n";
+        else std::cout << "unknown\n";
+    }
+}`,
+  why: String.raw`and_then keeps each lookup's failure in the type, so a missing group is reported as unknown rather than read as a lot of zero.` },
+
+{ n: 14, d: "applications", t: "Session token that can be logged out",
+  p: String.raw`A session token is an optional string. Logging in sets it, and logging out resets it. Print active while a token is held and logged out once it is cleared. Set the token to abc123, print the state, then clear it and print the state again.`,
+  ex: String.raw`active
+logged out`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+int main() {
+    std::optional<std::string> token;
+    token = "abc123";
+    std::cout << (token ? "active" : "logged out") << "\n";
+    token.reset();
+    std::cout << (token ? "active" : "logged out") << "\n";
+}`,
+  why: String.raw`reset returns the session to an empty state that the type itself records, so logout cannot leave a stale token behind.` },
+
+{ n: 15, d: "applications", t: "Position limit that may be absent",
+  p: String.raw`A position limit is optional, and an absent limit means the position is unlimited. Check a position of 800 against a limit of 1000, a position of 1200 against the same limit, and a position of 1200 with no limit. Print accepted when the position is within the limit or no limit exists, and breach otherwise.`,
+  ex: String.raw`accepted
+breach
+accepted`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+const char* check(long long pos, std::optional<long long> limit) {
+    if (!limit) return "accepted";
+    return pos <= *limit ? "accepted" : "breach";
+}
+
+int main() {
+    std::cout << check(800, 1000) << "\n";
+    std::cout << check(1200, 1000) << "\n";
+    std::cout << check(1200, std::nullopt) << "\n";
+}`,
+  why: String.raw`Modelling an unlimited position as an absent limit keeps the rule explicit, instead of using a huge number that could be exceeded by accident.` },
+
+{ n: 16, d: "applications", t: "Price check inside an if-initialiser",
+  p: String.raw`Look up prices for AAPL, MSFT and XYZ in a map of symbol to price, where AAPL is 10150 and MSFT is 9900. Use an if statement with an initialiser to read the price. Print SYM missing when there is no price, SYM above when the price is over 10000, and SYM not above otherwise.`,
+  ex: String.raw`AAPL above
+MSFT not above
+XYZ missing`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+std::optional<long long> price(const std::map<std::string, long long>& m, const std::string& s) {
+    auto it = m.find(s);
+    if (it == m.end()) return std::nullopt;
+    return it->second;
+}
+
+int main() {
+    const std::map<std::string, long long> prices{{"AAPL", 10150}, {"MSFT", 9900}};
+    for (std::string s : {"AAPL", "MSFT", "XYZ"}) {
+        if (auto px = price(prices, s); !px) std::cout << s << " missing\n";
+        else if (*px > 10000) std::cout << s << " above\n";
+        else std::cout << s << " not above\n";
+    }
+}`,
+  why: String.raw`Scoping the optional to the if statement keeps the missing check and the value check together, so the value is never read outside them.` },
+
+{ n: 17, d: "applications", t: "First feed that has an update",
+  p: String.raw`Three feeds are polled in order. Each feed holds an optional price, empty when it has no update. Use the first feed that has a price and print price=N from feed K, where K is the feed's position counted from 1. The feeds hold nothing, 10120 and 10130.`,
+  ex: String.raw`price=10120 from feed 2`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+int main() {
+    std::vector<std::optional<long long>> feeds{std::nullopt, 10120, 10130};
+    for (size_t i = 0; i < feeds.size(); ++i) {
+        if (feeds[i]) {
+            std::cout << "price=" << *feeds[i] << " from feed " << i + 1 << "\n";
+            break;
+        }
+    }
+}`,
+  why: String.raw`Checking each optional in turn means a quiet feed is skipped without an error, and the first live price wins.` },
+
+{ n: 18, d: "applications", t: "Draining an event source until it is empty",
+  p: String.raw`An event source returns an optional event, and returns nothing once it is exhausted. Drain a source holding two fill events with quantities 100 and 50, summing the quantities, and print total=N.`,
+  ex: String.raw`total=150`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+struct Event { long long qty; };
+
+class Source {
+    std::vector<Event> events_{{100}, {50}};
+    size_t next_ = 0;
+public:
+    std::optional<Event> next() {
+        if (next_ == events_.size()) return std::nullopt;
+        return events_[next_++];
+    }
+};
+
+int main() {
+    Source src;
+    long long total = 0;
+    while (auto e = src.next()) total += e->qty;
+    std::cout << "total=" << total << "\n";
+}`,
+  why: String.raw`Using an empty optional as the end-of-stream signal lets a while loop read events without a separate count or end flag.` },
+
+{ n: 19, d: "applications", t: "First quote with a wide spread",
+  p: String.raw`Find the first quote whose spread is at least a given number of cents, and return its symbol as an optional. Quotes are AAPL with spread 10, MSFT with spread 25 and GOOG with spread 30. Print the symbol for a threshold of 20, then for a threshold of 50. Print none when no quote qualifies.`,
+  ex: String.raw`MSFT
+none`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <vector>
+
+struct Quote { std::string sym; long long spread; };
+
+std::optional<std::string> first_wide(const std::vector<Quote>& qs, long long min) {
+    auto it = std::find_if(qs.begin(), qs.end(), [&](const Quote& q) { return q.spread >= min; });
+    if (it == qs.end()) return std::nullopt;
+    return it->sym;
+}
+
+int main() {
+    const std::vector<Quote> quotes{{"AAPL", 10}, {"MSFT", 25}, {"GOOG", 30}};
+    std::cout << first_wide(quotes, 20).value_or("none") << "\n";
+    std::cout << first_wide(quotes, 50).value_or("none") << "\n";
+}`,
+  why: String.raw`A search that can find nothing returns an optional, so the no-match case is part of the signature rather than a sentinel string.` },
+
+{ n: 20, d: "applications", t: "Heartbeat that may never have arrived",
+  p: String.raw`A session stores the time of its last heartbeat in milliseconds, or nothing if none has arrived. At time 10000 milliseconds, report no heartbeat when there is none, stale when the last heartbeat is more than 3000 milliseconds old, and alive otherwise. Check three cases in order: no heartbeat, a last heartbeat at 6000, and one at 8000.`,
+  ex: String.raw`no heartbeat
+stale
+alive`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+const char* health(std::optional<long long> last, long long now) {
+    if (!last) return "no heartbeat";
+    return now - *last > 3000 ? "stale" : "alive";
+}
+
+int main() {
+    const long long now = 10000;
+    std::cout << health(std::nullopt, now) << "\n";
+    std::cout << health(6000, now) << "\n";
+    std::cout << health(8000, now) << "\n";
+}`,
+  why: String.raw`A session that has never sent a heartbeat is a different state from one whose heartbeat has gone stale, and the optional keeps the two apart.` },
+
+{ n: 21, d: "applications", t: "Slot table for resting orders",
+  p: String.raw`A fixed table of three slots holds resting order ids, with empty slots as nullopt. Place order 11 in the first free slot, then order 12, then cancel order 11, then place order 13, which takes the freed slot. Print each slot's id, or - for an empty slot, separated by spaces, after these operations.`,
+  ex: String.raw`13 12 -`,
+  code: String.raw`#include <array>
+#include <iostream>
+#include <optional>
+
+using Slots = std::array<std::optional<long long>, 3>;
+
+bool place(Slots& s, long long id) {
+    for (auto& slot : s) {
+        if (!slot) {
+            slot = id;
+            return true;
+        }
+    }
+    return false;
+}
+
+void cancel(Slots& s, long long id) {
+    for (auto& slot : s) {
+        if (slot && *slot == id) {
+            slot.reset();
+            return;
+        }
+    }
+}
+
+int main() {
+    Slots s{};
+    place(s, 11);
+    place(s, 12);
+    cancel(s, 11);
+    place(s, 13);
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (i > 0) std::cout << " ";
+        if (s[i]) std::cout << *s[i];
+        else std::cout << "-";
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`Resetting a freed slot to nullopt is what makes it available again, so the table never needs a separate in-use flag.` },
+
+{ n: 22, d: "applications", t: "Book built in place inside an optional",
+  p: String.raw`Build an optional vector of five prices, each 10000, constructing the vector in place inside the optional. Print size=N for its size, then reset the optional and print engaged=yes or engaged=no.`,
+  ex: String.raw`size=5
+engaged=no`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+int main() {
+    std::optional<std::vector<long long>> book{std::in_place, 5, 10000LL};
+    std::cout << "size=" << book->size() << "\n";
+    book.reset();
+    std::cout << "engaged=" << (book ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`std::in_place constructs the vector directly inside the optional, so no temporary vector is copied or moved into it.` },
+
+{ n: 23, d: "medium", t: "Length of an optional account name",
+  p: String.raw`Each order may carry an optional account. Print name_len=N with the length of the account name, or 0 when the order has no account. Use transform on the optional account rather than an if statement. The orders are one with account desk-alpha and quantity 10, and one with no account.`,
+  ex: String.raw`name_len=10
+name_len=0`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+struct Account { std::string name; };
+struct Order { long long qty; std::optional<Account> account; };
+
+int main() {
+    const Order orders[] = {Order{10, Account{"desk-alpha"}}, Order{5, std::nullopt}};
+    for (const auto& o : orders) {
+        auto len = o.account.transform([](const Account& a) { return a.name.size(); });
+        std::cout << "name_len=" << len.value_or(0) << "\n";
+    }
+}`,
+  why: String.raw`transform keeps the account lookup and the name length in one expression, and the missing case falls through to value_or without a branch.` },
+
+{ n: 24, d: "medium", t: "Catching an empty value access",
+  p: String.raw`Read the last price with value() from an optional that starts empty. Catch the bad_optional_access exception and print no price. Then assign 10150 and read it again, printing last=N.`,
+  ex: String.raw`no price
+last=10150`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<long long> last;
+    try {
+        long long v = last.value();
+        std::cout << "last=" << v << "\n";
+    } catch (const std::bad_optional_access&) {
+        std::cout << "no price\n";
+    }
+    last = 10150;
+    std::cout << "last=" << last.value() << "\n";
+}`,
+  why: String.raw`value() is the one access that can throw, so it belongs where an empty state is truly unexpected, while value_or or a has_value test covers the normal path.` },
+
+{ n: 25, d: "medium", t: "Swapping a value into an empty optional",
+  p: String.raw`Start with an optional holding 10000 and an empty optional. Swap them, then print a=N or a=none and b=N or b=none for the two optionals after the swap. Expected output shows the value has moved to b.`,
+  ex: String.raw`a=none b=10000`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+int main() {
+    std::optional<long long> a = 10000, b;
+    a.swap(b);
+    std::cout << "a=" << (a ? std::to_string(*a) : std::string("none"))
+              << " b=" << (b ? std::to_string(*b) : std::string("none")) << "\n";
+}`,
+  why: String.raw`swap moves whole engaged or disengaged states at once, so a value and an empty slot can be exchanged without copying either.` },
+
+{ n: 26, d: "medium", t: "Moving a unique resource out of an optional",
+  p: String.raw`An optional holds a unique pointer to the value 42. Move the pointer out into a second unique pointer, then print value=N with the moved value and slot_null=yes or slot_null=no, reporting whether the pointer left in the optional is now null.`,
+  ex: String.raw`value=42 slot_null=yes`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <optional>
+
+int main() {
+    std::optional<std::unique_ptr<int>> slot = std::make_unique<int>(42);
+    std::unique_ptr<int> taken = std::move(*slot);
+    std::cout << "value=" << *taken << " slot_null=" << (*slot == nullptr ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`An optional of a move-only type can hand over its resource, and the optional stays engaged but holds nothing, which is the state code must check for.` },
+
+{ n: 27, d: "medium", t: "Comparing optionals with values and with empty",
+  p: String.raw`Let a be an optional holding 3 and b be an empty optional. Print three results in one line, as a>b=yes or a>b=no, a==3=yes or a==3=no, and b<a=yes or b<a=no, using the standard comparison operators on optionals.`,
+  ex: String.raw`a>b=yes a==3=yes b<a=yes`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> a = 3;
+    std::optional<int> b;
+    std::cout << "a>b=" << (a > b ? "yes" : "no")
+              << " a==3=" << (a == 3 ? "yes" : "no")
+              << " b<a=" << (b < a ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`An empty optional compares less than any value, so comparisons on optionals give a consistent order without a separate empty check.` },
+
+{ n: 28, d: "medium", t: "Spread check through a chain of lookups",
+  p: String.raw`Look up a quote by symbol in a map, then compute its spread as ask minus bid, and report whether the spread is at least 20 cents. Chain these with and_then, so a missing quote yields no answer. Symbols are AAPL with bid 10000 and ask 10010, MSFT with bid 9980 and ask 10010, and XYZ, which is missing. Print SYM wide, SYM tight, or SYM unknown.`,
+  ex: String.raw`AAPL tight
+MSFT wide
+XYZ unknown`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+struct Quote { long long bid, ask; };
+
+std::optional<Quote> quote_of(const std::map<std::string, Quote>& m, const std::string& s) {
+    auto it = m.find(s);
+    if (it == m.end()) return std::nullopt;
+    return it->second;
+}
+
+std::optional<bool> is_wide(const std::map<std::string, Quote>& m, const std::string& s) {
+    return quote_of(m, s).and_then([](const Quote& q) -> std::optional<bool> {
+        return q.ask - q.bid >= 20;
+    });
+}
+
+int main() {
+    const std::map<std::string, Quote> quotes{{"AAPL", {10000, 10010}}, {"MSFT", {9980, 10010}}};
+    for (std::string s : {"AAPL", "MSFT", "XYZ"}) {
+        auto w = is_wide(quotes, s);
+        if (!w) std::cout << s << " unknown\n";
+        else std::cout << s << (*w ? " wide\n" : " tight\n");
+    }
+}`,
+  why: String.raw`Each step returns an optional, so a missing symbol short-circuits the whole computation and the caller gets one unambiguous unknown.` },
+
+{ n: 29, d: "medium", t: "Telling an unknown symbol from a symbol with no price",
+  p: String.raw`A table maps each symbol to an optional last price, so a symbol can be known but have no price yet. Look up the price with a nested optional, where the outer optional is empty for an unknown symbol and the inner is empty for a known symbol with no price. The table holds AAPL at 10000 and XYZ with no price. For AAPL, XYZ and ABC, print SYM: px=N, SYM: no price, or SYM: unknown.`,
+  ex: String.raw`AAPL: px=10000
+XYZ: no price
+ABC: unknown`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+
+using Lookup = std::optional<std::optional<long long>>;
+
+Lookup last_px(const std::map<std::string, std::optional<long long>>& m, const std::string& s) {
+    auto it = m.find(s);
+    if (it == m.end()) return std::nullopt;
+    return Lookup(it->second);
+}
+
+int main() {
+    const std::map<std::string, std::optional<long long>> table{{"AAPL", 10000}, {"XYZ", std::nullopt}};
+    for (std::string s : {"AAPL", "XYZ", "ABC"}) {
+        Lookup r = last_px(table, s);
+        if (!r) std::cout << s << ": unknown\n";
+        else if (!*r) std::cout << s << ": no price\n";
+        else std::cout << s << ": px=" << **r << "\n";
+    }
+}`,
+  why: String.raw`Two levels of optional keep the unknown symbol and the symbol without a price distinct, which a single optional could not do.` },
+
+{ n: 30, d: "medium", t: "Describing a fill or falling back to empty",
+  p: String.raw`Describe a fill as the text fill followed by the quantity when the quantity is positive, and return nothing otherwise. Use or_else to supply the text empty when there is nothing to describe, then take the value. Print the description for quantities 100 and 0, one per line.`,
+  ex: String.raw`fill 100
+empty`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+std::optional<std::string> describe(long long qty) {
+    if (qty > 0) return "fill " + std::to_string(qty);
+    return std::nullopt;
+}
+
+int main() {
+    for (long long q : {100LL, 0LL}) {
+        std::cout << describe(q).or_else([] { return std::optional<std::string>("empty"); }).value() << "\n";
+    }
+}`,
+  why: String.raw`or_else supplies a fallback that is itself an optional, so the chain stays in optional form until the single value() at the end.` },
+
+{ n: 31, d: "medium", t: "Finding an order by pointer without copying",
+  p: String.raw`Search a vector of orders, each with an id and a quantity, for an order with a given id. Return a pointer to the order inside an optional, or nothing when it is absent. Use transform to read the quantity from the found order. The orders are id 1 with quantity 100 and id 2 with quantity 50. Look up id 2, then id 9, printing qty=N or not found.`,
+  ex: String.raw`qty=50
+not found`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <vector>
+
+struct Order { long long id, qty; };
+
+std::optional<const Order*> find_order(const std::vector<Order>& v, long long id) {
+    for (const auto& o : v)
+        if (o.id == id) return &o;
+    return std::nullopt;
+}
+
+int main() {
+    const std::vector<Order> orders{{1, 100}, {2, 50}};
+    for (long long id : {2LL, 9LL}) {
+        auto qty = find_order(orders, id).transform([](const Order* o) { return o->qty; });
+        if (qty) std::cout << "qty=" << *qty << "\n";
+        else std::cout << "not found\n";
+    }
+}`,
+  why: String.raw`Returning a pointer in an optional avoids copying the order, and the empty case is still a type rather than a null pointer that might be dereferenced.` },
+
+{ n: 32, d: "medium", t: "Tracking the session open and move from open",
+  p: String.raw`Track the session open price in an optional. Set it from the first tick and leave it alone afterwards. The ticks are 10000, 10050 and 9980. After all ticks, print open=N and move=N, where move is the last tick minus the open.`,
+  ex: String.raw`open=10000 move=-20`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<long long> open;
+    long long last = 0;
+    for (long long px : {10000LL, 10050LL, 9980LL}) {
+        if (!open) open = px;
+        last = px;
+    }
+    std::cout << "open=" << *open << " move=" << last - *open << "\n";
+}`,
+  why: String.raw`The optional records that the open has been set, so later ticks cannot overwrite the open even though the loop keeps running.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-optional-only-v1";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 23, to: 32, label: "Medium", range: "Problems 23–32", badge: "medium" },
+  { from: 1, to: 22, label: "Applications", range: "Problems 1–22", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
