@@ -100,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Practical applications using std::optional · 32 problems</p>
+    <p class="kicker">Practical applications using std::optional · 51 problems</p>
     <h1>std::optional Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">32</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">51</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="51" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -844,6 +844,401 @@ int main() {
     std::cout << "open=" << *open << " move=" << last - *open << "\n";
 }`,
   why: String.raw`The optional records that the open has been set, so later ticks cannot overwrite the open even though the loop keeps running.` },
+
+{ n: 33, d: "medium", t: "Hashing optionals in an unordered set",
+  p: String.raw`Insert the values 1, an empty optional, 1 and 2 into an unordered set of optional integers. Print distinct=N with the number of distinct elements, where the empty optional counts as one element.`,
+  ex: String.raw`distinct=3`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <unordered_set>
+
+int main() {
+    std::unordered_set<std::optional<int>> ids{1, std::nullopt, 1, 2};
+    std::cout << "distinct=" << ids.size() << "\n";
+}`,
+  why: String.raw`std::hash is provided for optional, so optionals can key hash containers, and the empty state is one ordinary key.` },
+
+{ n: 34, d: "medium", t: "Checking optional results at compile time",
+  p: String.raw`A constexpr function half returns the half of an even integer and an empty optional for an odd one. Verify half(4) equals 2 and half(3) is empty with static_assert, then print static ok, and print half(3)=N or half(3)=none at run time.`,
+  ex: String.raw`static ok
+half(3)=none`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+constexpr std::optional<int> half(int x) {
+    if (x % 2 != 0) return std::nullopt;
+    return x / 2;
+}
+
+static_assert(half(4) == 2);
+static_assert(!half(3).has_value());
+
+int main() {
+    std::cout << "static ok\n";
+    auto h = half(3);
+    std::cout << "half(3)=" << (h ? std::to_string(*h) : std::string("none")) << "\n";
+}`,
+  why: String.raw`Because optional is a literal type with constexpr members, the same validation can run at compile time as a static check.` },
+
+{ n: 35, d: "medium", t: "Optional reference to an existing order",
+  p: String.raw`Hold an optional reference wrapper to an existing order with quantity 100, using std::ref. Change the quantity to 150 through the optional, then print qty=N with the order's quantity.`,
+  ex: String.raw`qty=150`,
+  code: String.raw`#include <functional>
+#include <iostream>
+#include <optional>
+
+struct Order { long long qty; };
+
+int main() {
+    Order o{100};
+    std::optional<std::reference_wrapper<Order>> ref = std::ref(o);
+    ref->get().qty = 150;
+    std::cout << "qty=" << o.qty << "\n";
+}`,
+  why: String.raw`An optional reference wrapper gives an optional view of an existing object without copying it, which C++ optional cannot hold directly as a reference.` },
+
+{ n: 36, d: "medium", t: "Eager and lazy fallbacks",
+  p: String.raw`The price is 10150 and a fallback of 100 is needed only when the price is absent. Compute the value once with value_or, which evaluates its argument every time, and once with or_else, which runs its function only when the optional is empty. Count the calls to each fallback and print eager calls=N lazy calls=N.`,
+  ex: String.raw`eager calls=1 lazy calls=0`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int eager = 0;
+int lazy = 0;
+
+long long fallback_eager() {
+    ++eager;
+    return 100;
+}
+
+int main() {
+    std::optional<long long> px = 10150;
+    long long a = px.value_or(fallback_eager());
+    long long b = px.or_else([] {
+        ++lazy;
+        return std::optional<long long>(100);
+    }).value();
+    (void)a;
+    (void)b;
+    std::cout << "eager calls=" << eager << " lazy calls=" << lazy << "\n";
+}`,
+  why: String.raw`value_or always computes its argument, so an expensive fallback should go through or_else to run only when it is needed.` },
+
+{ n: 37, d: "medium", t: "Three-state flag with optional bool",
+  p: String.raw`An order's fill flag is an optional bool, where true means filled, false means rejected, and empty means the outcome is unknown. Print filled, rejected or unknown for the flags true, false and empty, one per line.`,
+  ex: String.raw`filled
+rejected
+unknown`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+const char* outcome(std::optional<bool> filled) {
+    if (!filled) return "unknown";
+    return *filled ? "filled" : "rejected";
+}
+
+int main() {
+    const std::optional<bool> flags[] = {true, false, std::nullopt};
+    for (const auto& f : flags) std::cout << outcome(f) << "\n";
+}`,
+  why: String.raw`A bool alone has two states, but optional bool adds the third state the problem needs, so an unknown outcome is not forced into true or false.` },
+
+{ n: 38, d: "medium", t: "Optional holding a variant",
+  p: String.raw`A field may be absent, a number, or text, so it is an optional holding a variant of integer and string. Print num N for a number, text S for text, and absent when it is empty. Show the field holding 5, then holding abc, then empty.`,
+  ex: String.raw`num 5
+text abc
+absent`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+#include <variant>
+
+using Field = std::optional<std::variant<long long, std::string>>;
+
+void show(const Field& f) {
+    if (!f) {
+        std::cout << "absent\n";
+        return;
+    }
+    if (auto* n = std::get_if<long long>(&*f)) std::cout << "num " << *n << "\n";
+    else std::cout << "text " << std::get<std::string>(*f) << "\n";
+}
+
+int main() {
+    show(Field{5LL});
+    show(Field{std::string("abc")});
+    show(std::nullopt);
+}`,
+  why: String.raw`The optional says whether the field is present at all, and the variant says what kind of value it holds, so the two questions stay separate.` },
+
+{ n: 39, d: "applications", t: "Sorting orders with missing priorities last",
+  p: String.raw`Sort orders by an optional priority, ascending, with orders that have no priority at the end. The orders are id 1 with priority 3, id 2 with none, id 3 with priority 1, and id 4 with priority 2. Print the ids in sorted order, separated by spaces.`,
+  ex: String.raw`3 4 1 2`,
+  code: String.raw`#include <algorithm>
+#include <iostream>
+#include <optional>
+#include <vector>
+
+struct Order { int id; std::optional<int> prio; };
+
+int main() {
+    std::vector<Order> v{{1, 3}, {2, std::nullopt}, {3, 1}, {4, 2}};
+    std::sort(v.begin(), v.end(), [](const Order& a, const Order& b) {
+        if (a.prio && b.prio) return *a.prio < *b.prio;
+        return a.prio.has_value() && !b.prio.has_value();
+    });
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (i > 0) std::cout << " ";
+        std::cout << v[i].id;
+    }
+    std::cout << "\n";
+}`,
+  why: String.raw`The comparator decides explicitly where missing priorities go, so the order of orders without a priority is a deliberate choice rather than a side effect of comparing nullopt.` },
+
+{ n: 40, d: "medium", t: "Class template argument deduction for optional",
+  p: String.raw`Create an optional from the integer 5 with class template argument deduction, and another from a std::string holding x with std::make_optional. Check at compile time that the first is an optional of int, then print the two values separated by a space.`,
+  ex: String.raw`5 x`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+#include <type_traits>
+
+int main() {
+    std::optional o = 5;
+    auto s = std::make_optional(std::string("x"));
+    static_assert(std::is_same_v<decltype(o), std::optional<int>>);
+    std::cout << *o << " " << *s << "\n";
+}`,
+  why: String.raw`Deduction lets the optional's type come from its initial value, which removes repeated type names in declarations.` },
+
+{ n: 41, d: "medium", t: "Destructor runs when an optional is reset",
+  p: String.raw`A session type prints open when it is constructed and closed when it is destroyed. Emplace one session into an empty optional, reset the optional, then print after reset. Give the three output lines in order.`,
+  ex: String.raw`open
+closed
+after reset`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Session {
+    Session() { std::cout << "open\n"; }
+    ~Session() { std::cout << "closed\n"; }
+};
+
+int main() {
+    std::optional<Session> s;
+    s.emplace();
+    s.reset();
+    std::cout << "after reset\n";
+}`,
+  why: String.raw`An optional controls the lifetime of its value, so reset is the point where a resource held inside it is released.` },
+
+{ n: 42, d: "medium", t: "Emplacing over an existing value",
+  p: String.raw`A connection type prints open N when constructed and close N when destroyed. Emplace connection 1 into an empty optional, then emplace connection 2 over it, then reset. Print the events in order.`,
+  ex: String.raw`open 1
+close 1
+open 2
+close 2`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Conn {
+    int id;
+    explicit Conn(int i) : id(i) { std::cout << "open " << id << "\n"; }
+    ~Conn() { std::cout << "close " << id << "\n"; }
+};
+
+int main() {
+    std::optional<Conn> c;
+    c.emplace(1);
+    c.emplace(2);
+    c.reset();
+}`,
+  why: String.raw`emplace over an engaged optional destroys the old value first, so there is never a moment when two connections are both held by the same optional.` },
+
+{ n: 43, d: "medium", t: "Optional members with designated initialisers",
+  p: String.raw`A config has a lot size defaulting to 100 and an optional cap. Create one config with cap 500 using a designated initialiser, and one with the default cap. Print lot=N cap=N for the first, and lot=N cap=none for the second.`,
+  ex: String.raw`lot=100 cap=500
+lot=100 cap=none`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <string>
+
+struct Config {
+    long long lot = 100;
+    std::optional<long long> cap;
+};
+
+int main() {
+    Config a{.cap = 500};
+    Config b{};
+    std::cout << "lot=" << a.lot << " cap=" << *a.cap << "\n";
+    std::cout << "lot=" << b.lot << " cap=" << (b.cap ? std::to_string(*b.cap) : std::string("none")) << "\n";
+}`,
+  why: String.raw`Making the cap optional lets a config leave it unset, and the default member initialiser keeps the lot size valid without extra code.` },
+
+{ n: 44, d: "medium", t: "Conditional expression producing an optional",
+  p: String.raw`Choose between an optional holding 3 and an empty optional with the conditional operator, based on a flag. Run it for the flags true and false, printing x=N or x=none for each, one per line.`,
+  ex: String.raw`x=3
+x=none`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    for (bool active : {true, false}) {
+        auto x = active ? std::optional<int>(3) : std::nullopt;
+        if (x) std::cout << "x=" << *x << "\n";
+        else std::cout << "x=none\n";
+    }
+}`,
+  why: String.raw`The two branches share a common type through the optional, so a conditional can choose between a value and nothing without a temporary variable.` },
+
+{ n: 45, d: "medium", t: "Comparing an optional zero with an empty one",
+  p: String.raw`Compare two optional integers with the plain int 0 and report the result for three checks, printing zero==0 yes or no for an optional holding zero, none==0 yes or no for an empty optional, and truthy yes or no for the optional holding zero used as a condition.`,
+  ex: String.raw`zero==0 yes
+none==0 no
+truthy yes`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+int main() {
+    std::optional<int> zero = 0;
+    std::optional<int> none;
+    std::cout << "zero==0 " << (zero == 0 ? "yes" : "no") << "\n";
+    std::cout << "none==0 " << (none == 0 ? "yes" : "no") << "\n";
+    std::cout << "truthy " << (zero ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`An optional holding zero is engaged, which is different from an empty optional, so comparing the value to zero and testing for presence give different answers.` },
+
+{ n: 46, d: "medium", t: "Taking a move-only value out of an empty optional",
+  p: String.raw`An empty optional holds a unique pointer. Move from it with value_or, supplying a unique pointer to 9 as the fallback, and print the value that comes out.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <optional>
+
+int main() {
+    std::optional<std::unique_ptr<int>> maybe;
+    auto p = std::move(maybe).value_or(std::make_unique<int>(9));
+    std::cout << *p << "\n";
+}`,
+  why: String.raw`Calling value_or on an rvalue optional moves the stored value out or the fallback in, so move-only types work without an extra copy.` },
+
+{ n: 47, d: "applications", t: "Parsing a field into an optional without leaking exceptions",
+  p: String.raw`Parse text into an integer with std::stoi, returning an empty optional when the text is not a number or is out of range. Parse 42, x and 99999999999 in order. Print the value or invalid for each.`,
+  ex: String.raw`42
+invalid
+invalid`,
+  code: String.raw`#include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <string>
+
+std::optional<int> parse_or_nullopt(const std::string& s) {
+    try {
+        return std::stoi(s);
+    } catch (const std::invalid_argument&) {
+        return std::nullopt;
+    } catch (const std::out_of_range&) {
+        return std::nullopt;
+    }
+}
+
+int main() {
+    for (std::string s : {"42", "x", "99999999999"}) {
+        auto v = parse_or_nullopt(s);
+        if (v) std::cout << *v << "\n";
+        else std::cout << "invalid\n";
+    }
+}`,
+  why: String.raw`The function turns two exception types into one empty result, so a caller that only needs a value does not have to handle exceptions at all.` },
+
+{ n: 48, d: "medium", t: "Defaulted three-way comparison with an optional member",
+  p: String.raw`A key has an integer a and an optional integer b. Give it a defaulted three-way comparison, then check whether the key with b empty is less than the key with b equal to 5, both having a equal to 1. Print less=yes or less=no.`,
+  ex: String.raw`less=yes`,
+  code: String.raw`#include <compare>
+#include <iostream>
+#include <optional>
+
+struct Key {
+    long long a;
+    std::optional<long long> b;
+    auto operator<=>(const Key&) const = default;
+};
+
+int main() {
+    Key x{1, std::nullopt};
+    Key y{1, 5};
+    std::cout << "less=" << (x < y ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`An empty optional orders before any value, so a defaulted comparison over a struct with optional members works without a hand-written operator.` },
+
+{ n: 49, d: "medium", t: "Projecting a member through an optional",
+  p: String.raw`An order holds a quantity of 250. Use transform with a lambda that returns the quantity member to read it from an optional order, then read the same member from an empty optional with value_or 0. Print qty=N for each, one per line.`,
+  ex: String.raw`qty=250
+qty=0`,
+  code: String.raw`#include <iostream>
+#include <optional>
+
+struct Order { long long qty; };
+
+int main() {
+    std::optional<Order> o = Order{250};
+    auto q = o.transform([](const Order& x) { return x.qty; });
+    std::cout << "qty=" << q.value_or(0) << "\n";
+    std::optional<Order> none;
+    std::cout << "qty=" << none.transform([](const Order& x) { return x.qty; }).value_or(0) << "\n";
+}`,
+  why: String.raw`A member pointer would yield a reference, which an optional cannot hold, so transform with a lambda returns the field by value.` },
+
+{ n: 50, d: "applications", t: "Finding an exact price level in a sorted book",
+  p: String.raw`A book has sorted price levels 9950, 10000 and 10050. Find the index of an exact price using lower_bound, returning an empty optional when the price is not one of the levels. Look up 10000, then 10025, printing level=N or no level.`,
+  ex: String.raw`level=1
+no level`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <optional>
+#include <vector>
+
+std::optional<std::size_t> level_index(const std::vector<long long>& levels, long long px) {
+    auto it = std::lower_bound(levels.begin(), levels.end(), px);
+    if (it == levels.end() || *it != px) return std::nullopt;
+    return static_cast<std::size_t>(it - levels.begin());
+}
+
+int main() {
+    const std::vector<long long> levels{9950, 10000, 10050};
+    for (long long px : {10000LL, 10025LL}) {
+        auto i = level_index(levels, px);
+        if (i) std::cout << "level=" << *i << "\n";
+        else std::cout << "no level\n";
+    }
+}`,
+  why: String.raw`An optional index makes the not-found case impossible to confuse with index zero, which a sentinel of -1 would need extra care to avoid.` },
+
+{ n: 51, d: "applications", t: "Finding an order's position by value in a range",
+  p: String.raw`A vector of prices is searched with ranges find for the target price. Return the position of the match as an optional index, empty when the target is absent. Search for 10050, then for 10075, in the list 10000, 10050, 10100. Print index=N or not found.`,
+  ex: String.raw`index=1
+not found`,
+  code: String.raw`#include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <optional>
+#include <vector>
+
+int main() {
+    const std::vector<long long> px{10000, 10050, 10100};
+    for (long long target : {10050LL, 10075LL}) {
+        auto it = std::ranges::find(px, target);
+        std::optional<std::ptrdiff_t> idx;
+        if (it != px.end()) idx = std::distance(px.begin(), it);
+        if (idx) std::cout << "index=" << *idx << "\n";
+        else std::cout << "not found\n";
+    }
+}`,
+  why: String.raw`Holding the position in an optional keeps a failed search from producing an index that could be used by mistake.` },
 ];
 
 const TOTAL = problems.length;
@@ -944,8 +1339,8 @@ function buildCard(p) {
 }
 
 for (const sec of [
-  { from: 23, to: 32, label: "Medium", range: "Problems 23–32", badge: "medium" },
-  { from: 1, to: 22, label: "Applications", range: "Problems 1–22", badge: null }
+  { from: 23, to: 49, label: "Medium", range: "Problems 23–49", badge: "medium" },
+  { from: 1, to: 51, label: "Applications", range: "Problems 1–51", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");
