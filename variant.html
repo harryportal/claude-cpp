@@ -100,11 +100,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-
 <div class="wrap">
   <header>
     <a class="back" href="index.html">&larr; All topics</a>
-    <p class="kicker">Practical applications using std::variant · 20 problems</p>
+    <p class="kicker">Practical applications using std::variant · 32 problems</p>
     <h1>std::variant Problems</h1>
     <div class="progress">
-      <div class="pcount"><strong id="count">0</strong> of <span id="total">20</span> completed</div>
-      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><i id="fill"></i></div>
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">32</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="32" aria-valuenow="0"><i id="fill"></i></div>
     </div>
   </header>
   <main id="list"></main>
@@ -531,6 +531,411 @@ int main() {
     std::cout << "sum=" << sum << " texts=" << texts << "\n";
 }`,
   why: String.raw`get_if lets a loop test and read each element in one step, so mixed lists need no separate type tags.` },
+
+{ n: 21, d: "applications", t: "Replaying a market data message stream into a resting book",
+  p: String.raw`A feed sends three message kinds: AddOrder with an id and quantity, Execute with an id and the quantity filled, and Remove with an id. Replay the stream AddOrder 1 quantity 100, AddOrder 2 quantity 50, Execute 1 quantity 30, Remove 2, Execute 1 quantity 70. Remove the order from the book when its quantity reaches zero. Print adds=N execs=N removes=N resting=N with the counts of each message kind and the number of orders still resting.`,
+  ex: String.raw`adds=2 execs=2 removes=1 resting=0`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct AddOrder { long long id; long long qty; };
+struct Execute { long long id; long long qty; };
+struct Remove { long long id; };
+using Msg = std::variant<AddOrder, Execute, Remove>;
+
+int main() {
+    std::vector<Msg> stream{AddOrder{1, 100}, AddOrder{2, 50}, Execute{1, 30}, Remove{2}, Execute{1, 70}};
+    std::map<long long, long long> book;
+    int adds = 0, execs = 0, removes = 0;
+    for (const auto& m : stream) {
+        std::visit(Overloaded{
+            [&](const AddOrder& a) { book[a.id] = a.qty; ++adds; },
+            [&](const Execute& e) {
+                book[e.id] -= e.qty;
+                if (book[e.id] == 0) book.erase(e.id);
+                ++execs;
+            },
+            [&](const Remove& r) { book.erase(r.id); ++removes; }}, m);
+    }
+    std::cout << "adds=" << adds << " execs=" << execs << " removes=" << removes
+              << " resting=" << book.size() << "\n";
+}`,
+  why: String.raw`Each feed message is its own type, so the replay handler for each kind only touches the fields that kind carries, and a new message type cannot be silently ignored.` },
+
+{ n: 22, d: "applications", t: "SQL-style cell values with NULL and a numeric filter",
+  p: String.raw`A table column stores cells that may be NULL, an integer, a double, or text. Return the row indices where the cell is a number greater than 10. NULL and text never match. The column is 12, NULL, 9.5, the text 15, and 10.5, in that order. Print matched rows: followed by the matching indices separated by spaces.`,
+  ex: String.raw`matched rows: 0 4`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+using Cell = std::variant<std::monostate, long long, double, std::string>;
+
+bool matches(const Cell& c) {
+    if (auto* i = std::get_if<long long>(&c)) return *i > 10;
+    if (auto* d = std::get_if<double>(&c)) return *d > 10.0;
+    return false;
+}
+
+int main() {
+    std::vector<Cell> column{12LL, std::monostate{}, 9.5, std::string("15"), 10.5};
+    std::cout << "matched rows:";
+    for (size_t i = 0; i < column.size(); ++i)
+        if (matches(column[i])) std::cout << " " << i;
+    std::cout << "\n";
+}`,
+  why: String.raw`Modelling NULL as its own alternative keeps it distinct from zero or an empty string, which is how SQL three-valued logic avoids treating missing data as a real value.` },
+
+{ n: 23, d: "applications", t: "Summing numbers in a nested JSON-like document",
+  p: String.raw`A document is a value that is an integer, a string, an array of values, or an object of named values. Sum every integer in the document, ignoring strings. The document is an object with a = 5, b = an array of 1, 2 and an object with c = 10, and d = the text x. Print sum=N.`,
+  ex: String.raw`sum=18`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+struct Json;
+using Array = std::vector<Json>;
+using Object = std::vector<std::pair<std::string, Json>>;
+
+struct Json {
+    std::variant<long long, std::string, Array, Object> v;
+};
+
+long long sum_numbers(const Json& j) {
+    return std::visit([](const auto& x) -> long long {
+        using T = std::decay_t<decltype(x)>;
+        if constexpr (std::is_same_v<T, long long>) {
+            return x;
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return 0;
+        } else if constexpr (std::is_same_v<T, Array>) {
+            long long s = 0;
+            for (const auto& e : x) s += sum_numbers(e);
+            return s;
+        } else {
+            long long s = 0;
+            for (const auto& [key, e] : x) s += sum_numbers(e);
+            return s;
+        }
+    }, j.v);
+}
+
+int main() {
+    Json doc{Object{
+        {"a", Json{5LL}},
+        {"b", Json{Array{Json{1LL}, Json{2LL}, Json{Object{{"c", Json{10LL}}}}}}},
+        {"d", Json{std::string("x")}}}};
+    std::cout << "sum=" << sum_numbers(doc) << "\n";
+}`,
+  why: String.raw`A recursive variant lets one type describe any nesting depth, and visiting it recurses through arrays and objects without a separate tree class for each shape.` },
+
+{ n: 24, d: "applications", t: "Typing configuration values from text",
+  p: String.raw`A configuration loader turns text into a typed setting, trying bool for true and false, then integer, then double, and falling back to text. Parse the values true, 42, 1.5 and abc in order. For each, print its type and value: bool true, int 42, double 1.5 or string abc, using std::boolalpha for the bool.`,
+  ex: String.raw`bool true
+int 42
+double 1.5
+string abc`,
+  code: String.raw`#include <charconv>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <type_traits>
+#include <variant>
+
+using Setting = std::variant<bool, long long, double, std::string>;
+
+Setting parse_setting(std::string_view s) {
+    if (s == "true") return true;
+    if (s == "false") return false;
+    long long i = 0;
+    auto [pi, ei] = std::from_chars(s.data(), s.data() + s.size(), i);
+    if (ei == std::errc{} && pi == s.data() + s.size()) return i;
+    double d = 0;
+    auto [pd, ed] = std::from_chars(s.data(), s.data() + s.size(), d);
+    if (ed == std::errc{} && pd == s.data() + s.size()) return d;
+    return std::string(s);
+}
+
+int main() {
+    for (std::string_view text : {"true", "42", "1.5", "abc"}) {
+        Setting s = parse_setting(text);
+        std::visit([](const auto& x) {
+            using T = std::decay_t<decltype(x)>;
+            if constexpr (std::is_same_v<T, bool>) std::cout << "bool " << std::boolalpha << x << "\n";
+            else if constexpr (std::is_same_v<T, long long>) std::cout << "int " << x << "\n";
+            else if constexpr (std::is_same_v<T, double>) std::cout << "double " << x << "\n";
+            else std::cout << "string " << x << "\n";
+        }, s);
+    }
+}`,
+  why: String.raw`Trying parsers in a fixed order and returning the first that succeeds gives a typed value without the caller needing to know the type in advance.` },
+
+{ n: 25, d: "applications", t: "Alerting on sensor readings of mixed kinds",
+  p: String.raw`Sensor readings arrive as temperature in degrees Celsius, humidity as a percentage, or pressure in hectopascals. Count and print an alert line for every temperature above 30. The readings are temperature 21.5, humidity 80, temperature 31, and pressure 1013, in order. Print alert temp N for each alert, then alerts=N.`,
+  ex: String.raw`alert temp 31
+alerts=1`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Temp { double c; };
+struct Humidity { double pct; };
+struct Pressure { double hpa; };
+using Reading = std::variant<Temp, Humidity, Pressure>;
+
+int main() {
+    std::vector<Reading> readings{Temp{21.5}, Humidity{80.0}, Temp{31.0}, Pressure{1013.0}};
+    int alerts = 0;
+    for (const auto& r : readings) {
+        std::visit(Overloaded{
+            [&](const Temp& t) {
+                if (t.c > 30.0) {
+                    ++alerts;
+                    std::cout << "alert temp " << t.c << "\n";
+                }
+            },
+            [](const Humidity&) {},
+            [](const Pressure&) {}}, r);
+    }
+    std::cout << "alerts=" << alerts << "\n";
+}`,
+  why: String.raw`Each sensor kind carries its own unit, so the alert rule sits with the temperature alternative and cannot be applied to a pressure reading by mistake.` },
+
+{ n: 26, d: "applications", t: "Dispatching UI events and tracking the last width",
+  p: String.raw`A UI event queue holds clicks with x and y, key presses with a character, and resize events with width and height. Count each kind and record the width of the last resize. The queue is a click at 3,4, a key press a, a resize to 800 by 600, and a click at 1,1. Print clicks=N keys=N resizes=N width=N.`,
+  ex: String.raw`clicks=2 keys=1 resizes=1 width=800`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Click { int x, y; };
+struct Key { char ch; };
+struct Resize { int w, h; };
+using Event = std::variant<Click, Key, Resize>;
+
+int main() {
+    std::vector<Event> queue{Click{3, 4}, Key{'a'}, Resize{800, 600}, Click{1, 1}};
+    int clicks = 0, keys = 0, resizes = 0, width = 0;
+    for (const auto& e : queue) {
+        std::visit(Overloaded{
+            [&](const Click&) { ++clicks; },
+            [&](const Key&) { ++keys; },
+            [&](const Resize& r) { ++resizes; width = r.w; }}, e);
+    }
+    std::cout << "clicks=" << clicks << " keys=" << keys << " resizes=" << resizes
+              << " width=" << width << "\n";
+}`,
+  why: String.raw`A single visit covers every event kind, so adding an event type forces the handler to say what it does with that event.` },
+
+{ n: 27, d: "applications", t: "Decoding a tagged binary protocol",
+  p: String.raw`A binary protocol encodes messages with a one-byte tag. Tag 1 is a heartbeat with no payload. Tag 2 is a trade followed by one byte of quantity. Tag 3 is a cancel followed by one byte of order id. Decode the bytes 1, 2, 5, 3, 7 in order, printing heartbeat, trade qty=N or cancel id=N for each message, and stop with unknown tag N on any other tag.`,
+  ex: String.raw`heartbeat
+trade qty=5
+cancel id=7`,
+  code: String.raw`#include <cstdint>
+#include <iostream>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Heartbeat {};
+struct Trade { std::uint8_t qty; };
+struct Cancel { std::uint8_t id; };
+using Msg = std::variant<Heartbeat, Trade, Cancel>;
+
+int main() {
+    const std::vector<std::uint8_t> bytes{1, 2, 5, 3, 7};
+    std::size_t i = 0;
+    while (i < bytes.size()) {
+        const std::uint8_t tag = bytes[i];
+        Msg msg;
+        if (tag == 1) {
+            msg = Heartbeat{};
+            i += 1;
+        } else if (tag == 2 && i + 1 < bytes.size()) {
+            msg = Trade{bytes[i + 1]};
+            i += 2;
+        } else if (tag == 3 && i + 1 < bytes.size()) {
+            msg = Cancel{bytes[i + 1]};
+            i += 2;
+        } else {
+            std::cout << "unknown tag " << static_cast<int>(tag) << "\n";
+            break;
+        }
+        std::visit(Overloaded{
+            [](const Heartbeat&) { std::cout << "heartbeat\n"; },
+            [](const Trade& t) { std::cout << "trade qty=" << static_cast<int>(t.qty) << "\n"; },
+            [](const Cancel& c) { std::cout << "cancel id=" << static_cast<int>(c.id) << "\n"; }}, msg);
+    }
+}`,
+  why: String.raw`Decoding into a variant turns a byte stream into typed messages once, so the rest of the program never has to look at raw tags again.` },
+
+{ n: 28, d: "applications", t: "Collecting validation errors of different kinds",
+  p: String.raw`An order's fields are validated and each failure is recorded as either a missing field with its name, or a value out of range with its name and value. The quantity must be between 1 and 1000, and the price field must be present. Validate the fields with only qty set to 0, and print one line per error: missing NAME or NAME out of range: VALUE.`,
+  ex: String.raw`missing px
+qty out of range: 0`,
+  code: String.raw`#include <iostream>
+#include <map>
+#include <string>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct MissingField { std::string name; };
+struct OutOfRange { std::string name; long long value; };
+using ValidationError = std::variant<MissingField, OutOfRange>;
+
+std::vector<ValidationError> validate(const std::map<std::string, long long>& fields) {
+    std::vector<ValidationError> errors;
+    if (!fields.contains("px")) errors.push_back(MissingField{"px"});
+    auto it = fields.find("qty");
+    if (it == fields.end()) {
+        errors.push_back(OutOfRange{"qty", 0});
+    } else if (it->second < 1 || it->second > 1000) {
+        errors.push_back(OutOfRange{"qty", it->second});
+    }
+    return errors;
+}
+
+int main() {
+    for (const auto& e : validate({{"qty", 0}})) {
+        std::visit(Overloaded{
+            [](const MissingField& m) { std::cout << "missing " << m.name << "\n"; },
+            [](const OutOfRange& o) { std::cout << o.name << " out of range: " << o.value << "\n"; }}, e);
+    }
+}`,
+  why: String.raw`A validator that returns a list of typed errors lets the caller format each kind differently, and an empty list means the input is valid.` },
+
+{ n: 29, d: "applications", t: "Connection state machine with a bounded retry",
+  p: String.raw`A connection starts Idle. A Start event moves it to Connecting with attempt 1. Each Timeout while connecting moves it to the next attempt, until attempt 3 has timed out, when it becomes Failed with the reason timeout after 3 attempts. Apply the events Start, Timeout, Timeout and Timeout in order, then print failed: REASON for the final failed state.`,
+  ex: String.raw`failed: timeout after 3 attempts`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+struct Idle {};
+struct Connecting { int attempt; };
+struct Connected { std::string session; };
+struct Failed { std::string reason; };
+using State = std::variant<Idle, Connecting, Connected, Failed>;
+
+struct Start {};
+struct Timeout {};
+using Event = std::variant<Start, Timeout>;
+
+State step(const State& s, const Event& e) {
+    if (std::holds_alternative<Idle>(s) && std::holds_alternative<Start>(e)) return Connecting{1};
+    if (auto* c = std::get_if<Connecting>(&s); c && std::holds_alternative<Timeout>(e)) {
+        if (c->attempt < 3) return Connecting{c->attempt + 1};
+        return Failed{"timeout after 3 attempts"};
+    }
+    return s;
+}
+
+int main() {
+    State s = Idle{};
+    for (Event e : {Event{Start{}}, Event{Timeout{}}, Event{Timeout{}}, Event{Timeout{}}}) s = step(s, e);
+    if (auto* f = std::get_if<Failed>(&s)) std::cout << "failed: " << f->reason << "\n";
+}`,
+  why: String.raw`Each state carries only the data valid in that state, so a Connected state can hold a session while Idle and Failed have nothing to store.` },
+
+{ n: 30, d: "applications", t: "Adding lengths given in different units",
+  p: String.raw`Lengths are given either in metres or in feet. Convert each to centimetres using integer arithmetic, where one foot is 30.4 centimetres, so a length in feet is the feet times 304 divided by 10. Sum a length of 100 metres and a length of 10 feet, and print total_cm=N.`,
+  ex: String.raw`total_cm=10304`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Meters { long long m; };
+struct Feet { long long ft; };
+using Length = std::variant<Meters, Feet>;
+
+long long to_cm(const Length& l) {
+    return std::visit(Overloaded{
+        [](const Meters& m) { return m.m * 100; },
+        [](const Feet& f) { return f.ft * 304 / 10; }}, l);
+}
+
+int main() {
+    const Length lengths[] = {Meters{100}, Feet{10}};
+    long long total = 0;
+    for (const auto& l : lengths) total += to_cm(l);
+    std::cout << "total_cm=" << total << "\n";
+}`,
+  why: String.raw`Converting each unit in its own visitor keeps the conversion factors next to the type they belong to, and the sum is always taken in one agreed unit.` },
+
+{ n: 31, d: "applications", t: "Counting live cache entries among tombstones",
+  p: String.raw`A cache slot is a value holding an integer, a tombstone left by a deleted entry, or a pending load. Count the slots holding values and the slots pending. The slots are the value 5, a tombstone, a pending load, and the value 7, in order. Print live=N pending=N.`,
+  ex: String.raw`live=2 pending=1`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Value { long long v; };
+struct Tombstone {};
+struct Pending {};
+using Slot = std::variant<Value, Tombstone, Pending>;
+
+int main() {
+    const std::vector<Slot> slots{Value{5}, Tombstone{}, Pending{}, Value{7}};
+    int live = 0, pending = 0;
+    for (const auto& s : slots) {
+        if (std::holds_alternative<Value>(s)) ++live;
+        else if (std::holds_alternative<Pending>(s)) ++pending;
+    }
+    std::cout << "live=" << live << " pending=" << pending << "\n";
+}`,
+  why: String.raw`Tombstones and pending loads are named states rather than sentinel numbers, so a lookup cannot mistake a deleted slot for a stored value of zero.` },
+
+{ n: 32, d: "applications", t: "Routing order intents through a notional limit",
+  p: String.raw`Trading intents are Buy with quantity and price, Sell with quantity and price, or Hold. A buy or sell is placed only when its notional, quantity times price, is at most 1000000. Process Buy 100 at 10000, Sell 200 at 10000 and Hold. Count the placed, rejected and held intents, and print placed=N rejected=N held=N.`,
+  ex: String.raw`placed=1 rejected=1 held=1`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Buy { long long qty, px; };
+struct Sell { long long qty, px; };
+struct Hold {};
+using Intent = std::variant<Buy, Sell, Hold>;
+
+int main() {
+    const std::vector<Intent> intents{Buy{100, 10000}, Sell{200, 10000}, Hold{}};
+    int placed = 0, rejected = 0, held = 0;
+    for (const auto& in : intents) {
+        std::visit(Overloaded{
+            [&](const Buy& b) { (b.qty * b.px <= 1000000 ? placed : rejected)++; },
+            [&](const Sell& s) { (s.qty * s.px <= 1000000 ? placed : rejected)++; },
+            [&](const Hold&) { ++held; }}, in);
+    }
+    std::cout << "placed=" << placed << " rejected=" << rejected << " held=" << held << "\n";
+}`,
+  why: String.raw`Handling each intent in its own visitor keeps the limit check next to the order it applies to, and Hold needs no check at all.` },
 ];
 
 const TOTAL = problems.length;
@@ -632,7 +1037,7 @@ function buildCard(p) {
 
 for (const sec of [
   { from: 1, to: 19, label: "Medium", range: "Problems 1–19", badge: "medium" },
-  { from: 11, to: 20, label: "Applications", range: "Problems 11–20", badge: null }
+  { from: 11, to: 32, label: "Applications", range: "Problems 11–32", badge: null }
 ]) {
   const section = el("section", "section");
   const h = el("h2");
