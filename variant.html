@@ -1,0 +1,648 @@
+<title>std::variant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: single-column reading list of collapsed cards, code kept in monospace */
+  --bg: #f4f6f8; --surface: #ffffff; --fg: #1a1f29; --muted: #5d6676; --line: #d9dee6;
+  --accent: #2d5b86; --easy: #2b7a57; --medium: #9a6212; --hard: #953a68; --code: #eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+    --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141a; --surface: #181c24; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2a303b;
+  --accent: #8fb7dd; --easy: #6fcaa0; --medium: #e6b36a; --hard: #e79bc1; --code: #0d1014;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.kicker {
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px;
+}
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.progress {
+  margin: 20px 0 8px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 10px;
+}
+.pcount { font-size: 14px; color: var(--muted); }
+.pcount strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.section { margin-top: 30px; }
+.section h2 { font-size: 14px; font-weight: 600; display: flex; gap: 10px; align-items: center; margin: 0 0 10px; }
+.range { color: var(--muted); font-weight: 400; font-size: 13px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  margin-bottom: 8px; min-width: 0;
+}
+.card-head { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.num { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+.chev {
+  width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s; margin-left: 2px; flex: none;
+}
+.toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); }
+.check {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+  white-space: nowrap; cursor: pointer;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.body { border-top: 1px solid var(--line); padding: 14px 16px 18px; min-width: 0; }
+.body p { margin: 0 0 10px; }
+.body .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); font-weight: 600; margin: 14px 0 6px;
+}
+.body pre {
+  margin: 0 0 10px; background: var(--code); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px; line-height: 1.5; white-space: pre;
+}
+.reveal {
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin: 4px 0 2px;
+}
+.reveal:hover { border-color: var(--accent); }
+.toggle:focus-visible, .check input:focus-visible, .reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.back{display:inline-block;margin:0 0 12px;color:var(--accent);text-decoration:none;font-weight:600}
+.back:hover{text-decoration:underline}
+</style>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">&larr; All topics</a>
+    <p class="kicker">Practical applications using std::variant · 20 problems</p>
+    <h1>std::variant Problems</h1>
+    <div class="progress">
+      <div class="pcount"><strong id="count">0</strong> of <span id="total">20</span> completed</div>
+      <div class="bar" role="progressbar" aria-label="Completed problems" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><i id="fill"></i></div>
+    </div>
+  </header>
+  <main id="list"></main>
+</div>
+
+<script>
+const problems = [
+{ n: 1, d: "medium", t: "Reading the active alternative index",
+  p: String.raw`Create three variants of the type int, string or double. Initialise the first with 5, the second with the text hi, and the third with 2.5. Print index=N for each variant's active alternative index, one per line.`,
+  ex: String.raw`index=0
+index=1
+index=2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string, double> a = 5;
+    std::variant<int, std::string, double> b = std::string("hi");
+    std::variant<int, std::string, double> c = 2.5;
+    std::cout << "index=" << a.index() << "\n";
+    std::cout << "index=" << b.index() << "\n";
+    std::cout << "index=" << c.index() << "\n";
+}`,
+  why: String.raw`index() reports which alternative is active as a number, which is useful for logging or for mapping states to a table.` },
+
+{ n: 2, d: "medium", t: "Checking which alternative is held",
+  p: String.raw`A variant of int or string is initialised with the text abc. Print int? yes or int? no, and string? yes or string? no, for whether the variant holds an int and whether it holds a string.`,
+  ex: String.raw`int? no
+string? yes`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = std::string("abc");
+    std::cout << "int? " << (std::holds_alternative<int>(v) ? "yes" : "no") << "\n";
+    std::cout << "string? " << (std::holds_alternative<std::string>(v) ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`holds_alternative answers the question by type, which reads more clearly than comparing an index to a number.` },
+
+{ n: 3, d: "medium", t: "Pointer access that returns null on mismatch",
+  p: String.raw`A variant of int or double starts holding the int 5. Use get_if to read the int and print int 5 when it holds one, otherwise print not int. Then assign 2.5 to the variant and repeat the same check.`,
+  ex: String.raw`int 5
+not int`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<int, double> v = 5;
+    if (auto* i = std::get_if<int>(&v)) std::cout << "int " << *i << "\n";
+    else std::cout << "not int\n";
+    v = 2.5;
+    if (auto* i = std::get_if<int>(&v)) std::cout << "int " << *i << "\n";
+    else std::cout << "not int\n";
+}`,
+  why: String.raw`get_if returns a null pointer rather than throwing, so a type check and a read can happen in one step.` },
+
+{ n: 4, d: "medium", t: "Catching a wrong-alternative access",
+  p: String.raw`A variant of int or string holds the int 7. Try to read it as a string with get, catching bad_variant_access and printing wrong alternative. Then read it as an int and print the value.`,
+  ex: String.raw`wrong alternative
+7`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> v = 7;
+    try {
+        std::cout << std::get<std::string>(v) << "\n";
+    } catch (const std::bad_variant_access&) {
+        std::cout << "wrong alternative\n";
+    }
+    std::cout << std::get<int>(v) << "\n";
+}`,
+  why: String.raw`get throws on a mismatch, so it fits code where the wrong alternative is a bug rather than an expected case.` },
+
+{ n: 5, d: "medium", t: "Describing each alternative with an overload set",
+  p: String.raw`Describe three values held in a variant of long long, string or bool. Print int 42 for the integer, text abc for the string, and flag on or flag off for the boolean, using std::visit with an overload set built from lambdas. The values are 42, abc and true, in order.`,
+  ex: String.raw`int 42
+text abc
+flag on`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+using Value = std::variant<long long, std::string, bool>;
+
+int main() {
+    const Value values[] = {42LL, std::string("abc"), true};
+    for (const auto& v : values) {
+        std::cout << std::visit(Overloaded{
+            [](long long x) { return "int " + std::to_string(x); },
+            [](const std::string& s) { return "text " + s; },
+            [](bool b) { return std::string(b ? "flag on" : "flag off"); }}, v) << "\n";
+    }
+}`,
+  why: String.raw`An overload set lets each alternative have its own handler, and the compiler checks that every alternative is covered.` },
+
+{ n: 6, d: "medium", t: "Combining two numeric variants",
+  p: String.raw`Two variants each hold an int or a double. Write a function that adds them by visiting both, returning a double. Print the sum of 2 and 3, then the sum of 2 and 2.5, one per line, using default stream formatting.`,
+  ex: String.raw`5
+4.5`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+using Num = std::variant<int, double>;
+
+double add(const Num& x, const Num& y) {
+    return std::visit([](auto p, auto q) {
+        return static_cast<double>(p) + static_cast<double>(q);
+    }, x, y);
+}
+
+int main() {
+    Num a = 2, b = 3;
+    Num c = 2.5;
+    std::cout << add(a, b) << "\n";
+    std::cout << add(a, c) << "\n";
+}`,
+  why: String.raw`Visiting two variants at once gives one visitor for every combination of alternatives, so the arithmetic is written once.` },
+
+{ n: 7, d: "medium", t: "Empty state with monostate",
+  p: String.raw`A state variant holds either std::monostate for no order or an order with an id. Start empty and print empty, then assign an order with id A-1 and print order A-1.`,
+  ex: String.raw`empty
+order A-1`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+struct Order { std::string id; };
+
+void show(const std::variant<std::monostate, Order>& s) {
+    if (std::holds_alternative<std::monostate>(s)) std::cout << "empty\n";
+    else std::cout << "order " << std::get<Order>(s).id << "\n";
+}
+
+int main() {
+    std::variant<std::monostate, Order> s;
+    show(s);
+    s = Order{"A-1"};
+    show(s);
+}`,
+  why: String.raw`monostate is a placeholder alternative with no data, so a variant can be empty without making the other alternatives optional.` },
+
+{ n: 8, d: "medium", t: "Replacing an alternative with emplace",
+  p: String.raw`A link type prints open N when constructed and close N when destroyed. A variant of int or link starts holding an int. Emplace link 1, then emplace link 2 over it, then emplace the int 9. Print the events in order.`,
+  ex: String.raw`open 1
+close 1
+open 2
+close 2`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+struct Link {
+    int id;
+    explicit Link(int i) : id(i) { std::cout << "open " << id << "\n"; }
+    ~Link() { std::cout << "close " << id << "\n"; }
+};
+
+int main() {
+    std::variant<int, Link> v;
+    v.emplace<Link>(1);
+    v.emplace<Link>(2);
+    v.emplace<int>(9);
+}`,
+  why: String.raw`emplace destroys the held alternative before constructing the new one, so a resource is released before its replacement exists.` },
+
+{ n: 9, d: "medium", t: "Selecting a duplicate alternative by index",
+  p: String.raw`A variant of two int alternatives is constructed in place using the second alternative with the value 7. Print index=N and value=N, where N is the index and the value held.`,
+  ex: String.raw`index=1 value=7`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<int, int> v{std::in_place_index<1>, 7};
+    std::cout << "index=" << v.index() << " value=" << std::get<1>(v) << "\n";
+}`,
+  why: String.raw`Two alternatives of the same type cannot be told apart by type, so in_place_index is how the constructor chooses which one is meant.` },
+
+{ n: 10, d: "medium", t: "Detecting a valueless variant after a throwing constructor",
+  p: String.raw`A type whose constructor throws when given true is stored in a variant of int or that type. Start with the int, then emplace the type with true inside a try block that ignores the exception. Print valueless=yes or valueless=no to show whether the variant is valueless by exception.`,
+  ex: String.raw`valueless=yes`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+struct Thrower {
+    explicit Thrower(bool t) {
+        if (t) throw 1;
+    }
+    Thrower(Thrower&&) {}
+};
+
+int main() {
+    std::variant<int, Thrower> v{std::in_place_index<0>, 0};
+    try {
+        v.emplace<1>(true);
+    } catch (int) {
+    }
+    std::cout << "valueless=" << (v.valueless_by_exception() ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`If a replacement throws during construction, the variant has no active alternative, which is a state the program must check before using the variant. The move constructor is not noexcept here because standard libraries may keep the old value when the new one is nothrow-movable, so a throwing move is what makes the valueless state appear reliably.` },
+
+{ n: 11, d: "applications", t: "Command dispatcher with a running total",
+  p: String.raw`Commands arrive as a variant of Add with a quantity, Cancel with an id, or Query. Start a total at zero. Add adds the quantity, Cancel subtracts the id, and Query prints open=N with the current total. Process Add 100, Add 50, Cancel 1 and Query, in that order.`,
+  ex: String.raw`open=149`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+struct Add { long long qty; };
+struct Cancel { long long id; };
+struct Query {};
+using Command = std::variant<Add, Cancel, Query>;
+
+int main() {
+    long long total = 0;
+    std::vector<Command> cmds{Add{100}, Add{50}, Cancel{1}, Query{}};
+    for (const auto& c : cmds) {
+        std::visit(Overloaded{
+            [&](const Add& a) { total += a.qty; },
+            [&](const Cancel& x) { total -= x.id; },
+            [&](const Query&) { std::cout << "open=" << total << "\n"; }}, c);
+    }
+}`,
+  why: String.raw`Each command type has its own handler, so adding a new command means adding one alternative and one handler, and the compiler flags any that are missed.` },
+
+{ n: 12, d: "medium", t: "Converting every alternative to text",
+  p: String.raw`A variant holds an int or a double. Convert whichever alternative is held to a string using a generic lambda with an output stream, and print the result. The values are 3 and 2.5, in order.`,
+  ex: String.raw`3
+2.5`,
+  code: String.raw`#include <iostream>
+#include <sstream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, double> vals[] = {3, 2.5};
+    for (const auto& v : vals) {
+        std::string s = std::visit([](auto x) {
+            std::ostringstream out;
+            out << x;
+            return out.str();
+        }, v);
+        std::cout << s << "\n";
+    }
+}`,
+  why: String.raw`A generic visitor returns the same type for every alternative, which is what std::visit requires of its handlers.` },
+
+{ n: 13, d: "applications", t: "Evaluating a nested expression tree",
+  p: String.raw`An expression is either a number or a sum or product of sub-expressions. Build the expression (1 + 2) * 3, evaluate it by visiting the variant, and print the result.`,
+  ex: String.raw`9`,
+  code: String.raw`#include <iostream>
+#include <variant>
+#include <vector>
+
+struct Expr;
+struct Add { std::vector<Expr> args; };
+struct Mul { std::vector<Expr> args; };
+struct Expr { std::variant<long long, Add, Mul> node; };
+
+template <class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+long long eval(const Expr& e);
+
+long long eval(const Expr& e) {
+    return std::visit(Overloaded{
+        [](long long n) { return n; },
+        [](const Add& a) {
+            long long s = 0;
+            for (const auto& x : a.args) s += eval(x);
+            return s;
+        },
+        [](const Mul& m) {
+            long long p = 1;
+            for (const auto& x : m.args) p *= eval(x);
+            return p;
+        }}, e.node);
+}
+
+int main() {
+    Expr e{Mul{{Expr{Add{{Expr{1LL}, Expr{2LL}}}}, Expr{3LL}}}};
+    std::cout << eval(e) << "\n";
+}`,
+  why: String.raw`A recursive variant keeps every node the same type while still letting each node carry different data, which is the usual way to write small interpreters.` },
+
+{ n: 14, d: "medium", t: "Ordering variants by index then value",
+  p: String.raw`Two variants of int or string are compared with the less-than operator. The first holds the int 100 and the second holds the text a. Print less=yes or less=no for whether the first is less than the second.`,
+  ex: String.raw`less=yes`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+int main() {
+    std::variant<int, std::string> a = 100;
+    std::variant<int, std::string> b = std::string("a");
+    std::cout << "less=" << (a < b ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Variant comparison orders by alternative first, so every int sorts before every string regardless of their values.` },
+
+{ n: 15, d: "medium", t: "Equality across alternatives of different types",
+  p: String.raw`A variant of int or long holds an int 5 in one object and a long 5 in another. Print equal=yes or equal=no for whether they compare equal. Then compare the first with an int 5 constructed as a variant and print same=yes or same=no.`,
+  ex: String.raw`equal=no
+same=yes`,
+  code: String.raw`#include <iostream>
+#include <variant>
+
+int main() {
+    std::variant<int, long> a = 5;
+    std::variant<int, long> b = 5L;
+    std::cout << "equal=" << (a == b ? "yes" : "no") << "\n";
+    std::variant<int, long> c{std::in_place_index<0>, 5};
+    std::cout << "same=" << (a == c ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`Equality compares the active alternative as well as the value, so an int 5 and a long 5 are different variants even though their numbers match.` },
+
+{ n: 16, d: "medium", t: "Inspecting a variant type at compile time",
+  p: String.raw`A variant type holds an int, a string and a double. At compile time, check its alternative count is 3 and that alternative 1 is std::string. At run time print size=N and alt1 string=yes or alt1 string=no.`,
+  ex: String.raw`size=3
+alt1 string=yes`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+
+using V = std::variant<int, std::string, double>;
+
+static_assert(std::variant_size_v<V> == 3);
+static_assert(std::is_same_v<std::variant_alternative_t<1, V>, std::string>);
+
+int main() {
+    std::cout << "size=" << std::variant_size_v<V> << "\n";
+    std::cout << "alt1 string="
+              << (std::is_same_v<std::variant_alternative_t<1, V>, std::string> ? "yes" : "no") << "\n";
+}`,
+  why: String.raw`variant_size and variant_alternative let generic code inspect a variant's type without constructing a value.` },
+
+{ n: 17, d: "medium", t: "Moving a unique pointer out of a variant",
+  p: String.raw`A variant holds either an int or a unique pointer to the int 42. Move the pointer out of the variant with std::get, then print value=N with the value it points to.`,
+  ex: String.raw`value=42`,
+  code: String.raw`#include <iostream>
+#include <memory>
+#include <variant>
+
+int main() {
+    std::variant<int, std::unique_ptr<int>> v = std::make_unique<int>(42);
+    auto p = std::get<std::unique_ptr<int>>(std::move(v));
+    std::cout << "value=" << *p << "\n";
+}`,
+  why: String.raw`Getting from an rvalue variant moves the alternative out, which works for move-only types held in a variant.` },
+
+{ n: 18, d: "applications", t: "Variant as a result type for parsing",
+  p: String.raw`A parse function returns either a number or an error message held in a variant. Parse 123 and then the text x. For a number print ok N, and for an error print error TEXT, using get_if to tell them apart. Parsing x yields the error bad input, and any other text is converted with std::stoll.`,
+  ex: String.raw`ok 123
+error bad input`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+
+using Result = std::variant<long long, std::string>;
+
+Result parse(const std::string& s) {
+    if (s == "x") return std::string("bad input");
+    return std::stoll(s);
+}
+
+int main() {
+    for (std::string s : {"123", "x"}) {
+        Result r = parse(s);
+        if (auto* v = std::get_if<long long>(&r)) std::cout << "ok " << *v << "\n";
+        else std::cout << "error " << std::get<std::string>(r) << "\n";
+    }
+}`,
+  why: String.raw`A variant with a value alternative and an error alternative is a compact result type when the error needs to carry text.` },
+
+{ n: 19, d: "medium", t: "Choosing a branch with if constexpr",
+  p: String.raw`A variant holds an int 5, the text x, or a bool true, in that order. Visit it with a generic lambda that uses if constexpr to print int:5, string:x, or bool:true, with the boolean printed as a word. Print one line per alternative.`,
+  ex: String.raw`int:5
+string:x
+bool:true`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+
+using V = std::variant<int, std::string, bool>;
+
+int main() {
+    const V values[] = {5, std::string("x"), true};
+    for (const auto& v : values) {
+        std::visit([](const auto& x) {
+            using T = std::decay_t<decltype(x)>;
+            if constexpr (std::is_same_v<T, int>) std::cout << "int:" << x << "\n";
+            else if constexpr (std::is_same_v<T, std::string>) std::cout << "string:" << x << "\n";
+            else std::cout << "bool:" << std::boolalpha << x << "\n";
+        }, v);
+    }
+}`,
+  why: String.raw`if constexpr discards the branches that do not apply to the current alternative, so each branch can use members that only exist for its type.` },
+
+{ n: 20, d: "applications", t: "Summing the numbers in a mixed list",
+  p: String.raw`A list holds variants that are each an int or a string. Sum the ints and count the strings, then print sum=N texts=N. The list is 1, a, 2, b and 39, in order.`,
+  ex: String.raw`sum=42 texts=2`,
+  code: String.raw`#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+int main() {
+    std::vector<std::variant<int, std::string>> items{1, std::string("a"), 2, std::string("b"), 39};
+    long long sum = 0;
+    int texts = 0;
+    for (const auto& it : items) {
+        if (auto* n = std::get_if<int>(&it)) sum += *n;
+        else ++texts;
+    }
+    std::cout << "sum=" << sum << " texts=" << texts << "\n";
+}`,
+  why: String.raw`get_if lets a loop test and read each element in one step, so mixed lists need no separate type tags.` },
+];
+
+const TOTAL = problems.length;
+const KEY = "cpp-variant-only-v1";
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const fillEl = document.getElementById("fill");
+const barEl = document.querySelector(".bar");
+
+let done = new Set();
+try {
+  done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
+} catch (e) { /* storage unavailable: start empty */ }
+
+function saveProgress() {
+  try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+}
+
+function updateProgress() {
+  const n = done.size;
+  countEl.textContent = n;
+  fillEl.style.width = (n / TOTAL * 100) + "%";
+  barEl.setAttribute("aria-valuenow", String(n));
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildCard(p) {
+  const id = "problem-" + p.n;
+  const card = el("article", "card");
+
+  const head = el("div", "card-head");
+  const toggle = el("button", "toggle");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", id);
+  const chev = el("span", "chev");
+  chev.setAttribute("aria-hidden", "true");
+  toggle.append(
+    el("span", "num", String(p.n).padStart(2, "0")),
+    el("span", "title", p.t),
+    el("span", "badge " + p.d, cap(p.d)),
+    chev
+  );
+
+  const check = el("label", "check");
+  const box = el("input");
+  box.type = "checkbox";
+  box.checked = done.has(p.n);
+  check.append(box, el("span", null, "Done"));
+  head.append(toggle, check);
+
+  const body = el("div", "body");
+  body.id = id;
+  body.hidden = true;
+  body.append(el("p", null, p.p));
+  if (p.idiom) body.append(el("p", "label", "Topic covered"), el("p", null, p.idiom));
+  if (p.ex) body.append(el("p", "label", "Example"), el("pre", null, p.ex));
+
+  const reveal = el("button", "reveal", "Show solution");
+  reveal.type = "button";
+  reveal.setAttribute("aria-expanded", "false");
+  const answer = el("div", "answer");
+  answer.hidden = true;
+  answer.append(
+    el("p", "label", "Solution"), el("pre", "code", p.code),
+    el("p", "label", "Explanation"), el("p", null, p.why)
+  );
+  reveal.addEventListener("click", () => {
+    const showing = answer.hidden;
+    answer.hidden = !showing;
+    reveal.textContent = showing ? "Hide solution" : "Show solution";
+    reveal.setAttribute("aria-expanded", String(showing));
+  });
+  body.append(reveal, answer);
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  });
+
+  box.addEventListener("change", () => {
+    if (box.checked) done.add(p.n); else done.delete(p.n);
+    saveProgress();
+    updateProgress();
+  });
+
+  card.append(head, body);
+  return card;
+}
+
+for (const sec of [
+  { from: 1, to: 19, label: "Medium", range: "Problems 1–19", badge: "medium" },
+  { from: 11, to: 20, label: "Applications", range: "Problems 11–20", badge: null }
+]) {
+  const section = el("section", "section");
+  const h = el("h2");
+  h.append(el("span", sec.badge ? "badge " + sec.badge : "badge", sec.label), el("span", "range", sec.range));
+  section.append(h);
+  for (const p of problems.filter(x => x.n >= sec.from && x.n <= sec.to)) section.append(buildCard(p));
+  list.append(section);
+}
+
+document.getElementById("total").textContent = TOTAL;
+barEl.setAttribute("aria-valuemax", String(TOTAL));
+updateProgress();
+</script>
